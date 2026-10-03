@@ -1,0 +1,6 @@
+{
+  "name": "e-Rapor SMPN 14 Tulang Bawang Barat",
+  "description": "Sistem Informasi Manajemen Nilai dan Cetak Rapor Siswa Terintegrasi Kurikulum Merdeka SMP Negeri 14 Tulang Bawang Barat",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

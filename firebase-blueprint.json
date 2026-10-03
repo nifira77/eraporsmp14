@@ -1,0 +1,29 @@
+{
+  "entities": {
+    "EraporDocument": {
+      "title": "EraporDocument",
+      "description": "Realtime synchronization document for e-Rapor Kurikulum Merdeka",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "description": "Serialized data payload for the section"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "User identifier who performed the update"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/erapor_data/{docId}": {
+      "schema": "EraporDocument",
+      "description": "Stores school info, students, grades, rombels, attendance, and settings for real-time multi-device sync"
+    }
+  }
+}
