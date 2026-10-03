@@ -722,6 +722,9 @@ export const getInitialState = (): ERaporState => {
           }
         });
 
+        const savedLogoSekolah = parsed.school?.logoSekolah || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_sekolah') : null) || defaultLogoSekolah;
+        const savedLogoPemda = parsed.school?.logoPemda || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_pemda') : null) || defaultLogoPemda;
+
         const currentSchool: SchoolInfo = {
           ...initialSchoolInfo,
           ...parsed.school,
@@ -731,8 +734,8 @@ export const getInitialState = (): ERaporState => {
           tanggalRapor: (!parsed.school?.tanggalRapor || parsed.school.tanggalRapor.includes('2024') || parsed.school.tanggalRapor.includes('2025'))
             ? '19 Desember 2026'
             : parsed.school.tanggalRapor,
-          logoSekolah: parsed.school?.logoSekolah || defaultLogoSekolah,
-          logoPemda: parsed.school?.logoPemda || defaultLogoPemda
+          logoSekolah: savedLogoSekolah,
+          logoPemda: savedLogoPemda
         };
 
         const currentRombels: Rombel[] = (parsed.rombels || initialRombels).map((r: any) => ({
@@ -758,8 +761,15 @@ export const getInitialState = (): ERaporState => {
     }
   }
 
+  const fallbackLogoSekolah = typeof window !== 'undefined' ? localStorage.getItem('custom_logo_sekolah') : null;
+  const fallbackLogoPemda = typeof window !== 'undefined' ? localStorage.getItem('custom_logo_pemda') : null;
+
   return {
-    school: initialSchoolInfo,
+    school: {
+      ...initialSchoolInfo,
+      logoSekolah: fallbackLogoSekolah || initialSchoolInfo.logoSekolah,
+      logoPemda: fallbackLogoPemda || initialSchoolInfo.logoPemda,
+    },
     users: initialUsers,
     currentUser: initialUsers[1], // Default: Ibu Siti Rahmawati (Wali Kelas VII-A)
     rombels: initialRombels,

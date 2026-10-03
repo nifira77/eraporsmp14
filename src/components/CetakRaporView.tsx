@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { 
   ERaporState, 
   Student, 
@@ -19,7 +20,9 @@ import {
   Clock,
   Award,
   Layers,
-  Calendar
+  Calendar,
+  FileSpreadsheet,
+  FileDown
 } from 'lucide-react';
 
 interface CetakRaporViewProps {
@@ -58,6 +61,134 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
   // Handler for direct browser print
   const handlePrint = () => {
     window.print();
+  };
+
+  // Download Leger in Microsoft Excel format (.xlsx)
+  const handleDownloadLegerExcel = () => {
+    // 1. Calculate totals and rankings for all students
+    const studentTotals = students.map(student => {
+      const studentSubjs = subjects.filter(subj => {
+        const isReligious = ['pai', 'pak_kristen', 'pak_katolik', 'pah_hindu', 'pab_buddha'].includes(subj.id);
+        if (!isReligious) return true;
+        const ag = (student.agama || '').toLowerCase();
+        if (subj.id === 'pai') return ag.includes('islam');
+        if (subj.id === 'pak_kristen') return ag.includes('protestan') || (ag.includes('kristen') && !ag.includes('katolik'));
+        if (subj.id === 'pak_katolik') return ag.includes('katolik') || ag.includes('khatolik');
+        if (subj.id === 'pah_hindu') return ag.includes('hindu');
+        if (subj.id === 'pab_buddha') return ag.includes('buddha') || ag.includes('budha');
+        return false;
+      });
+
+      const effectiveSubjs = studentSubjs.length > 0 ? studentSubjs : subjects.filter(s => !['pak_kristen', 'pak_katolik', 'pah_hindu', 'pab_buddha'].includes(s.id));
+
+      const total = effectiveSubjs.reduce((sum, subj) => {
+        const g = grades.find(item => item.studentId === student.id && item.subjectId === subj.id);
+        const val = raporPeriod === 'tengah_semester' 
+          ? (g?.nilaiAkhirSTS ?? g?.nilaiAkhirRapor ?? 0)
+          : (g?.nilaiAkhirRapor ?? 0);
+        return sum + val;
+      }, 0);
+      const avg = parseFloat((total / effectiveSubjs.length).toFixed(1));
+      return { student, total, avg, effectiveSubjs };
+    });
+
+    const sorted = [...studentTotals].sort((a, b) => b.total - a.total);
+    const rankMap: Record<string, number> = {};
+    sorted.forEach((item, index) => {
+      rankMap[item.student.id] = index + 1;
+    });
+
+    // 2. Prepare Leger Sheet rows
+    const rows = students.map((student, idx) => {
+      const studentRecord = studentTotals.find(s => s.student.id === student.id);
+      const att = attendances.find(a => a.studentId === student.id) || { sakit: 0, izin: 0, alpa: 0 };
+
+      const rowObj: Record<string, any> = {
+        'No': idx + 1,
+        'NISN': student.nisn,
+        'NIS': student.nis || '-',
+        'Nama Peserta Didik': student.nama,
+        'JK': student.jenisKelamin
+      };
+
+      subjects.forEach(subj => {
+        const isReligious = ['pai', 'pak_kristen', 'pak_katolik', 'pah_hindu', 'pab_buddha'].includes(subj.id);
+        const ag = (student.agama || '').toLowerCase();
+        const isStudentReligious = 
+          (subj.id === 'pai' && ag.includes('islam')) ||
+          (subj.id === 'pak_kristen' && (ag.includes('protestan') || (ag.includes('kristen') && !ag.includes('katolik')))) ||
+          (subj.id === 'pak_katolik' && (ag.includes('katolik') || ag.includes('khatolik'))) ||
+          (subj.id === 'pah_hindu' && ag.includes('hindu')) ||
+          (subj.id === 'pab_buddha' && (ag.includes('buddha') || ag.includes('budha')));
+
+        if (isReligious && !isStudentReligious) {
+          rowObj[subj.kode] = '-';
+        } else {
+          const g = grades.find(item => item.studentId === student.id && item.subjectId === subj.id);
+          const val = raporPeriod === 'tengah_semester' 
+            ? (g?.nilaiAkhirSTS ?? g?.nilaiAkhirRapor ?? '-')
+            : (g?.nilaiAkhirRapor ?? '-');
+          rowObj[subj.kode] = val;
+        }
+      });
+
+      rowObj['Total Nilai'] = studentRecord?.total ?? 0;
+      rowObj['Rata-Rata'] = studentRecord?.avg ?? 0;
+      rowObj['Peringkat'] = rankMap[student.id] ?? '-';
+      rowObj['Sakit (Hari)'] = att.sakit;
+      rowObj['Izin (Hari)'] = att.izin;
+      rowObj['Alpa (Hari)'] = att.alpa;
+
+      return rowObj;
+    });
+
+    // 3. Metadata Sheet
+    const metaRows = [
+      { 'Parameter': 'Satuan Pendidikan', 'Keterangan': school.namaSekolah },
+      { 'Parameter': 'NPSN', 'Keterangan': school.npsn },
+      { 'Parameter': 'Rombongan Belajar', 'Keterangan': selectedRombel.nama },
+      { 'Parameter': 'Tahun Pelajaran', 'Keterangan': school.tahunAjaran },
+      { 'Parameter': 'Semester', 'Keterangan': school.semester },
+      { 'Parameter': 'Periode Penilaian', 'Keterangan': raporPeriod === 'tengah_semester' ? 'Sumatif Tengah Semester (STS)' : 'Sumatif Akhir Semester (SAS)' },
+      { 'Parameter': 'Wali Kelas', 'Keterangan': `${selectedRombel.waliKelasNama} (NIP: ${selectedRombel.waliKelasNip})` },
+      { 'Parameter': 'Kepala Sekolah', 'Keterangan': `${school.kepalaSekolah} (NIP: ${school.nipKepalaSekolah})` },
+      { 'Parameter': 'Tanggal Dokumen', 'Keterangan': raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const wsLeger = XLSX.utils.json_to_sheet(rows);
+    const wsMeta = XLSX.utils.json_to_sheet(metaRows);
+
+    wsLeger['!cols'] = [
+      { wch: 6 },
+      { wch: 14 },
+      { wch: 10 },
+      { wch: 28 },
+      { wch: 6 },
+      ...subjects.map(() => ({ wch: 9 })),
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+    ];
+
+    wsMeta['!cols'] = [{ wch: 22 }, { wch: 45 }];
+
+    XLSX.utils.book_append_sheet(wb, wsLeger, 'Leger_Nilai');
+    XLSX.utils.book_append_sheet(wb, wsMeta, 'Info_Sekolah');
+
+    const periode = raporPeriod === 'tengah_semester' ? 'STS' : 'SAS';
+    XLSX.writeFile(wb, `Leger_Nilai_${selectedRombel.nama.replace(/\s+/g, '_')}_${periode}_2026-2027.xlsx`);
+  };
+
+  // Download / Print Leger as PDF in Landscape A4 format
+  const handleDownloadLegerPDF = () => {
+    setPrintMode('leger');
+    setTimeout(() => {
+      window.print();
+    }, 150);
   };
 
   // Helper to extract student's report data
@@ -124,6 +255,16 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
   return (
     <div className="space-y-5">
+      {/* Dynamic print orientation: Landscape for Leger Nilai, Portrait for Rapor/Cover */}
+      <style>{`
+        @media print {
+          @page {
+            size: ${printMode === 'leger' ? 'A4 landscape' : 'A4 portrait'} !important;
+            margin: ${printMode === 'leger' ? '8mm' : '12mm 15mm 15mm 15mm'} !important;
+          }
+        }
+      `}</style>
+
       {/* Top Filter and Actions Toolbar - HIDDEN ON PRINT */}
       <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-4 no-print">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -137,19 +278,43 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
           </div>
 
           {/* Direct Print Button */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              <span>
-                {printTarget === 'all' 
-                  ? `Cetak Semua Siswa (${students.length} Siswa)` 
-                  : `Cetak Rapor (${selectedStudent?.nama.split(' ')[0]})`}
-              </span>
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {printMode === 'leger' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleDownloadLegerExcel}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                  title="Unduh Leger Nilai dalam format Microsoft Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Unduh Leger Excel (.xlsx)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadLegerPDF}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                  title="Unduh / Cetak Dokumen Leger Nilai dalam format PDF (Landscape A4)"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span>Unduh / Cetak PDF</span>
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>
+                  {printTarget === 'all' 
+                    ? `Cetak Semua Siswa (${students.length} Siswa)` 
+                    : `Cetak Rapor (${selectedStudent?.nama.split(' ')[0]})`}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -897,7 +1062,39 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
         {/* MODE 4: LEGER NILAI SEMESTER (FORMAT SHEET LENGKAP KELAS VII-A) */}
         {/* ============================================================== */}
         {printMode === 'leger' && (
-          <div className="bg-white text-black p-6 sm:p-10 w-full max-w-[297mm] min-h-[210mm] shadow-xl border border-slate-300 rounded-sm font-sans text-[10px] print:m-0 print:p-0 print:w-full print:border-none print:shadow-none space-y-4">
+          <div className="flex flex-col items-center gap-4 w-full">
+            {/* Quick Export Ribbon for Leger */}
+            <div className="no-print bg-white border border-slate-200 rounded-xl p-3.5 w-full max-w-[297mm] flex flex-wrap items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2">
+                <TableProperties className="w-4 h-4 text-blue-700 shrink-0" />
+                <div>
+                  <span className="font-bold text-slate-800 text-xs">Pilihan Format Unduh Leger Nilai:</span>
+                  <span className="text-slate-500 text-[11px] block">
+                    Pilih format Excel (.xlsx) untuk pengolahan spreadsheet atau PDF (Landscape A4) untuk arsip resmi.
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadLegerExcel}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Unduh File Excel (.xlsx)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadLegerPDF}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>Unduh / Cetak Dokumen PDF</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white text-black p-6 sm:p-10 w-full max-w-[297mm] min-h-[210mm] shadow-xl border border-slate-300 rounded-sm font-sans text-[10px] print:m-0 print:p-0 print:w-full print:border-none print:shadow-none space-y-4">
             {/* Header Leger */}
             <div className="border-b-2 border-black pb-2 flex items-center justify-between gap-3">
               <div className="w-14 h-14 shrink-0 flex items-center justify-center">
@@ -1078,7 +1275,8 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );

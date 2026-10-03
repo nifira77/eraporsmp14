@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ERaporState, 
   SchoolInfo, 
@@ -27,9 +27,11 @@ import {
   BookOpen,
   UserPlus,
   Award,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { defaultLogoPemda, defaultLogoSekolah } from '../data/initialData';
+import { compressLogoImage } from '../utils/imageCompressor';
 
 interface DataSekolahViewProps {
   state: ERaporState;
@@ -57,6 +59,12 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   const [activeTab, setActiveTab] = useState<'sekolah' | 'rombel' | 'guru' | 'mapel'>('sekolah');
   const [formData, setFormData] = useState<SchoolInfo>({ ...school });
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<string | null>(null);
+
+  // Sync formData whenever school state updates (e.g. from cloud or parent)
+  useEffect(() => {
+    setFormData({ ...school });
+  }, [school]);
 
   // Modal Tambah Rombel
   const [isAddRombelOpen, setIsAddRombelOpen] = useState(false);
@@ -82,37 +90,59 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
     }));
   };
 
-  const handleLogoUpload = (type: 'logoSekolah' | 'logoPemda', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (type: 'logoSekolah' | 'logoPemda', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-      alert('Ukuran file logo maksimal 3 MB.');
-      return;
-    }
+    try {
+      setIsUploading(type);
+      // Auto compress and resize image to fit comfortably under Firestore and localStorage limits (~25KB)
+      const compressedDataUrl = await compressLogoImage(file, 280, 280, 0.85);
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const result = evt.target?.result as string;
-      if (result) {
-        setFormData(prev => ({
-          ...prev,
-          [type]: result
-        }));
-        setSuccessMsg(`File ${type === 'logoPemda' ? 'Logo Pemda' : 'Logo Sekolah'} berhasil diunggah. Klik "Simpan Perubahan Sekolah" untuk menyimpan.`);
-        setTimeout(() => setSuccessMsg(null), 4000);
+      // Save directly to dedicated localStorage key so it's immune to cache resets
+      const storageKey = type === 'logoSekolah' ? 'custom_logo_sekolah' : 'custom_logo_pemda';
+      try {
+        localStorage.setItem(storageKey, compressedDataUrl);
+      } catch (storageErr) {
+        console.warn('LocalStorage error:', storageErr);
       }
-    };
-    reader.readAsDataURL(file);
+
+      // Update form state AND instantly commit to global state & Firestore Cloud
+      const updatedSchool: SchoolInfo = {
+        ...formData,
+        [type]: compressedDataUrl
+      };
+
+      setFormData(updatedSchool);
+      onUpdateSchool(updatedSchool);
+
+      setSuccessMsg(`✓ ${type === 'logoPemda' ? 'Logo Pemda' : 'Logo Sekolah'} berhasil diunggah dan disimpan permanen.`);
+      setTimeout(() => setSuccessMsg(null), 4500);
+    } catch (err: any) {
+      console.error('Logo upload error:', err);
+      alert(err.message || 'Gagal memproses file logo.');
+    } finally {
+      setIsUploading(null);
+      e.target.value = '';
+    }
   };
 
   const handleResetLogo = (type: 'logoSekolah' | 'logoPemda') => {
-    if (type === 'logoPemda') {
-      setFormData(prev => ({ ...prev, logoPemda: defaultLogoPemda }));
-    } else {
-      setFormData(prev => ({ ...prev, logoSekolah: defaultLogoSekolah }));
-    }
-    setSuccessMsg(`Logo ${type === 'logoPemda' ? 'Pemda' : 'Sekolah'} dikembalikan ke logo bawaan.`);
+    const storageKey = type === 'logoSekolah' ? 'custom_logo_sekolah' : 'custom_logo_pemda';
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (_) {}
+
+    const defaultLogo = type === 'logoPemda' ? defaultLogoPemda : defaultLogoSekolah;
+    const updatedSchool: SchoolInfo = {
+      ...formData,
+      [type]: defaultLogo
+    };
+
+    setFormData(updatedSchool);
+    onUpdateSchool(updatedSchool);
+
+    setSuccessMsg(`Logo ${type === 'logoPemda' ? 'Pemda' : 'Sekolah'} dikembalikan ke logo bawaan sistem.`);
     setTimeout(() => setSuccessMsg(null), 3500);
   };
 
@@ -327,12 +357,22 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload Logo Pemda</span>
+                  <label className={`cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 ${isUploading === 'logoPemda' ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors`}>
+                    {isUploading === 'logoPemda' ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Logo Pemda</span>
+                      </>
+                    )}
                     <input 
                       type="file" 
                       accept="image/*" 
+                      disabled={isUploading !== null}
                       className="hidden" 
                       onChange={(e) => handleLogoUpload('logoPemda', e)} 
                     />
@@ -374,18 +414,28 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                       Logo emblem SMPN 14 Tubaba untuk sampul (cover) rapor, kop surat, dan bar aplikasi.
                     </p>
                     <p className="text-[10px] text-slate-400">
-                      Format: PNG, JPG, SVG, WebP (Maks. 3 MB)
+                      Format: PNG, JPG, SVG, WebP (Otomatis dikompres & disimpan permanen)
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload Logo Sekolah</span>
+                  <label className={`cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 ${isUploading === 'logoSekolah' ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors`}>
+                    {isUploading === 'logoSekolah' ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Logo Sekolah</span>
+                      </>
+                    )}
                     <input 
                       type="file" 
                       accept="image/*" 
+                      disabled={isUploading !== null}
                       className="hidden" 
                       onChange={(e) => handleLogoUpload('logoSekolah', e)} 
                     />
