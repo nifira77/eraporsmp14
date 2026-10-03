@@ -69,12 +69,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
       {/* Official Kemdikbud e-Rapor SP Banner */}
       <div className="bg-white rounded-xl border border-slate-200 border-l-4 border-l-blue-700 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center p-1 shrink-0">
-            <img 
-              src="/src/assets/images/kemdikbud_logo_1791032931328.jpg" 
-              alt="Logo Kemdikbudristek" 
-              className="w-full h-full object-contain"
-            />
+          <div className="w-14 h-14 rounded-xl bg-blue-900 border border-blue-950 flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-2xs">
+            {school.logoSekolah ? (
+              <img 
+                src={school.logoSekolah} 
+                alt="Logo Sekolah" 
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <School className="w-7 h-7 text-white" />
+            )}
           </div>
           <div>
             <p className="text-[11px] font-bold text-blue-900 tracking-wide uppercase">

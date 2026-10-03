@@ -876,14 +876,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                 key={student.id}
                 className="bg-white text-black p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm flex flex-col justify-between items-center text-center font-serif print:m-0 print:p-0 print:border-none print:shadow-none print-page-break"
               >
-                <div className="space-y-3 pt-6">
-                  <div className="w-24 h-24 mx-auto mb-2">
-                    <img 
-                      src="/src/assets/images/kemdikbud_logo_1791032931328.jpg" 
-                      alt="Logo Tut Wuri Handayani" 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                <div className="space-y-3 pt-8">
                   <h1 className="text-xl font-extrabold tracking-wider uppercase font-sans text-slate-900">
                     {raporPeriod === 'tengah_semester' 
                       ? 'LAPORAN HASIL BELAJAR TENGAH SEMESTER' 
@@ -901,8 +894,8 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                 </div>
 
                 {/* School Emblem / Logo */}
-                <div className="my-8 flex flex-col items-center">
-                  <div className="w-32 h-32 rounded-full border-2 border-black flex items-center justify-center p-2 shadow-xs bg-white">
+                <div className="my-10 flex flex-col items-center">
+                  <div className="w-40 h-40 rounded-full border-2 border-black flex items-center justify-center p-2 shadow-xs bg-white">
                     <img 
                       src={school.logoSekolah || "/src/assets/images/school_logo_emblem_1790936910635.jpg"} 
                       alt="Lambang SMPN 14 Tulang Bawang Barat" 

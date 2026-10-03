@@ -75,18 +75,9 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="bg-white border-b border-slate-200 border-t-3 border-blue-700 sticky top-0 z-30 shadow-xs no-print">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          {/* Brand & Official Ministry + School Logos */}
+          {/* Brand & School Logo */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 shrink-0">
-              {/* Logo Resmi Kemdikbudristek Tut Wuri Handayani */}
-              <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5" title="Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi">
-                <img 
-                  src="/src/assets/images/kemdikbud_logo_1791032931328.jpg" 
-                  alt="Logo Kemdikbudristek Tut Wuri Handayani" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
               {/* Logo Pemda */}
               {school.logoPemda && (
                 <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5" title="Pemerintah Kabupaten Tulang Bawang Barat">
