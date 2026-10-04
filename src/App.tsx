@@ -278,6 +278,47 @@ export default function App() {
     }));
   };
 
+  const handleUpdateUser = (updatedUser: UserProfile) => {
+    setState(prev => {
+      const updatedUsers = prev.users.map(u => u.id === updatedUser.id ? updatedUser : u);
+      const updatedCurrentUser = prev.currentUser.id === updatedUser.id ? updatedUser : prev.currentUser;
+      
+      // If this teacher is a Wali Kelas, synchronize rombel waliKelasNama & waliKelasNip
+      let updatedRombels = prev.rombels;
+      if (updatedUser.role === 'wali_kelas' && updatedUser.rombelId) {
+        updatedRombels = prev.rombels.map(r => {
+          if (r.id === updatedUser.rombelId || r.waliKelasId === updatedUser.id) {
+            return {
+              ...r,
+              waliKelasNama: updatedUser.name,
+              waliKelasNip: updatedUser.nip || '-'
+            };
+          }
+          return r;
+        });
+      }
+
+      // If this teacher has an assigned subject, synchronize subject guruPengampuNama
+      const updatedSubjects = prev.subjects.map(s => {
+        if (s.id === updatedUser.subjectId) {
+          return {
+            ...s,
+            guruPengampuNama: updatedUser.name
+          };
+        }
+        return s;
+      });
+
+      return {
+        ...prev,
+        users: updatedUsers,
+        currentUser: updatedCurrentUser,
+        rombels: updatedRombels,
+        subjects: updatedSubjects
+      };
+    });
+  };
+
   const handleDeleteUser = (userId: string) => {
     setState(prev => ({
       ...prev,
@@ -318,6 +359,7 @@ export default function App() {
         cloudStatus={cloudStatus}
         lastSyncedTime={lastSyncedTime}
         onSelectUser={handleSelectUser}
+        onUpdateUser={handleUpdateUser}
         onToggleLock={handleToggleLock}
         onResetData={handleResetData}
         onExportData={handleExportData}
@@ -402,6 +444,7 @@ export default function App() {
               onAddRombel={handleAddRombel}
               onDeleteRombel={handleDeleteRombel}
               onAddUser={handleAddUser}
+              onUpdateUser={handleUpdateUser}
               onDeleteUser={handleDeleteUser}
             />
           )}
@@ -410,6 +453,7 @@ export default function App() {
             <DataPendidikView
               state={state}
               onAddUser={handleAddUser}
+              onUpdateUser={handleUpdateUser}
               onDeleteUser={handleDeleteUser}
             />
           )}

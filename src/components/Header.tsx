@@ -11,7 +11,10 @@ import {
   RotateCcw,
   CheckCircle2,
   SlidersHorizontal,
-  Cloud
+  Cloud,
+  Edit3,
+  X,
+  Save
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -22,6 +25,7 @@ interface HeaderProps {
   cloudStatus?: 'connected' | 'syncing' | 'offline';
   lastSyncedTime?: string | null;
   onSelectUser: (user: UserProfile) => void;
+  onUpdateUser?: (user: UserProfile) => void;
   onToggleLock: () => void;
   onResetData: () => void;
   onExportData: () => void;
@@ -35,12 +39,40 @@ export const Header: React.FC<HeaderProps> = ({
   cloudStatus = 'connected',
   lastSyncedTime = null,
   onSelectUser,
+  onUpdateUser,
   onToggleLock,
   onResetData,
   onExportData
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
+
+  // Edit Self Profile Modal
+  const [isEditSelfOpen, setIsEditSelfOpen] = useState(false);
+  const [editName, setEditName] = useState(currentUser.name);
+  const [editNip, setEditNip] = useState(currentUser.nip === '-' ? '' : currentUser.nip || '');
+  const [editPembinaEkskul, setEditPembinaEkskul] = useState(currentUser.pembinaEkskul || '');
+
+  const handleOpenEditSelf = () => {
+    setEditName(currentUser.name);
+    setEditNip(currentUser.nip === '-' ? '' : currentUser.nip || '');
+    setEditPembinaEkskul(currentUser.pembinaEkskul || '');
+    setIsEditSelfOpen(true);
+  };
+
+  const handleSaveSelf = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editName.trim() || !onUpdateUser) return;
+
+    onUpdateUser({
+      ...currentUser,
+      name: editName.trim(),
+      nip: editNip.trim() || '-',
+      tugasTambahan: editPembinaEkskul ? `Pembina ${editPembinaEkskul}` : undefined,
+      pembinaEkskul: editPembinaEkskul || undefined
+    });
+    setIsEditSelfOpen(false);
+  };
 
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
@@ -214,11 +246,25 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={() => setShowUserDropdown(false)} 
                   />
                   <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-                    <div className="px-3.5 py-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-slate-900">Ganti Akses Multi-User</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Pilih profil pengguna untuk mencoba hak akses guru atau wali kelas:
-                      </p>
+                    <div className="px-3.5 py-2 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">Ganti Akses Multi-User</p>
+                        <p className="text-[10px] text-slate-500">Pilih atau perbarui profil guru:</p>
+                      </div>
+                      {onUpdateUser && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            handleOpenEditSelf();
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg cursor-pointer transition-colors"
+                          title="Edit Data Profil Saya"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>Edit Profil</span>
+                        </button>
+                      )}
                     </div>
 
                     <div className="py-1">
@@ -309,6 +355,92 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal Edit Profil Saya */}
+      {isEditSelfOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <form onSubmit={handleSaveSelf} className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-blue-600" />
+                <span>Edit Profil Saya</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsEditSelfOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-3.5 space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nama Lengkap & Gelar
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nomor Induk Pegawai (NIP)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 19890520 201503 1 004"
+                  value={editNip}
+                  onChange={(e) => setEditNip(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                  <span>Tugas Tambahan (Pembina Ekskul)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Opsional</span>
+                </label>
+                <select
+                  value={editPembinaEkskul}
+                  onChange={(e) => setEditPembinaEkskul(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="">- Tidak Ada Tugas Tambahan -</option>
+                  <option value="OSIS">Pembina OSIS</option>
+                  <option value="Pramuka">Pembina Pramuka</option>
+                  <option value="Rohis">Pembina Rohis</option>
+                  <option value="UKS">Pembina UKS</option>
+                  <option value="Seni Tari">Pembina Seni Tari</option>
+                  <option value="Olah Raga">Pembina Olah Raga</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditSelfOpen(false)}
+                className="px-3.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Simpan</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </header>

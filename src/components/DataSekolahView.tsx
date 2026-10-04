@@ -28,7 +28,9 @@ import {
   UserPlus,
   Award,
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  Edit3,
+  X
 } from 'lucide-react';
 import { defaultLogoPemda, defaultLogoSekolah } from '../data/initialData';
 import { compressLogoImage } from '../utils/imageCompressor';
@@ -41,6 +43,7 @@ interface DataSekolahViewProps {
   onAddRombel: (rombel: Rombel) => void;
   onDeleteRombel: (rombelId: string) => void;
   onAddUser: (user: UserProfile) => void;
+  onUpdateUser: (user: UserProfile) => void;
   onDeleteUser: (userId: string) => void;
 }
 
@@ -52,6 +55,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   onAddRombel,
   onDeleteRombel,
   onAddUser,
+  onUpdateUser,
   onDeleteUser
 }) => {
   const { school, isLocked, rombels, users, subjects } = state;
@@ -82,6 +86,46 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   const [guruSubjectId, setGuruSubjectId] = useState(subjects[0]?.id || 'mtk');
   const [guruRombelId, setGuruRombelId] = useState(rombels[0]?.id || '7A');
   const [guruPembinaEkskul, setGuruPembinaEkskul] = useState<string>('');
+
+  // Modal Edit Guru
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editGuruNama, setEditGuruNama] = useState('');
+  const [editGuruNip, setEditGuruNip] = useState('');
+  const [editGuruRole, setEditGuruRole] = useState<UserRole>('guru_mapel');
+  const [editGuruSubjectId, setEditGuruSubjectId] = useState('');
+  const [editGuruRombelId, setEditGuruRombelId] = useState('');
+  const [editGuruPembinaEkskul, setEditGuruPembinaEkskul] = useState('');
+
+  const handleOpenEditGuru = (user: UserProfile) => {
+    setEditingUser(user);
+    setEditGuruNama(user.name);
+    setEditGuruNip(user.nip === '-' ? '' : user.nip || '');
+    setEditGuruRole(user.role);
+    setEditGuruSubjectId(user.subjectId || subjects[0]?.id || 'mtk');
+    setEditGuruRombelId(user.rombelId || rombels[0]?.id || '7A');
+    setEditGuruPembinaEkskul(user.pembinaEkskul || '');
+  };
+
+  const handleSubmitEditGuru = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser || !editGuruNama.trim()) return;
+
+    const updatedTeacher: UserProfile = {
+      ...editingUser,
+      name: editGuruNama.trim(),
+      nip: editGuruNip.trim() || '-',
+      role: editGuruRole,
+      subjectId: editGuruRole === 'guru_mapel' ? editGuruSubjectId : (subjects[0]?.id || 'mtk'),
+      rombelId: editGuruRole === 'wali_kelas' ? editGuruRombelId : undefined,
+      tugasTambahan: editGuruPembinaEkskul ? `Pembina ${editGuruPembinaEkskul}` : undefined,
+      pembinaEkskul: editGuruPembinaEkskul || undefined
+    };
+
+    onUpdateUser(updatedTeacher);
+    setEditingUser(null);
+    setSuccessMsg(`Data pendidik "${updatedTeacher.name}" berhasil diperbarui.`);
+    setTimeout(() => setSuccessMsg(null), 3500);
+  };
 
   const handleChange = (field: keyof SchoolInfo, val: string) => {
     setFormData(prev => ({
@@ -767,20 +811,31 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {users.length > 1 && u.role !== 'admin' && (
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
-                            onClick={() => {
-                              if (confirm(`Hapus guru "${u.name}" dari sistem e-Rapor?`)) {
-                                onDeleteUser(u.id);
-                              }
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded transition-colors"
-                            title="Hapus Guru"
+                            onClick={() => handleOpenEditGuru(u)}
+                            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                            title="Edit Data Guru"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                        )}
+
+                          {users.length > 1 && u.role !== 'admin' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Hapus guru "${u.name}" dari sistem e-Rapor?`)) {
+                                  onDeleteUser(u.id);
+                                }
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                              title="Hapus Guru"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1122,15 +1177,158 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAddGuruOpen(false)}
-                className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs"
+                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer"
               >
                 Simpan Guru
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Modal Edit Guru */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <form onSubmit={handleSubmitEditGuru} className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-blue-600" />
+                <span>Edit Profil & Data Pendidik</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nama Lengkap & Gelar Pendidik
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editGuruNama}
+                  onChange={(e) => setEditGuruNama(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nomor Induk Pegawai (NIP)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 19890520 201503 1 004 (atau - jika non-NIP)"
+                  value={editGuruNip}
+                  onChange={(e) => setEditGuruNip(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Peran Akses Utama di e-Rapor
+                </label>
+                <select
+                  value={editGuruRole}
+                  onChange={(e) => setEditGuruRole(e.target.value as UserRole)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="guru_mapel">Guru Mata Pelajaran</option>
+                  <option value="wali_kelas">Wali Kelas & Guru Mapel</option>
+                  <option value="admin">Administrator Sekolah</option>
+                  <option value="kepala_sekolah">Kepala Sekolah</option>
+                </select>
+              </div>
+
+              {/* Pilihan Mapel jika guru mapel */}
+              {editGuruRole === 'guru_mapel' && (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Mata Pelajaran yang Diampu
+                  </label>
+                  <select
+                    value={editGuruSubjectId}
+                    onChange={(e) => setEditGuruSubjectId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {subjects.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.nama} ({s.kode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Pilihan Rombel jika wali kelas */}
+              {editGuruRole === 'wali_kelas' && (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Rombel Binaan Sebagai Wali Kelas
+                  </label>
+                  <select
+                    value={editGuruRombelId}
+                    onChange={(e) => setEditGuruRombelId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {rombels.map(r => (
+                      <option key={r.id} value={r.id}>
+                        {r.nama} ({r.fase})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Tugas Tambahan Pembina Ekskul */}
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                  <span>Tugas Tambahan (Pembina Ekstrakurikuler)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Opsional</span>
+                </label>
+                <select
+                  value={editGuruPembinaEkskul}
+                  onChange={(e) => setEditGuruPembinaEkskul(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="">- Tidak Ada Tugas Tambahan -</option>
+                  <option value="OSIS">Pembina OSIS</option>
+                  <option value="Pramuka">Pembina Pramuka</option>
+                  <option value="Rohis">Pembina Rohis</option>
+                  <option value="UKS">Pembina UKS</option>
+                  <option value="Seni Tari">Pembina Seni Tari</option>
+                  <option value="Olah Raga">Pembina Olah Raga</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Simpan Perubahan</span>
               </button>
             </div>
           </form>
