@@ -49,7 +49,7 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
   const [guruNip, setGuruNip] = useState('');
   const [guruRole, setGuruRole] = useState<UserRole>('guru_mapel');
   const [guruSubjectId, setGuruSubjectId] = useState(subjects[0]?.id || 'mtk');
-  const [guruRombelId, setGuruRombelId] = useState(rombels[0]?.id || '7A');
+  const [guruRombelId, setGuruRombelId] = useState(rombels[0]?.id || '7.1');
   const [guruPembinaEkskul, setGuruPembinaEkskul] = useState<string>('');
 
   // Modal Edit Guru
@@ -68,7 +68,7 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
     setEditNip(user.nip === '-' ? '' : user.nip || '');
     setEditRole(user.role);
     setEditSubjectId(user.subjectId || subjects[0]?.id || 'mtk');
-    setEditRombelId(user.rombelId || rombels[0]?.id || '7A');
+    setEditRombelId(user.rombelId || rombels[0]?.id || '7.1');
     setEditPembinaEkskul(user.pembinaEkskul || '');
   };
 
@@ -311,7 +311,7 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                         <span>Mengampu: <strong>{subject?.nama || 'Matematika'}</strong></span>
                       )}
                       {u.role === 'wali_kelas' && (
-                        <span>Wali Kelas: <strong>{rombel?.nama || 'Kelas VII-A'}</strong></span>
+                        <span>Wali Kelas: <strong>{rombel?.nama || 'Kelas 7.1'}</strong></span>
                       )}
                       {(u.role === 'admin' || u.role === 'kepala_sekolah') && (
                         <span className="text-slate-500 italic">Pimpinan Satuan Pendidikan</span>

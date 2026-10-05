@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'guru_mapel':
         return 'Guru Mata Pelajaran';
       case 'wali_kelas':
-        return 'Wali Kelas VII-A';
+        return currentUser.rombelId ? `Wali Kelas ${currentUser.rombelId}` : 'Wali Kelas';
       case 'admin':
         return 'Admin / Kepala Sekolah';
       case 'kepala_sekolah':

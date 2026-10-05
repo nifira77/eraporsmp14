@@ -30,7 +30,7 @@ export const TujuanPembelajaranView: React.FC<TujuanPembelajaranViewProps> = ({
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
     currentUser.subjectId || 'mtk'
   );
-  // Options: 'all' | 'all-7' | 'all-8' | 'all-9' | specific rombel id (e.g. '7A', '7B')
+  // Options: 'all' | 'all-7' | 'all-8' | 'all-9' | specific rombel id (e.g. '7.1', '7.2')
   const [selectedRombelId, setSelectedRombelId] = useState<string>('all');
 
   // Form modal state
@@ -51,7 +51,7 @@ export const TujuanPembelajaranView: React.FC<TujuanPembelajaranViewProps> = ({
       return true;
     }
     if (selectedRombelId === 'all-7') {
-      return tp.rombelId === 'all' || tp.rombelId === 'all-7' || tp.rombelId === '7A' || tp.rombelId === '7B' || tp.rombelId?.startsWith('7');
+      return tp.rombelId === 'all' || tp.rombelId === 'all-7' || tp.rombelId?.startsWith('7');
     }
     if (selectedRombelId === 'all-8') {
       return tp.rombelId === 'all' || tp.rombelId === 'all-8' || tp.rombelId?.startsWith('8');

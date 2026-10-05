@@ -32,10 +32,21 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
     attendances, 
     extracurriculars, 
     studentExtracurriculars,
+    rombels = [],
     isLocked,
     currentUser,
     users
   } = state;
+
+  const [selectedRombelId, setSelectedRombelId] = useState<string>(() => {
+    if (currentUser?.rombelId && rombels.some(r => r.id === currentUser.rombelId)) {
+      return currentUser.rombelId;
+    }
+    return rombels[0]?.id || '7.1';
+  });
+
+  const selectedRombel = rombels.find(r => r.id === selectedRombelId) || rombels[0] || { id: '7.1', nama: 'Kelas 7.1' };
+  const filteredStudents = students.filter(s => s.rombelId === selectedRombelId);
 
   const standardEkskulNames = ['OSIS', 'Pramuka', 'Rohis', 'UKS', 'Seni Tari', 'Olah Raga'];
   const standardEkskuls = useMemo(() => {
@@ -57,7 +68,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
     const map: Record<string, StudentAttendance> = {};
     students.forEach(s => {
       const att = attendances.find(a => a.studentId === s.id);
-      map[s.id] = att ? { ...att } : { studentId: s.id, rombelId: '7A', sakit: 0, izin: 0, alpa: 0 };
+      map[s.id] = att ? { ...att } : { studentId: s.id, rombelId: s.rombelId || '7.1', sakit: 0, izin: 0, alpa: 0 };
     });
     return map;
   });
@@ -67,7 +78,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
 
   // New ekskul form modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id || '');
+  const [selectedStudentId, setSelectedStudentId] = useState(filteredStudents[0]?.id || students[0]?.id || '');
   const [selectedEkskulId, setSelectedEkskulId] = useState(extracurriculars[0]?.id || '');
   const [selectedPredikat, setSelectedPredikat] = useState<'Sangat Baik' | 'Baik' | 'Cukup'>('Baik');
   const [ekskulKeterangan, setEkskulKeterangan] = useState('');
@@ -106,7 +117,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
     const newEntry: StudentExtracurricular = {
       id: `se-${Date.now()}`,
       studentId: selectedStudentId,
-      rombelId: '7A',
+      rombelId: selectedRombelId,
       ekskulId: selectedEkskulId,
       predikat: selectedPredikat,
       keterangan: ekskulKeterangan
@@ -134,30 +145,51 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
           </p>
         </div>
 
-        {/* Tab switch */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          <button
-            type="button"
-            onClick={() => setActiveTab('presensi')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              activeTab === 'presensi' 
-                ? 'bg-white text-blue-700 shadow-xs' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Ketidakhadiran (Presensi)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('ekskul')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              activeTab === 'ekskul' 
-                ? 'bg-white text-blue-700 shadow-xs' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Ekstrakurikuler
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Class Selector */}
+          <div className="flex items-center gap-1.5 bg-blue-50/90 px-3 py-1.5 rounded-lg border border-blue-200">
+            <span className="text-xs font-bold text-blue-900">Kelas:</span>
+            <select
+              value={selectedRombelId}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedRombelId(newId);
+                const first = students.find(s => s.rombelId === newId);
+                if (first) setSelectedStudentId(first.id);
+              }}
+              className="bg-white border border-blue-300 text-blue-900 text-xs font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer"
+            >
+              {rombels.map(r => (
+                <option key={r.id} value={r.id}>{r.nama}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tab switch */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveTab('presensi')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'presensi' 
+                  ? 'bg-white text-blue-700 shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Ketidakhadiran (Presensi)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ekskul')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'ekskul' 
+                  ? 'bg-white text-blue-700 shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Ekstrakurikuler
+            </button>
+          </div>
         </div>
       </div>
 
@@ -176,7 +208,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
               <div className="flex items-center gap-2">
                 <CalendarCheck className="w-4 h-4 text-blue-600" />
                 <h3 className="text-sm font-bold text-slate-900">
-                  Rekapitulasi Ketidakhadiran Semester Ganjil - Kelas VII-A
+                  Rekapitulasi Ketidakhadiran Semester {state.school.semester} - {selectedRombel.nama}
                 </h3>
               </div>
               <button
@@ -204,7 +236,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {students.map((student, idx) => {
+                  {filteredStudents.map((student, idx) => {
                     const att = localAttendances[student.id];
                     const s = att?.sakit || 0;
                     const i = att?.izin || 0;

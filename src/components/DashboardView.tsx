@@ -22,7 +22,17 @@ interface DashboardViewProps {
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate }) => {
-  const { school, currentUser, students, subjects, grades, isLocked } = state;
+  const { school, currentUser, students, subjects, grades, rombels = [], isLocked } = state;
+
+  // Resolve current active class for user (wali kelas or default rombel)
+  const userRombel = (rombels && rombels.length > 0)
+    ? (rombels.find(r => r.id === currentUser.rombelId) ||
+       rombels.find(r => r.waliKelasId === currentUser.id) ||
+       rombels[0])
+    : { id: '7.1', nama: 'Kelas 7.1', tingkat: 7, fase: 'Fase D' };
+  const activeClassName = userRombel.nama;
+  const activeClassStudents = students.filter(s => s.rombelId === userRombel.id);
+  const classStudentCount = activeClassStudents.length > 0 ? activeClassStudents.length : 10;
 
   // Compute school & class statistics
   const totalStudents = students.length;
@@ -43,11 +53,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
     ? Math.round((passingGrades.length / validGrades.length) * 100) 
     : 0;
 
-  // Calculate completion status per subject for Class 7A
+  // Calculate completion status per subject for active class
   const subjectProgress = subjects.map(subject => {
-    const subjectGrades = grades.filter(g => g.subjectId === subject.id && g.rombelId === '7A');
+    const subjectGrades = grades.filter(g => g.subjectId === subject.id && (g.rombelId === userRombel.id || g.rombelId === '7.1'));
     const completedCount = subjectGrades.filter(g => g.nilaiAkhirRapor > 0).length;
-    const isComplete = completedCount >= totalStudents;
+    const isComplete = completedCount >= (activeClassStudents.length || totalStudents);
     const avg = subjectGrades.length > 0
       ? (subjectGrades.reduce((sum, g) => sum + g.nilaiAkhirRapor, 0) / subjectGrades.length).toFixed(1)
       : '0';
@@ -55,7 +65,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
     return {
       ...subject,
       completedCount,
-      totalStudents,
+      totalStudents: activeClassStudents.length || totalStudents,
       isComplete,
       avg
     };
@@ -110,9 +120,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
               type="button"
               onClick={() => onNavigate('cetak_rapor')}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              title={`Cetak rapor untuk peserta didik di ${activeClassName}`}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Cetak Rapor Kelas VII-A</span>
+              <span>Cetak Rapor {activeClassName}</span>
+            </button>
+          )}
+
+          {(currentUser.role === 'admin' || currentUser.role === 'kepala_sekolah') && (
+            <button
+              type="button"
+              onClick={() => onNavigate('cetak_rapor')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              title="Buka Pusat Cetak Dokumen Rapor Berdasarkan Kelas"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Cetak Rapor Berdasarkan Kelas ({rombels.length} Kelas)</span>
             </button>
           )}
 
@@ -190,9 +213,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
         {/* Metric 1 */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500">Total Peserta Didik (7A)</p>
+            <p className="text-xs font-medium text-slate-500">
+              {currentUser.role === 'wali_kelas' ? `Peserta Didik (${activeClassName})` : `Total Peserta Didik (12 Kelas)`}
+            </p>
             <p className="text-2xl font-bold text-slate-900 font-mono tabular-nums mt-1">
-              {totalStudents} <span className="text-xs font-normal text-slate-500">Siswa</span>
+              {currentUser.role === 'wali_kelas' ? classStudentCount : totalStudents} <span className="text-xs font-normal text-slate-500">Siswa</span>
             </p>
             <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-500">
               <span className="text-emerald-600 font-semibold">100%</span>
@@ -264,7 +289,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
                 Progress Penginputan Nilai Guru Mata Pelajaran
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Pemantauan kesiapan data rapor Semester {school.semester} Kelas VII-A
+                Pemantauan kesiapan data rapor Semester {school.semester} {currentUser.role === 'wali_kelas' ? activeClassName : 'Semua Rombel (12 Kelas)'}
               </p>
             </div>
             <div className="text-right">

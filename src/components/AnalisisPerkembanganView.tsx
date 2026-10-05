@@ -26,14 +26,28 @@ interface AnalisisPerkembanganViewProps {
 }
 
 export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> = ({ state }) => {
-  const { students, subjects, grades, attendances, learningObjectives, school } = state;
+  const { students, subjects, grades, attendances, learningObjectives, school, rombels = [], currentUser } = state;
+
+  const [selectedRombelId, setSelectedRombelId] = useState<string>(() => {
+    if (currentUser?.rombelId && rombels.some(r => r.id === currentUser.rombelId)) {
+      return currentUser.rombelId;
+    }
+    return rombels[0]?.id || '7.1';
+  });
+
+  const selectedRombel = rombels.find(r => r.id === selectedRombelId) || rombels[0] || { id: '7.1', nama: 'Kelas 7.1' };
+  const classStudents = useMemo(() => students.filter(s => s.rombelId === selectedRombelId), [students, selectedRombelId]);
 
   const [activeTab, setActiveTab] = useState<'ringkasan' | 'radar_siswa' | 'remedial' | 'ranking'>('ringkasan');
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(students[0]?.id || '');
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(() => {
+    const list = students.filter(s => s.rombelId === (currentUser?.rombelId || rombels[0]?.id || '7.1'));
+    return list[0]?.id || students[0]?.id || '';
+  });
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('mtk');
 
   // Selected student
-  const selectedStudent = students.find(s => s.id === selectedStudentId) || students[0];
+  const activeStudents = classStudents.length > 0 ? classStudents : students;
+  const selectedStudent = activeStudents.find(s => s.id === selectedStudentId) || activeStudents[0] || students[0];
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId) || subjects[0];
 
   // Subject statistics
@@ -62,7 +76,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
 
   // Overall class ranking data
   const studentRankings = useMemo(() => {
-    const list = students.map(student => {
+    const list = activeStudents.map(student => {
       const studentSubjs = subjects.filter(subj => {
         const isReligious = ['pai', 'pak_kristen', 'pak_katolik', 'pah_hindu', 'pab_buddha'].includes(subj.id);
         if (!isReligious) return true;
@@ -209,7 +223,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
     const encoded = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encoded);
-    link.setAttribute('download', `Analisis_Perkembangan_Kelas_VIIA_SMPN14Tubaba.csv`);
+    link.setAttribute('download', `Analisis_Perkembangan_${selectedRombel.nama.replace(/\s+/g, '_')}_SMPN14Tubaba.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -229,6 +243,25 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Class Selector */}
+          <div className="flex items-center gap-1.5 bg-blue-50/90 px-3 py-1.5 rounded-lg border border-blue-200 text-xs">
+            <span className="font-bold text-blue-900">Kelas:</span>
+            <select
+              value={selectedRombelId}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedRombelId(newId);
+                const first = students.find(s => s.rombelId === newId);
+                if (first) setSelectedStudentId(first.id);
+              }}
+              className="bg-white border border-blue-300 text-blue-900 font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer"
+            >
+              {rombels.map(r => (
+                <option key={r.id} value={r.id}>{r.nama}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
             <button
               type="button"
@@ -369,7 +402,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
                 Tabel Daya Serap & Distribusi Mutu Per Mata Pelajaran
               </h3>
               <span className="text-xs text-slate-500">
-                Semester Ganjil 2024/2025 · Kelas VII-A
+                Semester {school.semester} {school.tahunAjaran} · {selectedRombel.nama}
               </span>
             </div>
 
@@ -488,7 +521,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
                 <span>Analisis Profil Belajar:</span>
               </div>
               <p className="text-[11px] leading-relaxed text-blue-800">
-                Grafik radar membandingkan kekuatan relatif siswa pada 11 mapel. Garis biru tebal mewakili nilai siswa, sedangkan garis putus-putus abu-abu adalah rata-rata kelas VII-A.
+                Grafik radar membandingkan kekuatan relatif siswa pada 11 mapel. Garis biru tebal mewakili nilai siswa, sedangkan garis putus-putus abu-abu adalah rata-rata {selectedRombel.nama}.
               </p>
             </div>
           </div>
@@ -501,7 +534,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
                   Radar Performa Kompetensi: {selectedStudent.nama}
                 </h3>
                 <p className="text-xs text-slate-500 font-mono">
-                  NISN: {selectedStudent.nisn} · Kelas VII-A
+                  NISN: {selectedStudent.nisn} · {selectedRombel.nama}
                 </p>
               </div>
 
@@ -609,7 +642,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
       )}
 
       {/* ============================================================== */}
-      {/* TAB 3: PERINGKAT & KLASIFIKASI HASIL BELAJAR KELAS VII-A */}
+      {/* TAB 3: PERINGKAT & KLASIFIKASI HASIL BELAJAR */}
       {/* ============================================================== */}
       {activeTab === 'ranking' && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
@@ -617,14 +650,14 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
             <div>
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Award className="w-4 h-4 text-amber-500" />
-                Daftar Peringkat & Rekapitulasi Prestasi Akademik Kelas VII-A
+                Daftar Peringkat & Rekapitulasi Prestasi Akademik {selectedRombel.nama}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Urutan berdasarkan akumulasi nilai akhir 11 mata pelajaran Kurikulum Merdeka
               </p>
             </div>
             <span className="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-md border border-amber-200">
-              Total 10 Peserta Didik
+              Total {activeStudents.length} Peserta Didik
             </span>
           </div>
 

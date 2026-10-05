@@ -26,7 +26,17 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
   onUpdateNotes,
   onUpdateAchievements
 }) => {
-  const { students, notes, achievements } = state;
+  const { students, notes, achievements, rombels = [], currentUser } = state;
+
+  const [selectedRombelId, setSelectedRombelId] = useState<string>(() => {
+    if (currentUser?.rombelId && rombels.some(r => r.id === currentUser.rombelId)) {
+      return currentUser.rombelId;
+    }
+    return rombels[0]?.id || '7.1';
+  });
+
+  const selectedRombel = rombels.find(r => r.id === selectedRombelId) || rombels[0] || { id: '7.1', nama: 'Kelas 7.1' };
+  const filteredStudents = students.filter(s => s.rombelId === selectedRombelId);
 
   const [activeTab, setActiveTab] = useState<'catatan' | 'prestasi'>('catatan');
   const [localNotes, setLocalNotes] = useState<Record<string, StudentNote>>(() => {
@@ -35,7 +45,7 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
       const n = notes.find(item => item.studentId === s.id);
       map[s.id] = n 
         ? { ...n } 
-        : { studentId: s.id, rombelId: '7A', catatan: 'Pertahankan prestasi belajar dan keaktifan di kelas.', statusKenaikan: 'Memenuhi Kriteria Ketuntasan Belajar' };
+        : { studentId: s.id, rombelId: s.rombelId || '7.1', catatan: 'Pertahankan prestasi belajar dan keaktifan di kelas.', statusKenaikan: 'Memenuhi Kriteria Ketuntasan Belajar' };
     });
     return map;
   });
@@ -45,7 +55,7 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
 
   // Modal new achievement
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [achStudentId, setAchStudentId] = useState(students[0]?.id || '');
+  const [achStudentId, setAchStudentId] = useState(filteredStudents[0]?.id || students[0]?.id || '');
   const [achBidang, setAchBidang] = useState('Non-Akademik');
   const [achTitle, setAchTitle] = useState('');
   const [achLevel, setAchLevel] = useState<'Kecamatan' | 'Kabupaten' | 'Provinsi' | 'Nasional'>('Kabupaten');
@@ -85,7 +95,7 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
     const newAch: StudentAchievement = {
       id: `ach-${Date.now()}`,
       studentId: achStudentId,
-      rombelId: '7A',
+      rombelId: selectedRombelId,
       bidang: achBidang,
       prestasi: achTitle,
       tingkat: achLevel,
@@ -121,29 +131,50 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          <button
-            type="button"
-            onClick={() => setActiveTab('catatan')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              activeTab === 'catatan' 
-                ? 'bg-white text-blue-700 shadow-xs' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Catatan Wali Kelas
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('prestasi')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              activeTab === 'prestasi' 
-                ? 'bg-white text-blue-700 shadow-xs' 
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Prestasi Siswa
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Class Selector */}
+          <div className="flex items-center gap-1.5 bg-blue-50/90 px-3 py-1.5 rounded-lg border border-blue-200">
+            <span className="text-xs font-bold text-blue-900">Kelas:</span>
+            <select
+              value={selectedRombelId}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedRombelId(newId);
+                const firstInNewClass = students.find(s => s.rombelId === newId);
+                if (firstInNewClass) setAchStudentId(firstInNewClass.id);
+              }}
+              className="bg-white border border-blue-300 text-blue-900 text-xs font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer"
+            >
+              {rombels.map(r => (
+                <option key={r.id} value={r.id}>{r.nama}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveTab('catatan')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'catatan' 
+                  ? 'bg-white text-blue-700 shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Catatan Wali Kelas
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('prestasi')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'prestasi' 
+                  ? 'bg-white text-blue-700 shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Prestasi Siswa
+            </button>
+          </div>
         </div>
       </div>
 
@@ -162,7 +193,7 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-blue-600" />
                 <h3 className="text-sm font-bold text-slate-900">
-                  Formulir Catatan Wali Kelas Semester {state.school.semester} - Kelas VII-A
+                  Formulir Catatan Wali Kelas Semester {state.school.semester} - {selectedRombel.nama}
                 </h3>
               </div>
               <button
@@ -176,7 +207,7 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
             </div>
 
             <div className="space-y-4">
-              {students.map((student, idx) => (
+              {filteredStudents.map((student, idx) => (
                 <div key={student.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">

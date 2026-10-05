@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   ERaporState, 
@@ -47,26 +47,79 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
   } = state;
 
   // Selected filters and print configurations
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(students[0]?.id || '');
+  // Selected class / rombel for printing
+  const [selectedRombelId, setSelectedRombelId] = useState<string>(() => {
+    if (state.currentUser?.rombelId && rombels.some(r => r.id === state.currentUser.rombelId)) {
+      return state.currentUser.rombelId;
+    }
+    return rombels[0]?.id || '7.1';
+  });
+
+  const selectedRombel = rombels.find(r => r.id === selectedRombelId) || rombels[0];
+
+  // Filter students based on selected class / rombel
+  const classStudents: Student[] = useMemo(() => {
+    const list = students.filter(s => s.rombelId === selectedRombelId);
+    if (list.length === 0 && students.length > 0 && selectedRombelId === (rombels[0]?.id || '7.1')) {
+      return students;
+    }
+    return list;
+  }, [students, selectedRombelId, rombels]);
+
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(() => {
+    const list = students.filter(s => s.rombelId === (state.currentUser?.rombelId || rombels[0]?.id || '7.1'));
+    return list[0]?.id || students[0]?.id || '';
+  });
+
+  // Keep selected student synced when class changes
+  useEffect(() => {
+    if (!classStudents.some(s => s.id === selectedStudentId)) {
+      if (classStudents.length > 0) {
+        setSelectedStudentId(classStudents[0].id);
+      }
+    }
+  }, [classStudents, selectedStudentId]);
+
+  const selectedStudent = classStudents.find(s => s.id === selectedStudentId) || classStudents[0] || students[0];
+
   const [printMode, setPrintMode] = useState<PrintMode>('rapor_nilai');
   const [raporPeriod, setRaporPeriod] = useState<AssessmentMode>('akhir_semester');
   const [printTarget, setPrintTarget] = useState<PrintTarget>('single');
 
-  const selectedStudent = students.find(s => s.id === selectedStudentId) || students[0];
-  const selectedRombel = rombels.find(r => r.id === selectedStudent?.rombelId) || rombels[0];
-
   // List of students to render
-  const targetStudents = printTarget === 'all' ? students : [selectedStudent];
+  const targetStudents = printTarget === 'all' ? classStudents : (selectedStudent ? [selectedStudent] : []);
 
   // Handler for direct browser print
   const handlePrint = () => {
     window.print();
   };
 
+  // Dynamic label for the primary print action button based on selected class & target
+  const getPrintButtonLabel = () => {
+    const rombelName = selectedRombel?.nama || 'Kelas';
+    const totalCount = classStudents.length;
+
+    if (printMode === 'leger') {
+      return `Cetak PDF Leger ${rombelName}`;
+    }
+
+    let docName = 'Rapor';
+    if (printMode === 'cover') docName = 'Cover Rapor';
+    if (printMode === 'identitas') docName = 'Biodata';
+
+    if (printTarget === 'all') {
+      return `Cetak ${docName} ${rombelName} (Semua Siswa - ${totalCount})`;
+    }
+
+    const fullName = selectedStudent?.nama || 'Siswa';
+    const shortName = fullName.length > 20 ? fullName.split(' ').slice(0, 2).join(' ') : fullName;
+    return `Cetak ${docName} ${rombelName} (${shortName})`;
+  };
+
   // Download Leger in Microsoft Excel format (.xlsx)
   const handleDownloadLegerExcel = () => {
-    // 1. Calculate totals and rankings for all students
-    const studentTotals = students.map(student => {
+    // 1. Calculate totals and rankings for students in this class
+    const studentTotals = classStudents.map(student => {
       const studentSubjs = subjects.filter(subj => {
         const isReligious = ['pai', 'pak_kristen', 'pak_katolik', 'pah_hindu', 'pab_buddha'].includes(subj.id);
         if (!isReligious) return true;
@@ -99,7 +152,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
     });
 
     // 2. Prepare Leger Sheet rows
-    const rows = students.map((student, idx) => {
+    const rows = classStudents.map((student, idx) => {
       const studentRecord = studentTotals.find(s => s.student.id === student.id);
       const att = attendances.find(a => a.studentId === student.id) || { sakit: 0, izin: 0, alpa: 0 };
 
@@ -285,41 +338,168 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   type="button"
                   onClick={handleDownloadLegerExcel}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
-                  title="Unduh Leger Nilai dalam format Microsoft Excel (.xlsx)"
+                  title={`Unduh Leger Nilai ${selectedRombel?.nama} (.xlsx)`}
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  <span>Unduh Leger Excel (.xlsx)</span>
+                  <span>Unduh Leger Excel {selectedRombel?.nama} (.xlsx)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleDownloadLegerPDF}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
-                  title="Unduh / Cetak Dokumen Leger Nilai dalam format PDF (Landscape A4)"
+                  title={`Unduh / Cetak Dokumen Leger Nilai ${selectedRombel?.nama} (PDF Landscape A4)`}
                 >
                   <FileDown className="w-4 h-4" />
-                  <span>Unduh / Cetak PDF</span>
+                  <span>{getPrintButtonLabel()}</span>
                 </button>
               </>
             ) : (
               <button
                 type="button"
                 onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                disabled={targetStudents.length === 0}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                title={`Cetak dokumen rapor resmi untuk ${selectedRombel?.nama}`}
               >
                 <Printer className="w-4 h-4" />
-                <span>
-                  {printTarget === 'all' 
-                    ? `Cetak Semua Siswa (${students.length} Siswa)` 
-                    : `Cetak Rapor (${selectedStudent?.nama.split(' ')[0]})`}
-                </span>
+                <span>{getPrintButtonLabel()}</span>
               </button>
             )}
           </div>
         </div>
 
+        {/* Quick Class Selector Bar (Pilihan Cepat Berdasarkan Kelas 7, 8, 9) */}
+        <div className="bg-slate-50/90 p-3 rounded-xl border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 shrink-0 font-bold text-slate-800">
+            <Layers className="w-4 h-4 text-blue-600" />
+            <span>Pilih Kelas Cetak Rapor:</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Tingkat 7 */}
+            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-500 px-1.5">Kelas 7:</span>
+              {['7.1', '7.2', '7.3', '7.4'].map(cId => {
+                const isSelected = selectedRombelId === cId;
+                const sCount = students.filter(s => s.rombelId === cId).length;
+                return (
+                  <button
+                    key={cId}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRombelId(cId);
+                      const first = students.find(s => s.rombelId === cId);
+                      if (first) setSelectedStudentId(first.id);
+                    }}
+                    className={`px-2 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                    title={`Pilih Kelas ${cId} (${sCount} Siswa)`}
+                  >
+                    <span>{cId}</span>
+                    <span className={`text-[10px] px-1 rounded-full ${isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-500'}`}>
+                      {sCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tingkat 8 */}
+            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-500 px-1.5">Kelas 8:</span>
+              {['8.1', '8.2', '8.3', '8.4'].map(cId => {
+                const isSelected = selectedRombelId === cId;
+                const sCount = students.filter(s => s.rombelId === cId).length;
+                return (
+                  <button
+                    key={cId}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRombelId(cId);
+                      const first = students.find(s => s.rombelId === cId);
+                      if (first) setSelectedStudentId(first.id);
+                    }}
+                    className={`px-2 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                    title={`Pilih Kelas ${cId} (${sCount} Siswa)`}
+                  >
+                    <span>{cId}</span>
+                    <span className={`text-[10px] px-1 rounded-full ${isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-500'}`}>
+                      {sCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tingkat 9 */}
+            <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-500 px-1.5">Kelas 9:</span>
+              {['9.1', '9.2', '9.3', '9.4'].map(cId => {
+                const isSelected = selectedRombelId === cId;
+                const sCount = students.filter(s => s.rombelId === cId).length;
+                return (
+                  <button
+                    key={cId}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRombelId(cId);
+                      const first = students.find(s => s.rombelId === cId);
+                      if (first) setSelectedStudentId(first.id);
+                    }}
+                    className={`px-2 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                    title={`Pilih Kelas ${cId} (${sCount} Siswa)`}
+                  >
+                    <span>{cId}</span>
+                    <span className={`text-[10px] px-1 rounded-full ${isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-500'}`}>
+                      {sCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Filter Controls Row */}
         <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Pilihan Rombel / Kelas Dropdown */}
+          <div className="flex items-center gap-1.5 bg-blue-50/90 px-3 py-1.5 rounded-xl border border-blue-200">
+            <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5 shrink-0">
+              <Layers className="w-3.5 h-3.5 text-blue-700" />
+              <span>Kelas Aktif:</span>
+            </label>
+            <select
+              value={selectedRombelId}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedRombelId(newId);
+                const firstInNewClass = students.find(s => s.rombelId === newId);
+                if (firstInNewClass) {
+                  setSelectedStudentId(firstInNewClass.id);
+                }
+              }}
+              className="bg-white border border-blue-300 text-blue-900 text-xs font-bold rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+            >
+              {rombels.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.nama} ({students.filter(s => s.rombelId === r.id).length} Siswa)
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Pilihan Periode Rapor: STS vs SAS */}
           <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
@@ -399,8 +579,9 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   className={`px-2.5 py-1 rounded font-semibold cursor-pointer ${
                     printTarget === 'single' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
+                  title={`Cetak rapor per siswa di ${selectedRombel?.nama}`}
                 >
-                  Per Siswa
+                  Per Siswa ({selectedRombel?.nama})
                 </button>
                 <button
                   type="button"
@@ -408,9 +589,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   className={`flex items-center gap-1 px-2.5 py-1 rounded font-bold cursor-pointer ${
                     printTarget === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
+                  title={`Cetak rapor seluruh peserta didik di ${selectedRombel?.nama}`}
                 >
                   <Users className="w-3.5 h-3.5" />
-                  <span>Cetak Semua ({students.length})</span>
+                  <span>Cetak 1 Kelas ({selectedRombel?.nama} - {classStudents.length} Siswa)</span>
                 </button>
               </div>
 
@@ -420,7 +602,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   onChange={(e) => setSelectedStudentId(e.target.value)}
                   className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs cursor-pointer"
                 >
-                  {students.map((s, idx) => (
+                  {classStudents.map((s, idx) => (
                     <option key={s.id} value={s.id}>
                       {idx + 1}. {s.nama} ({s.nisn})
                     </option>
@@ -442,7 +624,9 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
             </span>
             <span>·</span>
             <span className="font-semibold text-blue-800">
-              {printTarget === 'all' ? `Mode Bundle: Semua Siswa (${students.length} Lembar)` : `Siswa: ${selectedStudent?.nama}`}
+              {printTarget === 'all' 
+                ? `Mode Bundle: Semua Siswa ${selectedRombel?.nama} (${classStudents.length} Lembar)` 
+                : `Siswa: ${selectedStudent?.nama} (${selectedRombel?.nama})`}
             </span>
           </div>
 
@@ -1052,7 +1236,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
         )}
 
         {/* ============================================================== */}
-        {/* MODE 4: LEGER NILAI SEMESTER (FORMAT SHEET LENGKAP KELAS VII-A) */}
+        {/* MODE 4: LEGER NILAI SEMESTER (FORMAT SHEET LENGKAP) */}
         {/* ============================================================== */}
         {printMode === 'leger' && (
           <div className="flex flex-col items-center gap-4 w-full">
@@ -1074,7 +1258,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Unduh File Excel (.xlsx)</span>
+                  <span>Unduh File Excel {selectedRombel?.nama} (.xlsx)</span>
                 </button>
                 <button
                   type="button"
@@ -1082,7 +1266,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                 >
                   <FileDown className="w-3.5 h-3.5" />
-                  <span>Unduh / Cetak Dokumen PDF</span>
+                  <span>Unduh / Cetak PDF Leger {selectedRombel?.nama}</span>
                 </button>
               </div>
             </div>

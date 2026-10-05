@@ -20,7 +20,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
   onOpenSubjectGrades
 }) => {
   const { students, subjects, grades, rombels } = state;
-  const [selectedRombelId, setSelectedRombelId] = useState('7A');
+  const [selectedRombelId, setSelectedRombelId] = useState(rombels[0]?.id || '7.1');
 
   const rombelStudents = students.filter(s => s.rombelId === selectedRombelId);
   const selectedRombel = rombels.find(r => r.id === selectedRombelId) || rombels[0];
@@ -83,7 +83,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
             <span className="text-xs font-bold text-slate-900">
-              Kesiapan Cetak Rapor Kelas
+              Kesiapan Cetak Rapor {selectedRombel.nama}
             </span>
             <p className="text-xs text-slate-500 mt-0.5">
               {completeCount} dari {subjects.length} mata pelajaran telah tuntas diinput oleh guru pengampu

@@ -54,7 +54,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
 
   // Selected filters
   const [selectedRombelId, setSelectedRombelId] = useState<string>(
-    currentUser.rombelId || '7A'
+    currentUser.rombelId || rombels[0]?.id || '7.1'
   );
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
     currentUser.subjectId || 'mtk'

@@ -84,7 +84,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   const [guruNip, setGuruNip] = useState('');
   const [guruRole, setGuruRole] = useState<UserRole>('guru_mapel');
   const [guruSubjectId, setGuruSubjectId] = useState(subjects[0]?.id || 'mtk');
-  const [guruRombelId, setGuruRombelId] = useState(rombels[0]?.id || '7A');
+  const [guruRombelId, setGuruRombelId] = useState(rombels[0]?.id || '7.1');
   const [guruPembinaEkskul, setGuruPembinaEkskul] = useState<string>('');
 
   // Modal Edit Guru
@@ -102,7 +102,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
     setEditGuruNip(user.nip === '-' ? '' : user.nip || '');
     setEditGuruRole(user.role);
     setEditGuruSubjectId(user.subjectId || subjects[0]?.id || 'mtk');
-    setEditGuruRombelId(user.rombelId || rombels[0]?.id || '7A');
+    setEditGuruRombelId(user.rombelId || rombels[0]?.id || '7.1');
     setEditGuruPembinaEkskul(user.pembinaEkskul || '');
   };
 
@@ -794,7 +794,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                           <span>Mengampu: <strong>{subjectAssigned?.nama || 'Matematika'}</strong></span>
                         )}
                         {u.role === 'wali_kelas' && (
-                          <span>Wali Kelas: <strong>{rombelAssigned?.nama || 'Kelas VII-A'}</strong></span>
+                          <span>Wali Kelas: <strong>{rombelAssigned?.nama || 'Kelas 7.1'}</strong></span>
                         )}
                         {(u.role === 'admin' || u.role === 'kepala_sekolah') && (
                           <span className="text-slate-500">Penanggung Jawab Lembaga</span>
@@ -949,7 +949,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Kelas VII-C, Kelas VIII-A, Kelas IX-B"
+                  placeholder="Contoh: Kelas 7.1, Kelas 8.2, Kelas 9.3"
                   value={rombelNama}
                   onChange={(e) => setRombelNama(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"

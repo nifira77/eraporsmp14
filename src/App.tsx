@@ -153,7 +153,7 @@ export default function App() {
     const defaultState: ERaporState = {
       school: initialSchoolInfo,
       users: initialUsers,
-      currentUser: initialUsers[1], // Siti Rahmawati (Wali Kelas VII-A)
+      currentUser: initialUsers[1], // Siti Rahmawati (Wali Kelas 7.1)
       rombels: initialRombels,
       subjects: initialSubjects,
       learningObjectives: initialLearningObjectives,

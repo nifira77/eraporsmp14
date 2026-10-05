@@ -50,7 +50,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
   const [formNisn, setFormNisn] = useState('');
   const [formNama, setFormNama] = useState('');
   const [formJk, setFormJk] = useState<'L' | 'P'>('L');
-  const [formRombelId, setFormRombelId] = useState(rombels[0]?.id || '7A');
+  const [formRombelId, setFormRombelId] = useState(rombels[0]?.id || '7.1');
   const [formTempatLahir, setFormTempatLahir] = useState('Tubaba');
   const [formTanggalLahir, setFormTanggalLahir] = useState('2011-05-15');
   const [formAgama, setFormAgama] = useState('Islam');
@@ -96,7 +96,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     setFormNisn(`011${Math.floor(1000000 + Math.random() * 9000000)}`);
     setFormNama('');
     setFormJk('L');
-    setFormRombelId(selectedRombelFilter === 'all' ? (rombels[0]?.id || '7A') : selectedRombelFilter);
+    setFormRombelId(selectedRombelFilter === 'all' ? (rombels[0]?.id || '7.1') : selectedRombelFilter);
     setFormTempatLahir('Tulang Bawang Barat');
     setFormTanggalLahir('2011-06-15');
     setFormAgama('Islam');
@@ -199,7 +199,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'NISN': '0122456791',
         'Nama Lengkap': 'Ahmad Fauzan Pratama',
         'Jenis Kelamin': 'L',
-        'Rombel / Kelas': 'Kelas VII-A',
+        'Rombel / Kelas': 'Kelas 7.1',
         'Tempat Lahir': 'Panaragan',
         'Tanggal Lahir': '2013-04-12',
         'Agama': 'Islam',
@@ -213,7 +213,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'NISN': '0122456792',
         'Nama Lengkap': 'Bella Safitri Putri',
         'Jenis Kelamin': 'P',
-        'Rombel / Kelas': 'Kelas VII-A',
+        'Rombel / Kelas': 'Kelas 7.1',
         'Tempat Lahir': 'Mulya Asri',
         'Tanggal Lahir': '2013-08-25',
         'Agama': 'Islam',
@@ -227,7 +227,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'NISN': '0122456793',
         'Nama Lengkap': 'Christian Alexander',
         'Jenis Kelamin': 'L',
-        'Rombel / Kelas': 'Kelas VII-A',
+        'Rombel / Kelas': 'Kelas 7.2',
         'Tempat Lahir': 'Bandar Lampung',
         'Tanggal Lahir': '2013-06-18',
         'Agama': 'Kristen Protestan',
@@ -241,7 +241,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'NISN': '0122456794',
         'Nama Lengkap': 'I Wayan Darmawan',
         'Jenis Kelamin': 'L',
-        'Rombel / Kelas': 'Kelas VII-A',
+        'Rombel / Kelas': 'Kelas 7.2',
         'Tempat Lahir': 'Tubaba',
         'Tanggal Lahir': '2013-11-09',
         'Agama': 'Hindu',
@@ -256,7 +256,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
       { 'No': 1, 'Kolom': 'NIS & NISN', 'Ketentuan': 'Wajib diisi angka unik untuk setiap peserta didik (NISN 10 digit)' },
       { 'No': 2, 'Kolom': 'Nama Lengkap', 'Ketentuan': 'Wajib diisi sesuai dokumen resmi Akta Kelahiran / Kartu Keluarga' },
       { 'No': 3, 'Kolom': 'Jenis Kelamin', 'Ketentuan': 'Diisi "L" untuk Laki-laki atau "P" untuk Perempuan' },
-      { 'No': 4, 'Kolom': 'Rombel / Kelas', 'Ketentuan': 'Diisi rombel sasaran terdaftar (contoh: Kelas VII-A atau Kelas VII-B)' },
+      { 'No': 4, 'Kolom': 'Rombel / Kelas', 'Ketentuan': 'Diisi rombel sasaran terdaftar (contoh: Kelas 7.1, 7.2, 8.1, dst.)' },
       { 'No': 5, 'Kolom': 'Tanggal Lahir', 'Ketentuan': 'Gunakan format standar YYYY-MM-DD (contoh: 2013-05-15)' },
       { 'No': 6, 'Kolom': 'Agama', 'Ketentuan': 'Diisi: Islam, Kristen Protestan, Katolik, Hindu, atau Buddha' },
       { 'No': 7, 'Kolom': 'Tahun Pelajaran', 'Ketentuan': 'Tahun Ajaran Aktif e-Rapor: 2026/2027 (SMPN 14 Tulang Bawang Barat)' }
@@ -355,7 +355,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
           }
 
           // Rombel resolution
-          let resolvedRombelId = rombels[0]?.id || '7A';
+          let resolvedRombelId = rombels[0]?.id || '7.1';
           if (importTargetRombel !== 'auto') {
             resolvedRombelId = importTargetRombel;
           } else {

@@ -39,10 +39,10 @@ export interface SchoolInfo {
 
 export interface Rombel {
   id: string;
-  nama: string; // e.g. "Kelas VII-A"
+  nama: string; // e.g. "Kelas 7.1"
   tingkat: number; // 7, 8, 9
   fase: string; // "Fase D"
-  waliKelasId: string;
+  waliKelasId?: string;
   waliKelasNama: string;
   waliKelasNip: string;
   tahunAjaran: string;
