@@ -189,7 +189,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19850422 201001 2 021',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 10
+    jumlahSiswa: 0
   },
   {
     id: '7.2',
@@ -201,7 +201,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19820715 200801 1 012',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '7.3',
@@ -213,7 +213,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19881103 201201 1 007',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '7.4',
@@ -225,7 +225,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19900315 201402 2 003',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
 
   // Kelas 8
@@ -239,7 +239,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19810412 200604 1 009',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '8.2',
@@ -251,7 +251,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19860920 201101 1 015',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '8.3',
@@ -263,7 +263,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19890708 201503 2 008',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '8.4',
@@ -275,7 +275,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19690812 199412 2 001',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
 
   // Kelas 9
@@ -289,7 +289,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19830510 200902 1 006',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '9.2',
@@ -301,7 +301,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19920104 201801 1 002',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '9.3',
@@ -313,7 +313,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19871025 201001 2 018',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   },
   {
     id: '9.4',
@@ -325,7 +325,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19850618 201101 1 011',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 6
+    jumlahSiswa: 0
   }
 ];
 
@@ -414,247 +414,7 @@ export const initialLearningObjectives: TujuanPembelajaran[] = [
   { id: 'tp-mulok-2', subjectId: 'mulok', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Unggah-ungguh Bahasa Lampung', deskripsi: 'menerapkan tata krama berbahasa Lampung dialek Menggala/Tulang Bawang dalam percakapan sopan', semester: 'Ganjil' }
 ];
 
-export const initialStudents: Student[] = [
-  // Kelas 7.1
-  {
-    id: 'std-1',
-    nis: '24001',
-    nisn: '0112456781',
-    nama: 'Ahmad Dwi Pratama',
-    jenisKelamin: 'L',
-    rombelId: '7.1',
-    tempatLahir: 'Tulang Bawang Barat',
-    tanggalLahir: '14 Mei 2011',
-    agama: 'Islam',
-    namaAyah: 'Bambang Irawan',
-    namaIbu: 'Sri Wahyuni',
-    pekerjaanOrangTua: 'Wiraswasta',
-    alamat: 'Tirta Kencana RT 03 RW 01, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-2',
-    nis: '24002',
-    nisn: '0112456782',
-    nama: 'Anisa Zahra Putri',
-    jenisKelamin: 'P',
-    rombelId: '7.1',
-    tempatLahir: 'Panaragan',
-    tanggalLahir: '22 Agustus 2011',
-    agama: 'Islam',
-    namaAyah: 'Kurniawan',
-    namaIbu: 'Lilis Suryani',
-    pekerjaanOrangTua: 'PNS',
-    alamat: 'Kel. Panaragan Jaya RT 02 RW 02, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-3',
-    nis: '24003',
-    nisn: '0112456783',
-    nama: 'Bagas Saputra',
-    jenisKelamin: 'L',
-    rombelId: '7.1',
-    tempatLahir: 'Mulya Asri',
-    tanggalLahir: '09 Januari 2011',
-    agama: 'Islam',
-    namaAyah: 'Slamet Riyadi',
-    namaIbu: 'Siti Aminah',
-    pekerjaanOrangTua: 'Petani',
-    alamat: 'Diyuk Mulya Asri RT 05, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-4',
-    nis: '24004',
-    nisn: '0112456784',
-    nama: 'Citra Lestari',
-    jenisKelamin: 'P',
-    rombelId: '7.1',
-    tempatLahir: 'Menggala',
-    tanggalLahir: '18 Oktober 2011',
-    agama: 'Islam',
-    namaAyah: 'Herman Susanto',
-    namaIbu: 'Dewi Sartika',
-    pekerjaanOrangTua: 'Pedagang',
-    alamat: 'Jl. Poros Tirta Makmur No. 24, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-5',
-    nis: '24005',
-    nisn: '0112456785',
-    nama: 'Daffa Ibnu Ramadhan',
-    jenisKelamin: 'L',
-    rombelId: '7.1',
-    tempatLahir: 'Bandar Lampung',
-    tanggalLahir: '05 September 2011',
-    agama: 'Islam',
-    namaAyah: 'Ridwan Kamil',
-    namaIbu: 'Nurjanah',
-    pekerjaanOrangTua: 'Karyawan Swasta',
-    alamat: 'Kagungan Ratu RT 01 RW 01, Tulang Bawang Udik'
-  },
-  {
-    id: 'std-6',
-    nis: '24006',
-    nisn: '0112456786',
-    nama: 'Fajar Nugroho',
-    jenisKelamin: 'L',
-    rombelId: '7.1',
-    tempatLahir: 'Tulang Bawang Barat',
-    tanggalLahir: '11 Februari 2011',
-    agama: 'Islam',
-    namaAyah: 'Supriyanto',
-    namaIbu: 'Tri Astuti',
-    pekerjaanOrangTua: 'Petani',
-    alamat: 'Penumangan Baru RT 04 RW 02, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-7',
-    nis: '24007',
-    nisn: '0112456787',
-    nama: 'Gita Ayu Wulandari',
-    jenisKelamin: 'P',
-    rombelId: '7.1',
-    tempatLahir: 'Kotabumi',
-    tanggalLahir: '29 Juli 2011',
-    agama: 'Islam',
-    namaAyah: 'Agus Setiawan',
-    namaIbu: 'Rina Marlina',
-    pekerjaanOrangTua: 'Wiraswasta',
-    alamat: 'Tirta Kencana RT 01 RW 01, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-8',
-    nis: '24008',
-    nisn: '0112456788',
-    nama: 'Hendra Wijaya',
-    jenisKelamin: 'L',
-    rombelId: '7.1',
-    tempatLahir: 'Tubaba',
-    tanggalLahir: '03 Desember 2010',
-    agama: 'Islam',
-    namaAyah: 'Mulyadi',
-    namaIbu: 'Hartati',
-    pekerjaanOrangTua: 'Buruh Bangunan',
-    alamat: 'Bandar Dewa RT 02 RW 01, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-9',
-    nis: '24009',
-    nisn: '0112456789',
-    nama: 'Intan Permata Sari',
-    jenisKelamin: 'P',
-    rombelId: '7.1',
-    tempatLahir: 'Panaragan Jaya',
-    tanggalLahir: '12 Maret 2011',
-    agama: 'Islam',
-    namaAyah: 'Dedi Saputra',
-    namaIbu: 'Maya Anggraini',
-    pekerjaanOrangTua: 'Guru Honorer',
-    alamat: 'Panaragan Jaya Indah RT 03, Tulang Bawang Tengah'
-  },
-  {
-    id: 'std-10',
-    nis: '24010',
-    nisn: '0112456790',
-    nama: 'Joko Wahyudi',
-    jenisKelamin: 'L',
-    rombelId: '7.1',
-    tempatLahir: 'Tulang Bawang Barat',
-    tanggalLahir: '17 Juni 2011',
-    agama: 'Islam',
-    namaAyah: 'Wahyudi Siswanto',
-    namaIbu: 'Endang Sulastri',
-    pekerjaanOrangTua: 'Petani Karet',
-    alamat: 'Marga Kencana RT 06 RW 03, Tulang Bawang Udik'
-  },
-
-  // Kelas 7.2
-  { id: 'std-72-1', nis: '24011', nisn: '0112456801', nama: 'Aditya Pratama', jenisKelamin: 'L', rombelId: '7.2', tempatLahir: 'Tubaba', tanggalLahir: '10 Januari 2011', agama: 'Islam', namaAyah: 'Pratama', namaIbu: 'Siti Maryam', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Tirta Kencana RT 02' },
-  { id: 'std-72-2', nis: '24012', nisn: '0112456802', nama: 'Bella Safitri', jenisKelamin: 'P', rombelId: '7.2', tempatLahir: 'Panaragan', tanggalLahir: '15 Februari 2011', agama: 'Islam', namaAyah: 'Safri', namaIbu: 'Nursiah', pekerjaanOrangTua: 'Petani', alamat: 'Panaragan Jaya RT 01' },
-  { id: 'std-72-3', nis: '24013', nisn: '0112456803', nama: 'Candra Wijaya', jenisKelamin: 'L', rombelId: '7.2', tempatLahir: 'Mulya Kencana', tanggalLahir: '20 Maret 2011', agama: 'Islam', namaAyah: 'Wijaya', namaIbu: 'Rahayu', pekerjaanOrangTua: 'PNS', alamat: 'Mulya Kencana RT 04' },
-  { id: 'std-72-4', nis: '24014', nisn: '0112456804', nama: 'Dina Marlina', jenisKelamin: 'P', rombelId: '7.2', tempatLahir: 'Menggala', tanggalLahir: '25 April 2011', agama: 'Islam', namaAyah: 'Marwan', namaIbu: 'Lindawati', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 03' },
-  { id: 'std-72-5', nis: '24015', nisn: '0112456805', nama: 'Erick Setiawan', jenisKelamin: 'L', rombelId: '7.2', tempatLahir: 'Tubaba', tanggalLahir: '30 Mei 2011', agama: 'Islam', namaAyah: 'Setiawan', namaIbu: 'Wartini', pekerjaanOrangTua: 'Petani', alamat: 'Karta Sari RT 02' },
-  { id: 'std-72-6', nis: '24016', nisn: '0112456806', nama: 'Farah Nabila', jenisKelamin: 'P', rombelId: '7.2', tempatLahir: 'Bandar Lampung', tanggalLahir: '05 Juli 2011', agama: 'Islam', namaAyah: 'Hasan', namaIbu: 'Kalsum', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Panaragan Jaya RT 03' },
-
-  // Kelas 7.3
-  { id: 'std-73-1', nis: '24021', nisn: '0112456811', nama: 'Galang Ramadhan', jenisKelamin: 'L', rombelId: '7.3', tempatLahir: 'Tubaba', tanggalLahir: '12 Juni 2011', agama: 'Islam', namaAyah: 'Ramadhan', namaIbu: 'Sumarni', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 04' },
-  { id: 'std-73-2', nis: '24022', nisn: '0112456812', nama: 'Hafizah Nurul', jenisKelamin: 'P', rombelId: '7.3', tempatLahir: 'Panaragan', tanggalLahir: '18 Juli 2011', agama: 'Islam', namaAyah: 'Nurjaman', namaIbu: 'Fatmawati', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan Jaya RT 04' },
-  { id: 'std-73-3', nis: '24023', nisn: '0112456813', nama: 'Irfan Maulana', jenisKelamin: 'L', rombelId: '7.3', tempatLahir: 'Tubaba', tanggalLahir: '24 Agustus 2011', agama: 'Islam', namaAyah: 'Maulana', namaIbu: 'Rustini', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Asri RT 01' },
-  { id: 'std-73-4', nis: '24024', nisn: '0112456814', nama: 'Julia Rahma', jenisKelamin: 'P', rombelId: '7.3', tempatLahir: 'Menggala', tanggalLahir: '30 September 2011', agama: 'Islam', namaAyah: 'Rahman', namaIbu: 'Juwita', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 01' },
-  { id: 'std-73-5', nis: '24025', nisn: '0112456815', nama: 'Kevin Ardiansyah', jenisKelamin: 'L', rombelId: '7.3', tempatLahir: 'Tubaba', tanggalLahir: '06 Oktober 2011', agama: 'Islam', namaAyah: 'Ardi', namaIbu: 'Sunarti', pekerjaanOrangTua: 'Buruh', alamat: 'Karta RT 02' },
-  { id: 'std-73-6', nis: '24026', nisn: '0112456816', nama: 'Laras Wati', jenisKelamin: 'P', rombelId: '7.3', tempatLahir: 'Kotabumi', tanggalLahir: '11 November 2011', agama: 'Islam', namaAyah: 'Waryono', namaIbu: 'Sumiati', pekerjaanOrangTua: 'Petani', alamat: 'Penumangan RT 03' },
-
-  // Kelas 7.4
-  { id: 'std-74-1', nis: '24031', nisn: '0112456821', nama: 'M. Rizky Pratama', jenisKelamin: 'L', rombelId: '7.4', tempatLahir: 'Tubaba', tanggalLahir: '08 Maret 2011', agama: 'Islam', namaAyah: 'Rizal', namaIbu: 'Nuraini', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Tirta Kencana RT 05' },
-  { id: 'std-74-2', nis: '24032', nisn: '0112456822', nama: 'Nadya Syahrini', jenisKelamin: 'P', rombelId: '7.4', tempatLahir: 'Panaragan', tanggalLahir: '14 April 2011', agama: 'Islam', namaAyah: 'Syahril', namaIbu: 'Nurhaliza', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan Jaya RT 05' },
-  { id: 'std-74-3', nis: '24033', nisn: '0112456823', nama: 'Oki Prasetya', jenisKelamin: 'L', rombelId: '7.4', tempatLahir: 'Tubaba', tanggalLahir: '21 Mei 2011', agama: 'Islam', namaAyah: 'Prasojo', namaIbu: 'Kartika', pekerjaanOrangTua: 'Petani', alamat: 'Mulya Asri RT 03' },
-  { id: 'std-74-4', nis: '24034', nisn: '0112456824', nama: 'Putri Anggraini', jenisKelamin: 'P', rombelId: '7.4', tempatLahir: 'Kotabumi', tanggalLahir: '27 Juni 2011', agama: 'Islam', namaAyah: 'Anggoro', namaIbu: 'Lestari', pekerjaanOrangTua: 'Pedagang', alamat: 'Kagungan Ratu RT 02' },
-  { id: 'std-74-5', nis: '24035', nisn: '0112456825', nama: 'Qori Aulia', jenisKelamin: 'P', rombelId: '7.4', tempatLahir: 'Bandar Lampung', tanggalLahir: '15 Agustus 2011', agama: 'Islam', namaAyah: 'Mansur', namaIbu: 'Qomariyah', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Panaragan Jaya RT 06' },
-  { id: 'std-74-6', nis: '24036', nisn: '0112456826', nama: 'Rendi Saputra', jenisKelamin: 'L', rombelId: '7.4', tempatLahir: 'Tubaba', tanggalLahir: '20 September 2011', agama: 'Islam', namaAyah: 'Saptono', namaIbu: 'Sri Rejeki', pekerjaanOrangTua: 'Petani', alamat: 'Penumangan RT 01' },
-
-  // Kelas 8.1
-  { id: 'std-81-1', nis: '23001', nisn: '0102456701', nama: 'Satria Danu', jenisKelamin: 'L', rombelId: '8.1', tempatLahir: 'Tubaba', tanggalLahir: '04 Februari 2010', agama: 'Islam', namaAyah: 'Danu', namaIbu: 'Sari', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 01' },
-  { id: 'std-81-2', nis: '23002', nisn: '0102456702', nama: 'Tia Lestari', jenisKelamin: 'P', rombelId: '8.1', tempatLahir: 'Panaragan', tanggalLahir: '19 Maret 2010', agama: 'Islam', namaAyah: 'Lestiyono', namaIbu: 'Warni', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan RT 02' },
-  { id: 'std-81-3', nis: '23003', nisn: '0102456703', nama: 'Umar Faruq', jenisKelamin: 'L', rombelId: '8.1', tempatLahir: 'Tubaba', tanggalLahir: '25 April 2010', agama: 'Islam', namaAyah: 'Faruq', namaIbu: 'Aisyah', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Kencana RT 01' },
-  { id: 'std-81-4', nis: '23004', nisn: '0102456704', nama: 'Vina Melati', jenisKelamin: 'P', rombelId: '8.1', tempatLahir: 'Menggala', tanggalLahir: '11 Mei 2010', agama: 'Islam', namaAyah: 'Melatno', namaIbu: 'Surati', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Makmur RT 02' },
-  { id: 'std-81-5', nis: '23005', nisn: '0102456705', nama: 'Wahyu Hidayat', jenisKelamin: 'L', rombelId: '8.1', tempatLahir: 'Kotabumi', tanggalLahir: '16 Juni 2010', agama: 'Islam', namaAyah: 'Hidayat', namaIbu: 'Ratnawati', pekerjaanOrangTua: 'Pedagang', alamat: 'Karta Sari RT 03' },
-  { id: 'std-81-6', nis: '23006', nisn: '0102456706', nama: 'Yulia Safitri', jenisKelamin: 'P', rombelId: '8.1', tempatLahir: 'Tubaba', tanggalLahir: '22 Juli 2010', agama: 'Islam', namaAyah: 'Safri', namaIbu: 'Yuliana', pekerjaanOrangTua: 'Buruh', alamat: 'Bandar Dewa RT 01' },
-
-  // Kelas 8.2
-  { id: 'std-82-1', nis: '23011', nisn: '0102456711', nama: 'Aldi Kurniawan', jenisKelamin: 'L', rombelId: '8.2', tempatLahir: 'Tubaba', tanggalLahir: '09 Januari 2010', agama: 'Islam', namaAyah: 'Kurnia', namaIbu: 'Sumirah', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 03' },
-  { id: 'std-82-2', nis: '23012', nisn: '0102456712', nama: 'Bunga Citra', jenisKelamin: 'P', rombelId: '8.2', tempatLahir: 'Panaragan', tanggalLahir: '14 Februari 2010', agama: 'Islam', namaAyah: 'Citro', namaIbu: 'Endah', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan Jaya RT 01' },
-  { id: 'std-82-3', nis: '23013', nisn: '0102456713', nama: 'Dedi Hermawan', jenisKelamin: 'L', rombelId: '8.2', tempatLahir: 'Tubaba', tanggalLahir: '20 Maret 2010', agama: 'Islam', namaAyah: 'Hermawan', namaIbu: 'Rostina', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Asri RT 04' },
-  { id: 'std-82-4', nis: '23014', nisn: '0102456714', nama: 'Eva Susanti', jenisKelamin: 'P', rombelId: '8.2', tempatLahir: 'Kotabumi', tanggalLahir: '26 April 2010', agama: 'Islam', namaAyah: 'Susanto', namaIbu: 'Karyati', pekerjaanOrangTua: 'Pedagang', alamat: 'Kagungan Ratu RT 03' },
-  { id: 'std-82-5', nis: '23015', nisn: '0102456715', nama: 'Fadlan Mubarok', jenisKelamin: 'L', rombelId: '8.2', tempatLahir: 'Tubaba', tanggalLahir: '02 Mei 2010', agama: 'Islam', namaAyah: 'Mubarok', namaIbu: 'Halimah', pekerjaanOrangTua: 'Petani', alamat: 'Penumangan RT 02' },
-  { id: 'std-82-6', nis: '23016', nisn: '0102456716', nama: 'Ghea Amanda', jenisKelamin: 'P', rombelId: '8.2', tempatLahir: 'Bandar Lampung', tanggalLahir: '07 Juni 2010', agama: 'Islam', namaAyah: 'Amanda', namaIbu: 'Gartini', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Tirta Makmur RT 04' },
-
-  // Kelas 8.3
-  { id: 'std-83-1', nis: '23021', nisn: '0102456721', nama: 'Haris Munandar', jenisKelamin: 'L', rombelId: '8.3', tempatLahir: 'Tubaba', tanggalLahir: '13 Juli 2010', agama: 'Islam', namaAyah: 'Munandar', namaIbu: 'Harmi', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 06' },
-  { id: 'std-83-2', nis: '23022', nisn: '0102456722', nama: 'Intan Cahyani', jenisKelamin: 'P', rombelId: '8.3', tempatLahir: 'Panaragan', tanggalLahir: '18 Agustus 2010', agama: 'Islam', namaAyah: 'Cahyono', namaIbu: 'Mursiti', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan RT 03' },
-  { id: 'std-83-3', nis: '23023', nisn: '0102456723', nama: 'Jihan Fahira', jenisKelamin: 'P', rombelId: '8.3', tempatLahir: 'Tubaba', tanggalLahir: '24 September 2010', agama: 'Islam', namaAyah: 'Fahri', namaIbu: 'Jamilah', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Asri RT 02' },
-  { id: 'std-83-4', nis: '23024', nisn: '0102456724', nama: 'Kiki Fatmala', jenisKelamin: 'P', rombelId: '8.3', tempatLahir: 'Menggala', tanggalLahir: '30 Oktober 2010', agama: 'Islam', namaAyah: 'Fathur', namaIbu: 'Kustini', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 05' },
-  { id: 'std-83-5', nis: '23025', nisn: '0102456725', nama: 'Lukman Hakim', jenisKelamin: 'L', rombelId: '8.3', tempatLahir: 'Tubaba', tanggalLahir: '05 November 2010', agama: 'Islam', namaAyah: 'Hakim', namaIbu: 'Lilis', pekerjaanOrangTua: 'Petani', alamat: 'Karta Sari RT 01' },
-  { id: 'std-83-6', nis: '23026', nisn: '0102456726', nama: 'Mega Utami', jenisKelamin: 'P', rombelId: '8.3', tempatLahir: 'Kotabumi', tanggalLahir: '10 Desember 2010', agama: 'Islam', namaAyah: 'Utomo', namaIbu: 'Megawati', pekerjaanOrangTua: 'Buruh', alamat: 'Bandar Dewa RT 02' },
-
-  // Kelas 8.4
-  { id: 'std-84-1', nis: '23031', nisn: '0102456731', nama: 'Nabil Makarim', jenisKelamin: 'L', rombelId: '8.4', tempatLahir: 'Tubaba', tanggalLahir: '03 Januari 2010', agama: 'Islam', namaAyah: 'Makarim', namaIbu: 'Nabila', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 02' },
-  { id: 'std-84-2', nis: '23032', nisn: '0102456732', nama: 'Olivia Salsabila', jenisKelamin: 'P', rombelId: '8.4', tempatLahir: 'Panaragan', tanggalLahir: '08 Februari 2010', agama: 'Islam', namaAyah: 'Sobirin', namaIbu: 'Oktavia', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan Jaya RT 04' },
-  { id: 'std-84-3', nis: '23033', nisn: '0102456733', nama: 'Pandu Dewanata', jenisKelamin: 'L', rombelId: '8.4', tempatLahir: 'Tubaba', tanggalLahir: '14 Maret 2010', agama: 'Islam', namaAyah: 'Dewanata', namaIbu: 'Pariem', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Kencana RT 03' },
-  { id: 'std-84-4', nis: '23034', nisn: '0102456734', nama: 'Rani Maharani', jenisKelamin: 'P', rombelId: '8.4', tempatLahir: 'Menggala', tanggalLahir: '20 April 2010', agama: 'Islam', namaAyah: 'Mahardika', namaIbu: 'Ranita', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 02' },
-  { id: 'std-84-5', nis: '23035', nisn: '0102456735', nama: 'Surya Kencana', jenisKelamin: 'L', rombelId: '8.4', tempatLahir: 'Tubaba', tanggalLahir: '26 Mei 2010', agama: 'Islam', namaAyah: 'Suryanto', namaIbu: 'Kencanasari', pekerjaanOrangTua: 'Petani', alamat: 'Karta RT 01' },
-  { id: 'std-84-6', nis: '23036', nisn: '0102456736', nama: 'Tari Anggun', jenisKelamin: 'P', rombelId: '8.4', tempatLahir: 'Bandar Lampung', tanggalLahir: '01 Juli 2010', agama: 'Islam', namaAyah: 'Anggoro', namaIbu: 'Tarmini', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Panaragan RT 05' },
-
-  // Kelas 9.1
-  { id: 'std-91-1', nis: '22001', nisn: '0092456601', nama: 'Alif Bahtiar', jenisKelamin: 'L', rombelId: '9.1', tempatLahir: 'Tubaba', tanggalLahir: '12 Januari 2009', agama: 'Islam', namaAyah: 'Bahtiar', namaIbu: 'Alifah', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 01' },
-  { id: 'std-91-2', nis: '22002', nisn: '0092456602', nama: 'Berlian Ananda', jenisKelamin: 'P', rombelId: '9.1', tempatLahir: 'Panaragan', tanggalLahir: '17 Februari 2009', agama: 'Islam', namaAyah: 'Anandito', namaIbu: 'Berliana', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan Jaya RT 02' },
-  { id: 'std-91-3', nis: '22003', nisn: '0092456603', nama: 'Chandra Kirana', jenisKelamin: 'L', rombelId: '9.1', tempatLahir: 'Tubaba', tanggalLahir: '23 Maret 2009', agama: 'Islam', namaAyah: 'Kiran', namaIbu: 'Chandrawati', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Asri RT 01' },
-  { id: 'std-91-4', nis: '22004', nisn: '0092456604', nama: 'Dimas Prayoga', jenisKelamin: 'L', rombelId: '9.1', tempatLahir: 'Menggala', tanggalLahir: '29 April 2009', agama: 'Islam', namaAyah: 'Prayogo', namaIbu: 'Dimasti', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 03' },
-  { id: 'std-91-5', nis: '22005', nisn: '0092456605', nama: 'Elsa Novitasari', jenisKelamin: 'P', rombelId: '9.1', tempatLahir: 'Tubaba', tanggalLahir: '05 Mei 2009', agama: 'Islam', namaAyah: 'Novri', namaIbu: 'Elsiana', pekerjaanOrangTua: 'Petani', alamat: 'Karta Sari RT 02' },
-  { id: 'std-91-6', nis: '22006', nisn: '0092456606', nama: 'Fahri Ramadhan', jenisKelamin: 'L', rombelId: '9.1', tempatLahir: 'Kotabumi', tanggalLahir: '10 Juni 2009', agama: 'Islam', namaAyah: 'Ramadhani', namaIbu: 'Fahrina', pekerjaanOrangTua: 'Buruh', alamat: 'Bandar Dewa RT 03' },
-
-  // Kelas 9.2
-  { id: 'std-92-1', nis: '22011', nisn: '0092456611', nama: 'Gilang Dirga', jenisKelamin: 'L', rombelId: '9.2', tempatLahir: 'Tubaba', tanggalLahir: '07 Juli 2009', agama: 'Islam', namaAyah: 'Dirgantara', namaIbu: 'Gilarwati', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 04' },
-  { id: 'std-92-2', nis: '22012', nisn: '0092456612', nama: 'Hany Puspita', jenisKelamin: 'P', rombelId: '9.2', tempatLahir: 'Panaragan', tanggalLahir: '13 Agustus 2009', agama: 'Islam', namaAyah: 'Puspowo', namaIbu: 'Hanyarti', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan RT 04' },
-  { id: 'std-92-3', nis: '22013', nisn: '0092456613', nama: 'Ilham Saputra', jenisKelamin: 'L', rombelId: '9.2', tempatLahir: 'Tubaba', tanggalLahir: '19 September 2009', agama: 'Islam', namaAyah: 'Saputro', namaIbu: 'Ilhamia', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Kencana RT 02' },
-  { id: 'std-92-4', nis: '22014', nisn: '0092456614', nama: 'Jasmine Azzahra', jenisKelamin: 'P', rombelId: '9.2', tempatLahir: 'Bandar Lampung', tanggalLahir: '25 Oktober 2009', agama: 'Islam', namaAyah: 'Zahrani', namaIbu: 'Jasmini', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 01' },
-  { id: 'std-92-5', nis: '22015', nisn: '0092456615', nama: 'Kemas Farhan', jenisKelamin: 'L', rombelId: '9.2', tempatLahir: 'Tubaba', tanggalLahir: '30 November 2009', agama: 'Islam', namaAyah: 'Farhani', namaIbu: 'Kemasari', pekerjaanOrangTua: 'Petani', alamat: 'Karta RT 03' },
-  { id: 'std-92-6', nis: '22016', nisn: '0092456616', nama: 'Lina Marlina', jenisKelamin: 'P', rombelId: '9.2', tempatLahir: 'Kotabumi', tanggalLahir: '06 Desember 2009', agama: 'Islam', namaAyah: 'Marlino', namaIbu: 'Linawati', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Panaragan Jaya RT 03' },
-
-  // Kelas 9.3
-  { id: 'std-93-1', nis: '22021', nisn: '0092456621', nama: 'Maulana Malik', jenisKelamin: 'L', rombelId: '9.3', tempatLahir: 'Tubaba', tanggalLahir: '15 Januari 2009', agama: 'Islam', namaAyah: 'Maliki', namaIbu: 'Maulani', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 05' },
-  { id: 'std-93-2', nis: '22022', nisn: '0092456622', nama: 'Nabila Syakieb', jenisKelamin: 'P', rombelId: '9.3', tempatLahir: 'Panaragan', tanggalLahir: '21 Februari 2009', agama: 'Islam', namaAyah: 'Syakib', namaIbu: 'Nabilawati', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan RT 01' },
-  { id: 'std-93-3', nis: '22023', nisn: '0092456623', nama: 'Oscar Zidan', jenisKelamin: 'L', rombelId: '9.3', tempatLahir: 'Tubaba', tanggalLahir: '27 Maret 2009', agama: 'Islam', namaAyah: 'Zidane', namaIbu: 'Oscaria', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Asri RT 03' },
-  { id: 'std-93-4', nis: '22024', nisn: '0092456624', nama: 'Pradipta Arya', jenisKelamin: 'L', rombelId: '9.3', tempatLahir: 'Menggala', tanggalLahir: '02 April 2009', agama: 'Islam', namaAyah: 'Aryanto', namaIbu: 'Pradipti', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 04' },
-  { id: 'std-93-5', nis: '22025', nisn: '0092456625', nama: 'Rifki Fauzan', jenisKelamin: 'L', rombelId: '9.3', tempatLahir: 'Tubaba', tanggalLahir: '08 Mei 2009', agama: 'Islam', namaAyah: 'Fauzani', namaIbu: 'Rifkiana', pekerjaanOrangTua: 'Petani', alamat: 'Karta Sari RT 01' },
-  { id: 'std-93-6', nis: '22026', nisn: '0092456626', nama: 'Salsa Bila', jenisKelamin: 'P', rombelId: '9.3', tempatLahir: 'Bandar Lampung', tanggalLahir: '14 Juni 2009', agama: 'Islam', namaAyah: 'Bilah', namaIbu: 'Salsina', pekerjaanOrangTua: 'Buruh', alamat: 'Bandar Dewa RT 01' },
-
-  // Kelas 9.4
-  { id: 'std-94-1', nis: '22031', nisn: '0092456631', nama: 'Taufik Hidayat', jenisKelamin: 'L', rombelId: '9.4', tempatLahir: 'Tubaba', tanggalLahir: '11 Juli 2009', agama: 'Islam', namaAyah: 'Hidayanto', namaIbu: 'Taufiqah', pekerjaanOrangTua: 'Petani', alamat: 'Tirta Kencana RT 02' },
-  { id: 'std-94-2', nis: '22032', nisn: '0092456632', nama: 'Ulfah Rahmawati', jenisKelamin: 'P', rombelId: '9.4', tempatLahir: 'Panaragan', tanggalLahir: '16 Agustus 2009', agama: 'Islam', namaAyah: 'Rahmanto', namaIbu: 'Ulfiani', pekerjaanOrangTua: 'PNS', alamat: 'Panaragan Jaya RT 05' },
-  { id: 'std-94-3', nis: '22033', nisn: '0092456633', nama: 'Vicky Prasetyo', jenisKelamin: 'L', rombelId: '9.4', tempatLahir: 'Tubaba', tanggalLahir: '22 September 2009', agama: 'Islam', namaAyah: 'Prasetyono', namaIbu: 'Vickina', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Mulya Kencana RT 04' },
-  { id: 'std-94-4', nis: '22034', nisn: '0092456634', nama: 'Winda Amelia', jenisKelamin: 'P', rombelId: '9.4', tempatLahir: 'Menggala', tanggalLahir: '28 Oktober 2009', agama: 'Islam', namaAyah: 'Amelius', namaIbu: 'Windawati', pekerjaanOrangTua: 'Pedagang', alamat: 'Tirta Makmur RT 02' },
-  { id: 'std-94-5', nis: '22035', nisn: '0092456635', nama: 'Yoga Pratama', jenisKelamin: 'L', rombelId: '9.4', tempatLahir: 'Tubaba', tanggalLahir: '03 November 2009', agama: 'Islam', namaAyah: 'Pratanto', namaIbu: 'Yogiani', pekerjaanOrangTua: 'Petani', alamat: 'Karta RT 02' },
-  { id: 'std-94-6', nis: '22036', nisn: '0092456636', nama: 'Zahra Amelia', jenisKelamin: 'P', rombelId: '9.4', tempatLahir: 'Kotabumi', tanggalLahir: '09 Desember 2009', agama: 'Islam', namaAyah: 'Ameliano', namaIbu: 'Zahrina', pekerjaanOrangTua: 'Wiraswasta', alamat: 'Penumangan RT 04' }
-];
+export const initialStudents: Student[] = [];
 
 export const initialExtracurriculars: Extracurricular[] = [
   { id: 'ek-osis', nama: 'OSIS', pembina: 'Siti Rahmawati, S.Pd.' },
@@ -665,226 +425,11 @@ export const initialExtracurriculars: Extracurricular[] = [
   { id: 'ek-olahraga', nama: 'Olah Raga', pembina: 'Budi Santoso, M.Pd.' }
 ];
 
-export const initialStudentExtracurriculars: StudentExtracurricular[] = [
-  { id: 'se-1', studentId: 'std-1', rombelId: '7.1', ekskulId: 'ek-pramuka', predikat: 'Sangat Baik', keterangan: 'Aktif sebagai pemimpin regu dan terampil dalam pioneering serta semaphore.' },
-  { id: 'se-2', studentId: 'std-1', rombelId: '7.1', ekskulId: 'ek-olahraga', predikat: 'Baik', keterangan: 'Menunjukkan stamina dan sportivitas yang baik dalam latihan futsal dan atletik.' },
-  { id: 'se-3', studentId: 'std-2', rombelId: '7.1', ekskulId: 'ek-osis', predikat: 'Sangat Baik', keterangan: 'Sangat aktif, berinisiatif tinggi, dan bertanggung jawab dalam kepengurusan OSIS serta kegiatan kesiswaan.' },
-  { id: 'se-4', studentId: 'std-2', rombelId: '7.1', ekskulId: 'ek-tari', predikat: 'Sangat Baik', keterangan: 'Menguasai gerak dasar tari Cangget dan Tari Sigeh Penguten dengan luwes dan elok.' },
-  { id: 'se-5', studentId: 'std-3', rombelId: '7.1', ekskulId: 'ek-pramuka', predikat: 'Baik', keterangan: 'Disiplin hadir dalam setiap latihan kepramukaan dan perkemahan sabtu-minggu.' },
-  { id: 'se-6', studentId: 'std-4', rombelId: '7.1', ekskulId: 'ek-uks', predikat: 'Sangat Baik', keterangan: 'Terampil melakukan pertolongan pertama (P3K) dan aktif dalam program kesehatan sekolah.' },
-  { id: 'se-7', studentId: 'std-5', rombelId: '7.1', ekskulId: 'ek-rohis', predikat: 'Sangat Baik', keterangan: 'Sangat istiqomah dalam pembiasaan ibadah sholat berjamaah dan aktif dalam tadarus Al-Qur\'an.' },
-  { id: 'se-8', studentId: 'std-7', rombelId: '7.1', ekskulId: 'ek-tari', predikat: 'Sangat Baik', keterangan: 'Hapal formasi dan ragam gerak tari kreasi Lampung serta mewakili sekolah dalam festival seni.' },
-  { id: 'se-9', studentId: 'std-9', rombelId: '7.1', ekskulId: 'ek-uks', predikat: 'Baik', keterangan: 'Cekatan membantu teman yang sakit dan tertib menjaga kebersihan ruang UKS.' },
-  { id: 'se-10', studentId: 'std-10', rombelId: '7.1', ekskulId: 'ek-olahraga', predikat: 'Baik', keterangan: 'Berperan baik sebagai penjaga gawang tim futsal dan disiplin mengikuti latihan fisik.' }
-];
-
-export const initialAttendances: StudentAttendance[] = initialStudents.map((s, idx) => ({
-  studentId: s.id,
-  rombelId: s.rombelId,
-  sakit: idx % 4 === 0 ? 1 : (idx % 7 === 0 ? 2 : 0),
-  izin: idx % 5 === 0 ? 1 : 0,
-  alpa: idx % 9 === 0 ? 1 : 0
-}));
-
-export const initialNotes: StudentNote[] = initialStudents.map((s, idx) => ({
-  studentId: s.id,
-  rombelId: s.rombelId,
-  catatan: idx % 3 === 0
-    ? 'Pertahankan prestasi belajar dan kepemimpinan yang baik di kelas. Tingkatkan terus minat baca dan literasi teknologi.'
-    : idx % 3 === 1
-      ? 'Ananda memiliki bakat komunikasi dan sikap sosial yang sangat menonjol. Tetap santun dan rajin belajar.'
-      : 'Semangat belajar sangat baik, aktif berpartisipasi dalam diskusi kelompok serta selalu menyelesaikan tugas dengan disiplin.',
-  statusKenaikan: 'Memenuhi Kriteria Ketuntasan Belajar'
-}));
-
-export const initialAchievements: StudentAchievement[] = [
-  {
-    id: 'ach-1',
-    studentId: 'std-2',
-    rombelId: '7.1',
-    bidang: 'Non-Akademik',
-    prestasi: 'Juara 1 Lomba Tari Kreasi Daerah Tradisional Lampung Tingkat SMP',
-    tingkat: 'Kabupaten',
-    keterangan: 'Pekan Seni & Kebudayaan Kabupaten Tulang Bawang Barat Tahun 2024'
-  },
-  {
-    id: 'ach-2',
-    studentId: 'std-5',
-    rombelId: '7.1',
-    bidang: 'Akademik',
-    prestasi: 'Juara 2 Olimpiade Sains Nasional (OSN) Bidang Matematika',
-    tingkat: 'Kabupaten',
-    keterangan: 'Seleksi OSN Tingkat Kabupaten Tulang Bawang Barat'
-  },
-  {
-    id: 'ach-3',
-    studentId: 'std-1',
-    rombelId: '7.1',
-    bidang: 'Non-Akademik',
-    prestasi: 'Juara 2 Lomba Pionering Putra Jambore Ranting Pramuka',
-    tingkat: 'Kecamatan',
-    keterangan: 'Kwarran Tulang Bawang Tengah'
-  }
-];
-
-// Helper to generate realistic grades across all 11 subjects for 10 students
-export const generateInitialGrades = (): StudentGrade[] => {
-  const baseStudentPerformances: Record<string, number> = {
-    'std-1': 86, // Ahmad Dwi Pratama
-    'std-2': 91, // Anisa Zahra Putri (Juara 1)
-    'std-3': 76, // Bagas Saputra
-    'std-4': 89, // Citra Lestari (Juara 2)
-    'std-5': 92, // Daffa Ibnu Ramadhan (Juara umum matematika)
-    'std-6': 73, // Fajar Nugroho (perlu bimbingan)
-    'std-7': 87, // Gita Ayu Wulandari
-    'std-8': 71, // Hendra Wijaya (butuh remedial)
-    'std-9': 84, // Intan Permata Sari
-    'std-10': 78 // Joko Wahyudi
-  };
-
-  const grades: StudentGrade[] = [];
-
-  const subjectDescriptions: Record<string, { high: string; low: string }> = {
-    pai: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam memahami pesan mulia Q.S. an-Nisa: 59 serta meneladani asmaul husna dalam kehidupan sehari-hari.',
-      low: 'Perlu peningkatan dan pendampingan dalam membaca ayat Al-Qur\'an dengan kaidah tajwid yang benar.'
-    },
-    pkn: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam menganalisis kronologi perumusan Pancasila dan ketaatan terhadap norma sosial.',
-      low: 'Perlu bimbingan dalam menyajikan contoh nyata pengamalan sila-sila Pancasila dalam pergaulan sekolah.'
-    },
-    bindo: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam menulis teks deskripsi keindahan alam sekitar dan mengapresiasi nilai moral puisi rakyat.',
-      low: 'Perlu bimbingan dalam membedakan fakta dan opini pada analisis teks berita serta penggunaan konjungsi yang tepat.'
-    },
-    mtk: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam operasi hitung bilangan rasional dan menyederhanakan bentuk aljabar kompleks.',
-      low: 'Perlu pendampingan dan bimbingan dalam menyelesaikan soal cerita persamaan dan pertidaksamaan linier satu variabel.'
-    },
-    ipa: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam merancang penyelidikan ilmiah sederhana dan menganalisis perpindahan kalor.',
-      low: 'Perlu bimbingan dalam membedakan kerapatan massa jenis benda dan konversi satuan suhu termometer.'
-    },
-    ips: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam memahami silsilah keluarga serta pengaruh letak geografis Indonesia terhadap keragaman flora fauna.',
-      low: 'Perlu bimbingan dalam menganalisis bentuk interaksi sosial disosiatif di lingkungan masyarakat.'
-    },
-    bing: {
-      high: 'Demonstrates excellent capability in introducing oneself and others with polite expressions and describing daily routines clearly.',
-      low: 'Needs guidance in utilizing simple present tense auxiliary verbs and enriching descriptive food vocabulary.'
-    },
-    pjok: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam teknik gerak spesifik passing bola voli serta menjaga kebugaran jasmani.',
-      low: 'Perlu latihan berulang dalam mengontrol bola saat melakukan dribbling sepak bola.'
-    },
-    pak_kristen: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam meneladani kasih Kristus dan menerapkan nilai kejujuran serta perdamaian.',
-      low: 'Perlu bimbingan dalam merefleksikan nilai-nilai Kristiani dalam kehidupan bermasyarakat.'
-    },
-    pak_katolik: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam memahami pribadi Yesus Kristus dan mewujudkan kepedulian sosial menggereja.',
-      low: 'Perlu bimbingan dalam mendalami sakramen dan keterlibatan aktif dalam hidup menggereja.'
-    },
-    pah_hindu: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam ajaran Tri Hita Karana serta penerapan Panca Sradha dalam kehidupan bermasyarakat.',
-      low: 'Perlu bimbingan dalam menghafal dan melafalkan sloka-sloka suci kitab suci Weda.'
-    },
-    pab_buddha: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam meneladani welas asih Buddha Gotama dan pengamalan Pancasila Buddhis.',
-      low: 'Perlu bimbingan dalam mempraktikkan meditasi kesadaran (bhavana) dan pemahaman Empat Kebenaran Mulia.'
-    },
-    prakarya: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam merancang dan mengolah bahan pangan khas daerah Lampung serta menghasilkan kerajinan fungsional.',
-      low: 'Perlu pendampingan dalam teknik pengemasan produk dan kerapian penyelesaian akhir (finishing) karya kerajinan.'
-    },
-    seni: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam pembuatan karya inovatif dan bernilai fungsional.',
-      low: 'Perlu bimbingan dalam teknik ketelitian dan kerapian finishing hasil karya.'
-    },
-    informatika: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam menerapkan berpikir komputasional dekomposisi serta mengoperasikan lembar kerja.',
-      low: 'Perlu bimbingan dalam menyusun formula aritmetika dasar pada aplikasi lembar kerja (spreadsheet).'
-    },
-    mulok: {
-      high: 'Menunjukkan penguasaan yang sangat baik dalam membaca dan menulis Aksara Lampung Had Lampung serta melafalkan sastra lisan Segata.',
-      low: 'Perlu pendampingan intensif dalam mengenali anak huruf (anak surat) aksara Lampung dan pelafalan intonasi dialek Tulang Bawang.'
-    }
-  };
-
-  initialStudents.forEach((student) => {
-    const baseScore = baseStudentPerformances[student.id] || 80;
-
-    initialSubjects.forEach((subject) => {
-      // Small variation per subject
-      let modifier = 0;
-      if (subject.id === 'mtk' && student.id === 'std-5') modifier = +6;
-      if (subject.id === 'bindo' && student.id === 'std-2') modifier = +5;
-      if ((subject.id === 'prakarya' || subject.id === 'seni') && (student.id === 'std-2' || student.id === 'std-7')) modifier = +6;
-      if (subject.id === 'mulok' && student.id === 'std-7') modifier = +4;
-      if (subject.id === 'pjok' && (student.id === 'std-1' || student.id === 'std-10')) modifier = +5;
-      if (subject.id === 'mtk' && student.id === 'std-8') modifier = -4;
-
-      const seedVariation = ((student.id.charCodeAt(4) || 3) * 7 + (subject.id.charCodeAt(0) || 5) * 3) % 9 - 4;
-      const targetAvg = Math.min(98, Math.max(68, baseScore + modifier + seedVariation));
-
-      const lm1 = Math.min(99, Math.max(65, targetAvg + 2));
-      const lm2 = Math.min(99, Math.max(65, targetAvg - 1));
-      const lm3 = Math.min(99, Math.max(65, targetAvg + 1));
-      const lm4 = Math.min(99, Math.max(65, targetAvg - 2));
-
-      const nilaiAkhirLM = Math.round((lm1 + lm2 + lm3 + lm4) / 4);
-      
-      // Sumatif Tengah Semester (STS) calculations (fokus TP 1 & TP 2)
-      const nonTesSTS = Math.min(99, Math.max(65, targetAvg + 1));
-      const tesSTS = Math.min(99, Math.max(65, targetAvg));
-      const nilaiAkhirLM_STS = Math.round((lm1 + lm2) / 2);
-      const nilaiAkhirSTS = Math.round((nilaiAkhirLM_STS * 0.6) + (((nonTesSTS + tesSTS) / 2) * 0.4));
-
-      // Sumatif Akhir Semester (SAS) calculations
-      const nonTesSAS = Math.min(99, Math.max(65, targetAvg + 1));
-      const tesSAS = Math.min(99, Math.max(65, targetAvg - 1));
-      const nilaiAkhirSAS = Math.round((nonTesSAS + tesSAS) / 2);
-
-      // Kurikulum Merdeka Formula: 60% Sumatif LM + 40% SAS
-      const nilaiAkhirRapor = Math.round((nilaiAkhirLM * 0.6) + (nilaiAkhirSAS * 0.4));
-
-      const descInfo = subjectDescriptions[subject.id] || {
-        high: 'Menunjukkan penguasaan materi yang memuaskan dan aktif selama pembelajaran.',
-        low: 'Perlu bimbingan dan latihan mandiri lebih teratur.'
-      };
-
-      grades.push({
-        id: `grade-${student.id}-${subject.id}`,
-        studentId: student.id,
-        subjectId: subject.id,
-        rombelId: student.rombelId || '7.1',
-        sumatifLM: {
-          'tp-1': lm1,
-          'tp-2': lm2,
-          'tp-3': lm3,
-          'tp-4': lm4
-        },
-        nilaiAkhirLM,
-        nonTesSTS,
-        tesSTS,
-        nilaiAkhirSTS,
-        deskripsiSTS: `Menunjukkan pemahaman yang baik pada lingkup materi tengah semester ${subject.nama}.`,
-        nonTesSAS,
-        tesSAS,
-        nilaiAkhirSAS,
-        nilaiAkhirRapor,
-        deskripsiTertinggi: descInfo.high,
-        deskripsiTerendah: nilaiAkhirRapor < subject.kktp ? descInfo.low : `Menunjukkan perkembangan yang baik dalam mencapai tujuan pembelajaran ${subject.nama}, pertahankan konsistensi belajar.`,
-        statusKetercapaian: nilaiAkhirRapor >= subject.kktp ? 'Tercapai' : 'Perlu Peningkatan',
-        updatedAt: '2024-12-18 10:30'
-      });
-    });
-  });
-
-  return grades;
-};
-
-export const initialGrades: StudentGrade[] = generateInitialGrades();
+export const initialStudentExtracurriculars: StudentExtracurricular[] = [];
+export const initialAttendances: StudentAttendance[] = [];
+export const initialNotes: StudentNote[] = [];
+export const initialAchievements: StudentAchievement[] = [];
+export const initialGrades: StudentGrade[] = [];
 
 export const getInitialState = (): ERaporState => {
   const savedState = localStorage.getItem('erapor_smpn14tubaba_state');
