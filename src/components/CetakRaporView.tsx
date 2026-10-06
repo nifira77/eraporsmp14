@@ -643,11 +643,24 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
         {/* ============================================================== */}
         {printMode === 'rapor_nilai' && (
           <div className="w-full flex flex-col items-center gap-8 print:gap-0">
-            {targetStudents.map((student, studentIndex) => {
-              const studentData = getStudentData(student);
-              const rombel = rombels.find(r => r.id === student.rombelId) || selectedRombel;
+            {targetStudents.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center max-w-md w-full shadow-xs my-6 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Users className="w-7 h-7" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800">
+                  Belum Ada Peserta Didik di {selectedRombel?.nama || 'Kelas Ini'}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed text-center">
+                  Semua sample peserta didik telah dikosongkan. Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.
+                </p>
+              </div>
+            ) : (
+              targetStudents.map((student, studentIndex) => {
+                const studentData = getStudentData(student);
+                const rombel = rombels.find(r => r.id === student.rombelId) || selectedRombel;
 
-              return (
+                return (
                 <div 
                   key={student.id}
                   className="bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break"
@@ -1046,7 +1059,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         )}
 
@@ -1055,7 +1068,20 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
         {/* ============================================================== */}
         {printMode === 'cover' && (
           <div className="w-full flex flex-col items-center gap-8 print:gap-0">
-            {targetStudents.map((student) => (
+            {targetStudents.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center max-w-md w-full shadow-xs my-6 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Users className="w-7 h-7" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800">
+                  Belum Ada Peserta Didik di {selectedRombel?.nama || 'Kelas Ini'}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed text-center">
+                  Semua sample peserta didik telah dikosongkan. Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.
+                </p>
+              </div>
+            ) : (
+              targetStudents.map((student) => (
               <div 
                 key={student.id}
                 className="bg-white text-black p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm flex flex-col justify-between items-center text-center font-serif print:m-0 print:p-0 print:border-none print:shadow-none print-page-break"
@@ -1118,7 +1144,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   </p>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         )}
 
@@ -1127,7 +1153,20 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
         {/* ============================================================== */}
         {printMode === 'identitas' && (
           <div className="w-full flex flex-col items-center gap-8 print:gap-0">
-            {targetStudents.map((student) => (
+            {targetStudents.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center max-w-md w-full shadow-xs my-6 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Users className="w-7 h-7" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800">
+                  Belum Ada Peserta Didik di {selectedRombel?.nama || 'Kelas Ini'}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed text-center">
+                  Semua sample peserta didik telah dikosongkan. Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.
+                </p>
+              </div>
+            ) : (
+              targetStudents.map((student) => (
               <div 
                 key={student.id}
                 className="bg-white text-black p-10 sm:p-14 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break space-y-6"
@@ -1231,7 +1270,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         )}
 
@@ -1364,7 +1403,17 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       rankMap[item.student.id] = index + 1;
                     });
 
-                    return students.map((student, idx) => {
+                    if (classStudents.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={subjects.length + 8} className="border border-black py-8 text-center text-slate-500 font-sans">
+                            Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}. Silakan tambahkan data peserta didik asli melalui menu Data Siswa atau Impor File Excel.
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return classStudents.map((student, idx) => {
                       const studentRecord = studentTotals.find(s => s.student.id === student.id);
                       const att = attendances.find(a => a.studentId === student.id) || { sakit: 0, izin: 0, alpa: 0 };
 

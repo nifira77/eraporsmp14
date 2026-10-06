@@ -53,13 +53,44 @@ import { DataSekolahView } from './components/DataSekolahView';
 import { PenilaianEkskulView } from './components/PenilaianEkskulView';
 import { DataPendidikView } from './components/DataPendidikView';
 import { DataSiswaView } from './components/DataSiswaView';
+import { LoginView } from './components/LoginView';
 
 export default function App() {
   const [state, setState] = useState<ERaporState>(() => getInitialState());
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [cloudStatus, setCloudStatus] = useState<'connected' | 'syncing' | 'offline'>('syncing');
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('erapor_smpn14tubaba_auth') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const isRemoteUpdateRef = useRef(false);
+
+  const handleLogin = (user: UserProfile) => {
+    setIsAuthenticated(true);
+    try {
+      localStorage.setItem('erapor_smpn14tubaba_auth', 'true');
+    } catch (e) {
+      console.error(e);
+    }
+    setState(prev => ({
+      ...prev,
+      currentUser: user
+    }));
+    setActiveTab('dashboard');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem('erapor_smpn14tubaba_auth');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Subscribe to real-time cloud updates across multiple devices
   useEffect(() => {
@@ -77,22 +108,32 @@ export default function App() {
 
       if (cloudData && Object.keys(cloudData).length > 0) {
         isRemoteUpdateRef.current = true;
-        setState(prev => ({
-          ...prev,
-          school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
-          students: cloudData.students || prev.students,
-          grades: cloudData.grades || prev.grades,
-          rombels: cloudData.rombels || prev.rombels,
-          subjects: cloudData.subjects || prev.subjects,
-          learningObjectives: cloudData.learningObjectives || prev.learningObjectives,
-          attendances: cloudData.attendances || prev.attendances,
-          extracurriculars: cloudData.extracurriculars || prev.extracurriculars,
-          studentExtracurriculars: cloudData.studentExtracurriculars || prev.studentExtracurriculars,
-          notes: cloudData.notes || prev.notes,
-          achievements: cloudData.achievements || prev.achievements,
-          users: cloudData.users || prev.users,
-          isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
-        }));
+        setState(prev => {
+          const remoteStudents = (cloudData.students || prev.students).filter((s: any) => !s.id?.startsWith('std-'));
+          const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
+          const remoteGrades = (cloudData.grades || prev.grades).filter((g: any) => remoteValidStudentIds.has(g.studentId));
+          const remoteRombels = (cloudData.rombels || prev.rombels).map((r: any) => ({
+            ...r,
+            jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
+          }));
+
+          return {
+            ...prev,
+            school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
+            students: remoteStudents,
+            grades: remoteGrades,
+            rombels: remoteRombels,
+            subjects: cloudData.subjects || prev.subjects,
+            learningObjectives: cloudData.learningObjectives || prev.learningObjectives,
+            attendances: (cloudData.attendances || prev.attendances).filter((a: any) => remoteValidStudentIds.has(a.studentId)),
+            extracurriculars: cloudData.extracurriculars || prev.extracurriculars,
+            studentExtracurriculars: (cloudData.studentExtracurriculars || prev.studentExtracurriculars).filter((se: any) => remoteValidStudentIds.has(se.studentId)),
+            notes: (cloudData.notes || prev.notes).filter((n: any) => remoteValidStudentIds.has(n.studentId)),
+            achievements: (cloudData.achievements || prev.achievements).filter((ach: any) => remoteValidStudentIds.has(ach.studentId)),
+            users: cloudData.users || prev.users,
+            isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
+          };
+        });
 
         if (metadata.updatedAt) {
           setLastSyncedTime(new Date(metadata.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
@@ -328,25 +369,64 @@ export default function App() {
 
   // Student handlers
   const handleUpdateStudents = (students: Student[]) => {
-    setState(prev => ({
-      ...prev,
-      students
-    }));
+    setState(prev => {
+      const validStudentIds = new Set(students.map(s => s.id));
+      const updatedRombels = prev.rombels.map(r => ({
+        ...r,
+        jumlahSiswa: students.filter(s => s.rombelId === r.id).length
+      }));
+      return {
+        ...prev,
+        students,
+        rombels: updatedRombels,
+        grades: prev.grades.filter(g => validStudentIds.has(g.studentId)),
+        attendances: prev.attendances.filter(a => validStudentIds.has(a.studentId)),
+        notes: prev.notes.filter(n => validStudentIds.has(n.studentId)),
+        studentExtracurriculars: prev.studentExtracurriculars.filter(se => validStudentIds.has(se.studentId)),
+        achievements: prev.achievements.filter(ach => validStudentIds.has(ach.studentId))
+      };
+    });
   };
 
   const handleAddStudent = (newStudent: Student) => {
-    setState(prev => ({
-      ...prev,
-      students: [...prev.students, newStudent]
-    }));
+    setState(prev => {
+      const updatedStudents = [...prev.students, newStudent];
+      const updatedRombels = prev.rombels.map(r => ({
+        ...r,
+        jumlahSiswa: updatedStudents.filter(s => s.rombelId === r.id).length
+      }));
+      return {
+        ...prev,
+        students: updatedStudents,
+        rombels: updatedRombels
+      };
+    });
   };
 
   const handleDeleteStudent = (studentId: string) => {
-    setState(prev => ({
-      ...prev,
-      students: prev.students.filter(s => s.id !== studentId)
-    }));
+    setState(prev => {
+      const updatedStudents = prev.students.filter(s => s.id !== studentId);
+      const validStudentIds = new Set(updatedStudents.map(s => s.id));
+      const updatedRombels = prev.rombels.map(r => ({
+        ...r,
+        jumlahSiswa: updatedStudents.filter(s => s.rombelId === r.id).length
+      }));
+      return {
+        ...prev,
+        students: updatedStudents,
+        rombels: updatedRombels,
+        grades: prev.grades.filter(g => validStudentIds.has(g.studentId)),
+        attendances: prev.attendances.filter(a => validStudentIds.has(a.studentId)),
+        notes: prev.notes.filter(n => validStudentIds.has(n.studentId)),
+        studentExtracurriculars: prev.studentExtracurriculars.filter(se => validStudentIds.has(se.studentId)),
+        achievements: prev.achievements.filter(ach => validStudentIds.has(ach.studentId))
+      };
+    });
   };
+
+  if (!isAuthenticated) {
+    return <LoginView state={state} onLogin={handleLogin} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -363,6 +443,7 @@ export default function App() {
         onToggleLock={handleToggleLock}
         onResetData={handleResetData}
         onExportData={handleExportData}
+        onLogout={handleLogout}
       />
 
       {/* Main Workspace: Sidebar + Viewport */}
@@ -372,6 +453,7 @@ export default function App() {
           onTabChange={setActiveTab}
           currentUser={state.currentUser}
           isLocked={state.isLocked}
+          onLogout={handleLogout}
         />
 
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">

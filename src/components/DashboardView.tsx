@@ -32,7 +32,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
     : { id: '7.1', nama: 'Kelas 7.1', tingkat: 7, fase: 'Fase D' };
   const activeClassName = userRombel.nama;
   const activeClassStudents = students.filter(s => s.rombelId === userRombel.id);
-  const classStudentCount = activeClassStudents.length > 0 ? activeClassStudents.length : 10;
+  const classStudentCount = activeClassStudents.length;
 
   // Compute school & class statistics
   const totalStudents = students.length;
@@ -57,7 +57,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
   const subjectProgress = subjects.map(subject => {
     const subjectGrades = grades.filter(g => g.subjectId === subject.id && (g.rombelId === userRombel.id || g.rombelId === '7.1'));
     const completedCount = subjectGrades.filter(g => g.nilaiAkhirRapor > 0).length;
-    const isComplete = completedCount >= (activeClassStudents.length || totalStudents);
+    const isComplete = (activeClassStudents.length > 0 || totalStudents > 0) && completedCount >= (activeClassStudents.length || totalStudents);
     const avg = subjectGrades.length > 0
       ? (subjectGrades.reduce((sum, g) => sum + g.nilaiAkhirRapor, 0) / subjectGrades.length).toFixed(1)
       : '0';

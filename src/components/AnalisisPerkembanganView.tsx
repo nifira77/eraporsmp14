@@ -163,10 +163,12 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
     subjects.forEach((subj, idx) => {
       const angle = (Math.PI * 2 / totalAxes) * idx - Math.PI / 2;
       const stat = subjectStats.find(s => s.id === subj.id);
-      const studentGrade = grades.find(g => g.studentId === selectedStudent.id && g.subjectId === subj.id);
+      const studentGrade = selectedStudent 
+        ? grades.find(g => g.studentId === selectedStudent.id && g.subjectId === subj.id) 
+        : undefined;
 
-      const studentVal = studentGrade?.nilaiAkhirRapor || 70;
-      const classAvgVal = stat?.avg || 75;
+      const studentVal = studentGrade?.nilaiAkhirRapor || 0;
+      const classAvgVal = stat?.avg || 0;
 
       // Scale: 50 to 100
       const studentNormalized = Math.max(0.1, (studentVal - 45) / 55);
@@ -482,36 +484,42 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
             </h3>
 
             <div className="space-y-1 max-h-[380px] overflow-y-auto pr-1">
-              {students.map((student, idx) => {
-                const isSelected = student.id === selectedStudentId;
-                const studentGradeList = grades.filter(g => g.studentId === student.id && g.nilaiAkhirRapor > 0);
-                const avg = studentGradeList.length > 0 
-                  ? (studentGradeList.reduce((a, b) => a + b.nilaiAkhirRapor, 0) / studentGradeList.length).toFixed(1)
-                  : '-';
+              {students.length === 0 ? (
+                <p className="text-xs text-slate-500 py-6 text-center">
+                  Belum ada peserta didik. Silakan tambahkan data peserta didik asli dari SMPN 14 Tulang Bawang Barat.
+                </p>
+              ) : (
+                students.map((student, idx) => {
+                  const isSelected = student.id === selectedStudentId;
+                  const studentGradeList = grades.filter(g => g.studentId === student.id && g.nilaiAkhirRapor > 0);
+                  const avg = studentGradeList.length > 0 
+                    ? (studentGradeList.reduce((a, b) => a + b.nilaiAkhirRapor, 0) / studentGradeList.length).toFixed(1)
+                    : '-';
 
-                return (
-                  <button
-                    key={student.id}
-                    type="button"
-                    onClick={() => setSelectedStudentId(student.id)}
-                    className={`w-full text-left p-3 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-600 text-white font-semibold shadow-xs' 
-                        : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div>
-                      <p className="font-semibold">{idx + 1}. {student.nama}</p>
-                      <p className={`text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-400'} font-mono`}>
-                        NISN: {student.nisn}
-                      </p>
-                    </div>
-                    <span className={`font-mono font-bold text-xs ${isSelected ? 'text-white' : 'text-blue-600'}`}>
-                      {avg}
-                    </span>
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={student.id}
+                      type="button"
+                      onClick={() => setSelectedStudentId(student.id)}
+                      className={`w-full text-left p-3 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600 text-white font-semibold shadow-xs' 
+                          : 'hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-semibold">{idx + 1}. {student.nama}</p>
+                        <p className={`text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-400'} font-mono`}>
+                          NISN: {student.nisn}
+                        </p>
+                      </div>
+                      <span className={`font-mono font-bold text-xs ${isSelected ? 'text-white' : 'text-blue-600'}`}>
+                        {avg}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
             </div>
 
             {/* Diagnostic takeaway box */}
@@ -528,27 +536,37 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
 
           {/* Right: SVG Radar Visualizer (2 cols) */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col items-center justify-center space-y-4">
-            <div className="w-full flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Radar Performa Kompetensi: {selectedStudent.nama}
-                </h3>
-                <p className="text-xs text-slate-500 font-mono">
-                  NISN: {selectedStudent.nisn} · {selectedRombel.nama}
+            {!selectedStudent ? (
+              <div className="py-16 text-center text-slate-500 max-w-sm mx-auto">
+                <BrainCircuit className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-slate-800">Belum Ada Peserta Didik Terpilih</h4>
+                <p className="text-xs text-slate-500 mt-1">
+                  Tambahkan peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa untuk melihat visualisasi radar performa kompetensi.
                 </p>
               </div>
+            ) : (
+              <>
+                <div className="w-full flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      Radar Performa Kompetensi: {selectedStudent.nama}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-mono">
+                      NISN: {selectedStudent.nisn} · {selectedRombel.nama}
+                    </p>
+                  </div>
 
-              <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 bg-blue-600 rounded-full" />
-                  <span className="font-semibold text-slate-800">{selectedStudent.nama.split(' ')[0]}</span>
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 bg-blue-600 rounded-full" />
+                      <span className="font-semibold text-slate-800">{selectedStudent.nama.split(' ')[0]}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 border-2 border-dashed border-slate-400 rounded-full" />
+                      <span className="text-slate-500">Rerata Kelas</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 border-2 border-dashed border-slate-400 rounded-full" />
-                  <span className="text-slate-500">Rerata Kelas</span>
-                </div>
-              </div>
-            </div>
 
             {/* RADAR SVG GRAPHIC */}
             <div className="relative py-4">
@@ -637,6 +655,8 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
                 );
               })}
             </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -676,7 +696,18 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {studentRankings.map((item, idx) => {
+                {studentRankings.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Award className="w-8 h-8 text-slate-300" />
+                        <p className="font-semibold text-slate-700">Belum ada data peserta didik di {selectedRombel.nama}</p>
+                        <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  studentRankings.map((item, idx) => {
                   const isTop3 = idx < 3;
 
                   return (
@@ -730,7 +761,7 @@ export const AnalisisPerkembanganView: React.FC<AnalisisPerkembanganViewProps> =
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>

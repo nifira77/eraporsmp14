@@ -31,7 +31,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
       g => g.subjectId === subject.id && g.rombelId === selectedRombelId && g.nilaiAkhirRapor > 0
     );
     const count = subjGrades.length;
-    const isComplete = count >= rombelStudents.length;
+    const isComplete = rombelStudents.length > 0 && count >= rombelStudents.length;
     const avg = count > 0 
       ? (subjGrades.reduce((sum, g) => sum + g.nilaiAkhirRapor, 0) / count).toFixed(1)
       : '-';
@@ -45,7 +45,9 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
   });
 
   const completeCount = subjectMetrics.filter(m => m.isComplete).length;
-  const progressPercent = Math.round((completeCount / subjects.length) * 100);
+  const progressPercent = rombelStudents.length > 0 
+    ? Math.round((completeCount / subjects.length) * 100) 
+    : 0;
 
   return (
     <div className="space-y-5">
@@ -135,7 +137,15 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {rombelStudents.map((student, idx) => {
+              {rombelStudents.length === 0 ? (
+                <tr>
+                  <td colSpan={subjects.length + 3} className="py-10 text-center text-slate-500">
+                    <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel.nama}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Silakan tambahkan data peserta didik asli melalui menu Data Siswa atau Impor File Excel.</p>
+                  </td>
+                </tr>
+              ) : (
+                rombelStudents.map((student, idx) => {
                 const studentGrades = subjects.map(subj => {
                   const g = grades.find(item => item.studentId === student.id && item.subjectId === subj.id);
                   return {
@@ -179,7 +189,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
             {/* Footer Summary Row: Rata-rata Mapel */}
             <tfoot className="bg-slate-100 font-semibold border-t-2 border-slate-300">

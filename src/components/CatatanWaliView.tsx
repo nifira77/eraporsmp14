@@ -207,7 +207,14 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
             </div>
 
             <div className="space-y-4">
-              {filteredStudents.map((student, idx) => (
+              {filteredStudents.length === 0 ? (
+                <div className="p-12 text-center bg-white rounded-xl border border-slate-200">
+                  <MessageSquare className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <p className="font-semibold text-slate-700 text-xs">Belum ada peserta didik di {selectedRombel.nama}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Silakan tambahkan data peserta didik asli melalui menu Data Siswa atau Impor File Excel.</p>
+                </div>
+              ) : (
+                filteredStudents.map((student, idx) => (
                 <div key={student.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -254,7 +261,7 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
                     placeholder="Tuliskan catatan motivasi belajar, kedisiplinan, dan apresiasi perkembangan kepribadian siswa..."
                   />
                 </div>
-              ))}
+              )))}
             </div>
           </div>
         </div>

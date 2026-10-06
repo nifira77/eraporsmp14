@@ -28,7 +28,8 @@ import {
   FileSpreadsheet,
   FileCheck,
   X,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 
 interface InputNilaiViewProps {
@@ -955,7 +956,18 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
               </thead>
 
               <tbody className="divide-y divide-slate-200">
-                {rombelStudents.map((student, idx) => {
+                {rombelStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="py-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Users className="w-8 h-8 text-slate-400" />
+                        <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}</p>
+                        <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  rombelStudents.map((student, idx) => {
                   const grade = localGrades[student.id];
                   const lm1 = grade?.sumatifLM['tp-1'] ?? 0;
                   const lm2 = grade?.sumatifLM['tp-2'] ?? 0;
@@ -1069,7 +1081,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>
@@ -1117,7 +1129,18 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
               </thead>
 
               <tbody className="divide-y divide-slate-200">
-                {rombelStudents.map((student, idx) => {
+                {rombelStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Users className="w-8 h-8 text-slate-400" />
+                        <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}</p>
+                        <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  rombelStudents.map((student, idx) => {
                   const grade = localGrades[student.id];
                   const isPassing = (grade?.nilaiAkhirRapor || 0) >= (selectedSubject.kktp || 75);
 
@@ -1251,7 +1274,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>

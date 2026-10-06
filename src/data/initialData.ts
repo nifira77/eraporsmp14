@@ -436,7 +436,7 @@ export const getInitialState = (): ERaporState => {
   if (savedState) {
     try {
       const parsed = JSON.parse(savedState);
-      if (parsed && parsed.students && parsed.grades) {
+      if (parsed && parsed.school) {
         // Ensure initial users have pembinaEkskul and tugasTambahan if they match initial users
         const updatedUsers = (parsed.users || initialUsers).map((u: any) => {
           const initU = initialUsers.find(iu => iu.id === u.id);
@@ -546,58 +546,44 @@ export const getInitialState = (): ERaporState => {
         const hasAllRequiredClasses = requiredClassIds.every(id => savedRombels.some((r: any) => r.id === id));
         const isOutdatedRombels = !hasAllRequiredClasses || savedRombels.length < 12 || savedRombels.some((r: any) => r.id === '7A' || r.id === '7B' || r.nama?.includes('VII-A'));
 
-        const currentRombels: Rombel[] = isOutdatedRombels ? initialRombels : savedRombels.map((r: any) => ({
-          ...r,
-          tahunAjaran: (!r.tahunAjaran || r.tahunAjaran === '2024/2025' || r.tahunAjaran === '2025/2026') ? '2026/2027' : r.tahunAjaran
-        }));
+        // Filter out all sample dummy students (IDs starting with 'std-')
+        let currentStudents: Student[] = (parsed.students || []).filter((s: any) => {
+          return !s.id?.startsWith('std-');
+        });
 
-        let currentStudents: Student[] = (parsed.students || initialStudents).map((s: any) => {
+        // Remap any leftover legacy class references if real students were previously added under 7A/7B
+        currentStudents = currentStudents.map((s: any) => {
           if (s.rombelId === '7A') return { ...s, rombelId: '7.1' };
           if (s.rombelId === '7B') return { ...s, rombelId: '7.2' };
           return s;
         });
 
-        const existingClassRombelIds = new Set(currentStudents.map((s: any) => s.rombelId));
-        initialStudents.forEach(is => {
-          if (!existingClassRombelIds.has(is.rombelId)) {
-            currentStudents.push(is);
-          }
-        });
+        const validStudentIds = new Set(currentStudents.map(s => s.id));
+
+        const currentRombels: Rombel[] = (isOutdatedRombels ? initialRombels : savedRombels).map((r: any) => ({
+          ...r,
+          tahunAjaran: (!r.tahunAjaran || r.tahunAjaran === '2024/2025' || r.tahunAjaran === '2025/2026') ? '2026/2027' : r.tahunAjaran,
+          jumlahSiswa: currentStudents.filter(s => s.rombelId === r.id).length
+        }));
 
         if (activeUser.rombelId === '7A') {
           activeUser.rombelId = '7.1';
         }
 
-        // Remap 7A/7B in grades, attendances, and notes
-        currentGrades = currentGrades.map((g: any) => {
-          if (g.rombelId === '7A') return { ...g, rombelId: '7.1' };
-          if (g.rombelId === '7B') return { ...g, rombelId: '7.2' };
-          return g;
-        });
+        // Keep only grades, attendances, notes, extracurriculars, achievements belonging to genuine students
+        currentGrades = currentGrades.filter((g: any) => validStudentIds.has(g.studentId));
 
-        let currentAttendances: StudentAttendance[] = (parsed.attendances || initialAttendances).map((a: any) => {
-          if (a.rombelId === '7A') return { ...a, rombelId: '7.1' };
-          if (a.rombelId === '7B') return { ...a, rombelId: '7.2' };
-          return a;
-        });
-        const existingAttStudentIds = new Set(currentAttendances.map((a: any) => a.studentId));
-        initialAttendances.forEach(ia => {
-          if (!existingAttStudentIds.has(ia.studentId)) {
-            currentAttendances.push(ia);
-          }
-        });
+        let currentAttendances: StudentAttendance[] = (parsed.attendances || [])
+          .filter((a: any) => validStudentIds.has(a.studentId));
 
-        let currentNotes: StudentNote[] = (parsed.notes || initialNotes).map((n: any) => {
-          if (n.rombelId === '7A') return { ...n, rombelId: '7.1' };
-          if (n.rombelId === '7B') return { ...n, rombelId: '7.2' };
-          return n;
-        });
-        const existingNoteStudentIds = new Set(currentNotes.map((n: any) => n.studentId));
-        initialNotes.forEach(inote => {
-          if (!existingNoteStudentIds.has(inote.studentId)) {
-            currentNotes.push(inote);
-          }
-        });
+        let currentNotes: StudentNote[] = (parsed.notes || [])
+          .filter((n: any) => validStudentIds.has(n.studentId));
+
+        let currentStudentExtracurriculars: StudentExtracurricular[] = (parsed.studentExtracurriculars || [])
+          .filter((se: any) => validStudentIds.has(se.studentId));
+
+        let currentAchievements: StudentAchievement[] = (parsed.achievements || [])
+          .filter((ach: any) => validStudentIds.has(ach.studentId));
 
         return {
           ...parsed,
@@ -612,7 +598,8 @@ export const getInitialState = (): ERaporState => {
           attendances: currentAttendances,
           notes: currentNotes,
           extracurriculars,
-          studentExtracurriculars
+          studentExtracurriculars: currentStudentExtracurriculars,
+          achievements: currentAchievements
         };
       }
     } catch (e) {

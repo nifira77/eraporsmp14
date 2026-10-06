@@ -236,7 +236,18 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredStudents.map((student, idx) => {
+                  {filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-slate-500">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <CalendarCheck className="w-8 h-8 text-slate-300" />
+                          <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel.nama}</p>
+                          <p className="text-xs text-slate-400">Silakan tambahkan data peserta didik asli melalui menu Data Siswa atau Impor File Excel.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStudents.map((student, idx) => {
                     const att = localAttendances[student.id];
                     const s = att?.sakit || 0;
                     const i = att?.izin || 0;
@@ -294,7 +305,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
                         </td>
                       </tr>
                     );
-                  })}
+                  }))}
                 </tbody>
               </table>
             </div>

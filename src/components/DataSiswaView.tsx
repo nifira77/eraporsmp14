@@ -42,6 +42,15 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+
+  // Clear all students handler
+  const handleConfirmClearAll = () => {
+    onUpdateStudents([]);
+    setIsClearAllModalOpen(false);
+    setSuccessMsg('Semua data peserta didik berhasil dikosongkan.');
+    setTimeout(() => setSuccessMsg(null), 4000);
+  };
 
   // Modal Tambah Siswa Manual
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -160,7 +169,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     } else {
       // Add new student
       const newStudent: Student = {
-        id: `std-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        id: `siswa-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         nis: formNis.trim(),
         nisn: formNisn.trim(),
         nama: formNama.trim(),
@@ -379,7 +388,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
           const alamat = String(row['Alamat'] || row['alamat'] || 'Kab. Tulang Bawang Barat').trim();
 
           return {
-            id: `std-imp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
+            id: `siswa-imp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
             nis,
             nisn,
             nama,
@@ -496,6 +505,18 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
             <Download className="w-3.5 h-3.5" />
             <span>Ekspor Excel</span>
           </button>
+
+          {totalSiswa > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsClearAllModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              title="Hapus / Kosongkan semua data sample peserta didik"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span>Kosongkan Siswa</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -594,8 +615,56 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
-                    Tidak ada data peserta didik yang cocok dengan pencarian atau filter.
+                  <td colSpan={9} className="py-12 text-center">
+                    {totalSiswa === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-3 max-w-lg mx-auto py-4">
+                        <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-2xs">
+                          <Users className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">
+                            Data Sample Peserta Didik Telah Dikosongkan
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Aplikasi siap menerima data peserta didik asli dari <strong>SMPN 14 Tulang Bawang Barat</strong>. Silakan unggah file Excel (format Dapodik/template) atau masukkan data siswa secara manual per kelas (7.1 s.d 9.4).
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewStudents([]);
+                              setImportFileName(null);
+                              setIsImportModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+                          >
+                            <FileSpreadsheet className="w-4 h-4" />
+                            <span>Impor Excel Siswa</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleOpenAdd}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Tambah Siswa Manual</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleDownloadExcelTemplate}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Unduh Template Excel</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-6 text-slate-400 text-xs">
+                        Tidak ada data peserta didik yang cocok dengan pencarian atau filter kelas ini.
+                      </div>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -1013,6 +1082,51 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
               >
                 <FileCheck className="w-4 h-4" />
                 <span>Impor {previewStudents.length > 0 ? `${previewStudents.length} Siswa` : 'Sekarang'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 3: KONFIRMASI KOSONGKAN SELURUH SISWA */}
+      {/* ========================================================= */}
+      {isClearAllModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Kosongkan Seluruh Peserta Didik?
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tindakan ini akan menghapus seluruh data sample/siswa ({totalSiswa} siswa).
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 leading-relaxed">
+              Semua peserta didik akan dikosongkan dari seluruh 12 rombel (7.1 s.d 9.4) agar Anda dapat mengisi data peserta didik asli dari <strong>SMPN 14 Tulang Bawang Barat</strong> melalui input form atau impor file Excel.
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setIsClearAllModalOpen(false)}
+                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearAll}
+                className="px-4 py-2 font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Kosongkan Semua Siswa</span>
               </button>
             </div>
           </div>

@@ -15,7 +15,8 @@ import {
   GraduationCap,
   Award,
   Users,
-  School
+  School,
+  LogOut
 } from 'lucide-react';
 
 export type ActiveTab = 
@@ -37,13 +38,15 @@ interface SidebarProps {
   onTabChange: (tab: ActiveTab) => void;
   currentUser: UserProfile;
   isLocked: boolean;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
   currentUser,
-  isLocked
+  isLocked,
+  onLogout
 }) => {
   const isGuruMapel = currentUser.role === 'guru_mapel';
   const isWaliKelas = currentUser.role === 'wali_kelas';
@@ -262,6 +265,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           );
         })}
+
+        {/* Logout Action in Sidebar */}
+        {onLogout && (
+          <div className="pt-2 px-1">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-950/40 border border-rose-900/40 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span>Keluar / Logout</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* School Signature Info Footer */}

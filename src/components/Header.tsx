@@ -14,7 +14,8 @@ import {
   Cloud,
   Edit3,
   X,
-  Save
+  Save,
+  LogOut
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -29,6 +30,7 @@ interface HeaderProps {
   onToggleLock: () => void;
   onResetData: () => void;
   onExportData: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,7 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   onUpdateUser,
   onToggleLock,
   onResetData,
-  onExportData
+  onExportData,
+  onLogout
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
@@ -238,6 +241,19 @@ export const Header: React.FC<HeaderProps> = ({
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
+              {/* Direct Logout Button */}
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                  title="Keluar dari sesi e-Rapor dan kembali ke halaman Login"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Keluar</span>
+                </button>
+              )}
+
               {/* Dropdown Menu */}
               {showUserDropdown && (
                 <>
@@ -306,14 +322,27 @@ export const Header: React.FC<HeaderProps> = ({
                       })}
                     </div>
 
-                    <div className="border-t border-slate-100 mt-1 pt-1 px-3 py-1.5 bg-slate-50">
+                    <div className="border-t border-slate-100 mt-1 pt-1.5 px-3 py-1.5 bg-slate-50 space-y-1">
+                      {onLogout && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            onLogout();
+                          }}
+                          className="w-full flex items-center gap-1.5 text-[11px] text-slate-700 hover:text-rose-600 font-semibold py-1 transition-colors cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Keluar / Logout Akun</span>
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => {
                           setShowUserDropdown(false);
                           setShowConfirmReset(true);
                         }}
-                        className="w-full flex items-center gap-1.5 text-[11px] text-rose-600 hover:text-rose-800 font-medium py-1"
+                        className="w-full flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-rose-600 font-medium py-1 transition-colors cursor-pointer"
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>Reset Data Awal SMPN 14</span>
