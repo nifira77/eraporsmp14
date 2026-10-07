@@ -55,56 +55,112 @@ export function subscribeToCloudSync(
 
 let syncTimeout: any = null;
 
+export interface SyncOptions {
+  immediate?: boolean;
+  isExplicitClearAll?: boolean;
+}
+
 /**
  * Saves state to Firestore cloud database so all devices stay in sync.
- * Includes debouncing for rapid changes.
+ * Includes debouncing for rapid changes and protection against accidental wipeouts.
  */
 export async function syncStateToCloud(
   state: ERaporState,
-  updatedBy: string = 'Pengguna e-Rapor'
+  updatedBy: string = 'Pengguna e-Rapor',
+  options?: SyncOptions
 ): Promise<boolean> {
+  const executeSync = async (): Promise<boolean> => {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, DOC_ID);
+
+      let studentsToSave = state.students || [];
+      let gradesToSave = state.grades || [];
+      let rombelsToSave = state.rombels || [];
+
+      // SAFETY PROTECTION: If incoming state has 0 students and this is NOT an explicit clear-all action,
+      // verify if Firestore already holds student records, and preserve them.
+      if (studentsToSave.length === 0 && !options?.isExplicitClearAll) {
+        try {
+          const currentSnap = await getDoc(docRef);
+          if (currentSnap.exists()) {
+            const currentData = currentSnap.data();
+            const existingStudents = currentData?.students || [];
+            if (existingStudents.length > 0) {
+              studentsToSave = existingStudents;
+              gradesToSave = currentData?.grades || gradesToSave;
+              rombelsToSave = currentData?.rombels || rombelsToSave;
+            }
+          }
+        } catch (checkErr) {
+          console.warn('Safety check before sync failed, proceeding cautiously:', checkErr);
+        }
+      }
+      
+      // Clean state to ensure only valid JSON-serializable properties are saved
+      const cleanPayload = {
+        school: state.school,
+        students: studentsToSave,
+        grades: gradesToSave,
+        rombels: rombelsToSave,
+        subjects: state.subjects,
+        learningObjectives: state.learningObjectives,
+        attendances: state.attendances,
+        extracurriculars: state.extracurriculars,
+        studentExtracurriculars: state.studentExtracurriculars,
+        notes: state.notes,
+        achievements: state.achievements,
+        users: state.users,
+        isLocked: state.isLocked,
+        _metadata: {
+          updatedAt: new Date().toISOString(),
+          lastUpdatedBy: updatedBy,
+          deviceOrigin: CURRENT_DEVICE_ID,
+          isExplicitClearAll: Boolean(options?.isExplicitClearAll),
+          studentsCount: studentsToSave.length
+        }
+      };
+
+      await setDoc(docRef, cleanPayload, { merge: true });
+
+      // If students exist, also preserve a backup registry in Firestore
+      if (studentsToSave.length > 0) {
+        const registryRef = doc(db, COLLECTION_NAME, 'students_registry');
+        await setDoc(registryRef, {
+          students: studentsToSave,
+          count: studentsToSave.length,
+          lastUpdatedBy: updatedBy,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(() => {});
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to sync state to cloud:', error);
+      try {
+        handleFirestoreError(error, OperationType.WRITE, `${COLLECTION_NAME}/${DOC_ID}`);
+      } catch (e) {
+        // Handled
+      }
+      return false;
+    }
+  };
+
+  if (options?.immediate) {
+    if (syncTimeout) {
+      clearTimeout(syncTimeout);
+      syncTimeout = null;
+    }
+    return executeSync();
+  }
+
   return new Promise((resolve) => {
     if (syncTimeout) {
       clearTimeout(syncTimeout);
     }
 
     syncTimeout = setTimeout(async () => {
-      try {
-        const docRef = doc(db, COLLECTION_NAME, DOC_ID);
-        
-        // Clean state to ensure only valid JSON-serializable properties are saved
-        const cleanPayload = {
-          school: state.school,
-          students: state.students,
-          grades: state.grades,
-          rombels: state.rombels,
-          subjects: state.subjects,
-          learningObjectives: state.learningObjectives,
-          attendances: state.attendances,
-          extracurriculars: state.extracurriculars,
-          studentExtracurriculars: state.studentExtracurriculars,
-          notes: state.notes,
-          achievements: state.achievements,
-          users: state.users,
-          isLocked: state.isLocked,
-          _metadata: {
-            updatedAt: new Date().toISOString(),
-            lastUpdatedBy: updatedBy,
-            deviceOrigin: CURRENT_DEVICE_ID
-          }
-        };
-
-        await setDoc(docRef, cleanPayload, { merge: true });
-        resolve(true);
-      } catch (error) {
-        console.error('Failed to sync state to cloud:', error);
-        try {
-          handleFirestoreError(error, OperationType.WRITE, `${COLLECTION_NAME}/${DOC_ID}`);
-        } catch (e) {
-          // Handled
-        }
-        resolve(false);
-      }
+      const res = await executeSync();
+      resolve(res);
     }, 400); // 400ms debounce
   });
 }
@@ -119,6 +175,15 @@ export async function fetchCloudStateOnce(): Promise<Partial<ERaporState> | null
     if (snap.exists()) {
       const data = snap.data();
       const { _metadata, ...stateData } = data;
+      // If main_state students is empty, check backup registry
+      if (!stateData.students || stateData.students.length === 0) {
+        try {
+          const registrySnap = await getDoc(doc(db, COLLECTION_NAME, 'students_registry'));
+          if (registrySnap.exists() && registrySnap.data()?.students?.length > 0) {
+            stateData.students = registrySnap.data().students;
+          }
+        } catch (e) {}
+      }
       return stateData as Partial<ERaporState>;
     }
     return null;

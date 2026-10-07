@@ -546,10 +546,8 @@ export const getInitialState = (): ERaporState => {
         const hasAllRequiredClasses = requiredClassIds.every(id => savedRombels.some((r: any) => r.id === id));
         const isOutdatedRombels = !hasAllRequiredClasses || savedRombels.length < 12 || savedRombels.some((r: any) => r.id === '7A' || r.id === '7B' || r.nama?.includes('VII-A'));
 
-        // Filter out all sample dummy students (IDs starting with 'std-')
-        let currentStudents: Student[] = (parsed.students || []).filter((s: any) => {
-          return !s.id?.startsWith('std-');
-        });
+        // Keep all saved students
+        let currentStudents: Student[] = parsed.students || [];
 
         // Remap any leftover legacy class references if real students were previously added under 7A/7B
         currentStudents = currentStudents.map((s: any) => {

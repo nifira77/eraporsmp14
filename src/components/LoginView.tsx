@@ -28,20 +28,21 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
   const { school, users, rombels } = state;
 
   // Selected persona / custom input
-  const [selectedUserId, setSelectedUserId] = useState<string>(users[1]?.id || users[0]?.id || 'user-siti');
-  const [usernameInput, setUsernameInput] = useState<string>(users[1]?.nip || '19850422 201001 2 021');
+  const defaultTeacher = users[1] || users[0];
+  const [selectedUserId, setSelectedUserId] = useState<string>(defaultTeacher?.id || 'user-siti');
+  const [usernameInput, setUsernameInput] = useState<string>(defaultTeacher?.name || 'Siti Rahmawati, S.Pd.');
   const [passwordInput, setPasswordInput] = useState<string>('123456');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // When persona dropdown changes, update username and reset error
+  // When persona dropdown changes, update username directly to teacher name
   const handleSelectPersona = (userId: string) => {
     setSelectedUserId(userId);
     const targetUser = users.find(u => u.id === userId);
     if (targetUser) {
-      setUsernameInput(targetUser.nip === '-' ? targetUser.name : targetUser.nip);
+      setUsernameInput(targetUser.name);
       setErrorMessage(null);
     }
   };
@@ -56,7 +57,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
     }
     if (target) {
       setSelectedUserId(target.id);
-      setUsernameInput(target.nip === '-' ? target.name : target.nip);
+      setUsernameInput(target.name);
+      setPasswordInput('123456');
       performLogin(target);
     }
   };
@@ -66,7 +68,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
     setTimeout(() => {
       setIsLoading(false);
       onLogin(userToLogin);
-    }, 350);
+    }, 300);
+  };
+
+  // Helper to strip academic titles for flexible matching
+  const stripTitles = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/^(drs\.|dra\.|ir\.|h\.|hj\.)\s*/gi, '')
+      .replace(/,\s*(s\.pd|m\.pd|s\.kom|s\.th|s\.pd\.i|m\.si|m\.m)\.?/gi, '')
+      .replace(/[^a-z0-9]/g, '');
   };
 
   // Form submission
@@ -74,26 +85,49 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!usernameInput.trim()) {
-      setErrorMessage('Silakan masukkan NIP atau nama akun.');
+    const inputTrim = usernameInput.trim();
+    if (!inputTrim) {
+      setErrorMessage('Silakan masukkan Username (Nama Guru).');
       return;
     }
 
-    if (!passwordInput.trim()) {
-      setErrorMessage('Silakan masukkan kata sandi.');
+    const passTrim = passwordInput.trim();
+    if (!passTrim) {
+      setErrorMessage('Silakan masukkan Kata Sandi (Password).');
       return;
     }
 
-    // Try finding user by selected dropdown, or matching NIP / Name
-    const inputClean = usernameInput.trim().toLowerCase();
-    const matchedUser = 
-      users.find(u => u.id === selectedUserId) ||
-      users.find(u => u.nip.replace(/\s+/g, '') === inputClean.replace(/\s+/g, '')) ||
-      users.find(u => u.name.toLowerCase().includes(inputClean)) ||
-      (inputClean === 'admin' ? users.find(u => u.role === 'admin') : undefined);
+    // Password must be 123456 (or admin123 as alternative fallback)
+    if (passTrim !== '123456' && passTrim !== 'admin123') {
+      setErrorMessage('Kata sandi salah! Password yang berlaku adalah: 123456');
+      return;
+    }
+
+    // Try finding teacher by name
+    const inputClean = stripTitles(inputTrim);
+    let matchedUser = users.find(u => u.name.toLowerCase() === inputTrim.toLowerCase());
+    
+    if (!matchedUser) {
+      // Try matching by stripped title (e.g. "Siti Rahmawati" matches "Siti Rahmawati, S.Pd.")
+      matchedUser = users.find(u => stripTitles(u.name) === inputClean);
+    }
 
     if (!matchedUser) {
-      setErrorMessage('Akun pendidik/pegawai tidak ditemukan. Silakan pilih nama dari daftar akun.');
+      // Try substring match
+      matchedUser = users.find(u => u.name.toLowerCase().includes(inputTrim.toLowerCase()));
+    }
+
+    if (!matchedUser && (inputTrim.toLowerCase() === 'admin' || inputClean === 'admin')) {
+      matchedUser = users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah');
+    }
+
+    // If still not matched, check if user chose from dropdown
+    if (!matchedUser && selectedUserId) {
+      matchedUser = users.find(u => u.id === selectedUserId);
+    }
+
+    if (!matchedUser) {
+      setErrorMessage(`Nama guru "${usernameInput}" tidak ditemukan di sistem. Silakan pilih nama dari daftar guru yang terdaftar.`);
       return;
     }
 
@@ -315,14 +349,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
               </div>
             </div>
 
-            {/* Field 2: NIP / Username */}
+            {/* Field 2: Username (Nama Guru) */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-800">
-                  Nomor Induk Pegawai (NIP) / Akun
+                  Username (Nama Guru)
                 </label>
-                <span className="text-[10px] text-slate-500 font-mono">
-                  Terisi Otomatis
+                <span className="text-[10px] text-blue-600 font-medium">
+                  Sesuai Nama Guru
                 </span>
               </div>
               <div className="relative">
@@ -334,8 +368,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
                   required
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="Masukkan NIP atau nama pengguna..."
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-colors shadow-2xs font-mono"
+                  placeholder="Ketik atau pilih nama guru..."
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-colors shadow-2xs"
                 />
               </div>
             </div>
