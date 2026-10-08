@@ -423,6 +423,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
               {school.alamat}, {school.kecamatan}, Kab. {school.kabupaten}, Provinsi {school.provinsi}
             </p>
             <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1">
+              <p><span className="text-slate-500">NPSN:</span> <span className="font-mono">{school.npsn}</span> · <span className="text-slate-500">NSS NIS:</span> <span className="font-mono">{school.nss}</span></p>
               <p><span className="text-slate-500">Kepala Sekolah:</span> <strong className="text-slate-800">{school.kepalaSekolah}</strong></p>
               <p><span className="text-slate-500">NIP:</span> <span className="font-mono">{school.nipKepalaSekolah}</span></p>
             </div>

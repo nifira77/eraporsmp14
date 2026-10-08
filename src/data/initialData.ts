@@ -20,19 +20,19 @@ export const defaultLogoSekolah = '/src/assets/images/school_logo_emblem_1790936
 
 export const initialSchoolInfo: SchoolInfo = {
   namaSekolah: 'SMP Negeri 14 Tulang Bawang Barat',
-  npsn: '69987823',
-  nss: '201121204014',
-  alamat: 'Jl. Pendidikan No. 14, Tirta Kencana, Kec. Tulang Bawang Tengah',
-  desaKelurahan: 'Tirta Kencana',
-  kecamatan: 'Tulang Bawang Tengah',
-  kabupaten: 'Tulang Bawang Barat',
+  npsn: '10809848',
+  nss: '20.1.1812.05.044 / 200441',
+  alamat: 'Jl. Poros Tiyuh Marga Jaya, Kec. Gunung Agung, Kab. Tulag Bawang Barat, Kode Pos 34783',
+  desaKelurahan: 'Marga Jaya',
+  kecamatan: 'Gunung Agung',
+  kabupaten: 'Tulag Bawang Barat',
   provinsi: 'Lampung',
-  kodePos: '34693',
+  kodePos: '34783',
   telepon: '(0726) 782104',
   email: 'smpn14tubaba@kemdikbud.go.id',
   website: 'https://smpn14tulangbawangbarat.sch.id',
-  kepalaSekolah: 'Drs. H. Ahmad Fauzi, M.Pd.',
-  nipKepalaSekolah: '19680514 199303 1 004',
+  kepalaSekolah: 'PEBRIANSYAH., M.Pd',
+  nipKepalaSekolah: '197602182014071002',
   tahunAjaran: '2026/2027',
   semester: 'Ganjil',
   tempatRapor: 'Tulang Bawang Barat',
@@ -44,8 +44,8 @@ export const initialSchoolInfo: SchoolInfo = {
 export const initialUsers: UserProfile[] = [
   {
     id: 'user-admin',
-    name: 'Drs. H. Ahmad Fauzi, M.Pd.',
-    nip: '19680514 199303 1 004',
+    name: 'PEBRIANSYAH., M.Pd',
+    nip: '197602182014071002',
     role: 'admin',
     photoUrl: ''
   },
@@ -440,7 +440,16 @@ export const getInitialState = (): ERaporState => {
         // Respect saved users faithfully: never re-inject deleted default users or overwrite custom SMPN 14 teachers
         let updatedUsers: UserProfile[];
         if (Array.isArray(parsed.users) && parsed.users.length > 0) {
-          updatedUsers = parsed.users;
+          updatedUsers = parsed.users.map((u: any) => {
+            if (u.id === 'user-admin' && (u.name === 'Drs. H. Ahmad Fauzi, M.Pd.' || !u.name)) {
+              return {
+                ...u,
+                name: 'PEBRIANSYAH., M.Pd',
+                nip: '197602182014071002'
+              };
+            }
+            return u;
+          });
         } else {
           updatedUsers = initialUsers;
         }
@@ -515,9 +524,26 @@ export const getInitialState = (): ERaporState => {
         const savedLogoSekolah = parsed.school?.logoSekolah || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_sekolah') : null) || defaultLogoSekolah;
         const savedLogoPemda = parsed.school?.logoPemda || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_pemda') : null) || defaultLogoPemda;
 
+        const isLegacySchoolData = !parsed.school?.npsn || 
+          parsed.school.npsn === '69987823' || 
+          parsed.school.kepalaSekolah === 'Drs. H. Ahmad Fauzi, M.Pd.' ||
+          parsed.school.nss === '201121204014' ||
+          (parsed.school.alamat && parsed.school.alamat.includes('Pendidikan No. 14'));
+
         const currentSchool: SchoolInfo = {
           ...initialSchoolInfo,
           ...parsed.school,
+          ...(isLegacySchoolData ? {
+            npsn: initialSchoolInfo.npsn,
+            nss: initialSchoolInfo.nss,
+            alamat: initialSchoolInfo.alamat,
+            desaKelurahan: initialSchoolInfo.desaKelurahan,
+            kecamatan: initialSchoolInfo.kecamatan,
+            kabupaten: initialSchoolInfo.kabupaten,
+            kodePos: initialSchoolInfo.kodePos,
+            kepalaSekolah: initialSchoolInfo.kepalaSekolah,
+            nipKepalaSekolah: initialSchoolInfo.nipKepalaSekolah
+          } : {}),
           tahunAjaran: (!parsed.school?.tahunAjaran || parsed.school.tahunAjaran === '2024/2025' || parsed.school.tahunAjaran === '2025/2026') 
             ? '2026/2027' 
             : parsed.school.tahunAjaran,

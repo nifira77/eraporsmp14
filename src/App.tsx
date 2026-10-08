@@ -122,9 +122,27 @@ export default function App() {
             : prev.users;
           const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
 
+          const remoteSchool = cloudData.school ? {
+            ...prev.school,
+            ...cloudData.school,
+            ...(cloudData.school.kepalaSekolah === 'Drs. H. Ahmad Fauzi, M.Pd.' ? {
+              kepalaSekolah: prev.school.kepalaSekolah,
+              nipKepalaSekolah: prev.school.nipKepalaSekolah
+            } : {}),
+            ...(cloudData.school.npsn === '69987823' ? {
+              npsn: prev.school.npsn,
+              nss: prev.school.nss,
+              alamat: prev.school.alamat,
+              desaKelurahan: prev.school.desaKelurahan,
+              kecamatan: prev.school.kecamatan,
+              kabupaten: prev.school.kabupaten,
+              kodePos: prev.school.kodePos
+            } : {})
+          } : prev.school;
+
           return {
             ...prev,
-            school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
+            school: remoteSchool,
             students: remoteStudents,
             grades: remoteGrades,
             rombels: remoteRombels,
@@ -288,10 +306,15 @@ export default function App() {
 
   // School info updates
   const handleUpdateSchool = (school: SchoolInfo) => {
-    setState(prev => ({
-      ...prev,
-      school
-    }));
+    setState(prev => {
+      const newState: ERaporState = {
+        ...prev,
+        school
+      };
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
   };
 
   // Rombel handlers

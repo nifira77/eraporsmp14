@@ -199,6 +199,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
     const metaRows = [
       { 'Parameter': 'Satuan Pendidikan', 'Keterangan': school.namaSekolah },
       { 'Parameter': 'NPSN', 'Keterangan': school.npsn },
+      { 'Parameter': 'NSS NIS', 'Keterangan': school.nss },
       { 'Parameter': 'Rombongan Belajar', 'Keterangan': selectedRombel.nama },
       { 'Parameter': 'Tahun Pelajaran', 'Keterangan': school.tahunAjaran },
       { 'Parameter': 'Semester', 'Keterangan': school.semester },
@@ -697,7 +698,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         {school.alamat}, {school.kecamatan}, Kab. {school.kabupaten}, Provinsi {school.provinsi}
                       </p>
                       <p className="text-[9px] font-mono text-slate-700">
-                        NPSN: {school.npsn} · NSS: {school.nss} · Telp: {school.telepon} · Email: {school.email}
+                        NPSN: {school.npsn} · NSS NIS: {school.nss} · Telp: {school.telepon} · Email: {school.email}
                       </p>
                     </div>
 

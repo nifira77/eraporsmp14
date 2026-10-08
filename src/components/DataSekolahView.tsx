@@ -527,10 +527,11 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                NSS
+                NSS NIS
               </label>
               <input
                 type="text"
+                placeholder="20.1.1812.05.044 / 200441"
                 value={formData.nss}
                 onChange={(e) => handleChange('nss', e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
