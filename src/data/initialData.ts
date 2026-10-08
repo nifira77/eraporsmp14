@@ -344,7 +344,8 @@ export const initialSubjects: Subject[] = [
   { id: 'pjok', kode: 'PJOK', nama: 'Pendidikan Jasmani, Olahraga, dan Kesehatan', kategori: 'Umum', kktp: 75, guruPengampuId: 'g-pjok', guruPengampuNama: 'Wahyu Triyono, S.Pd.' },
   { id: 'prakarya', kode: 'PRK', nama: 'Prakarya', kategori: 'Umum', kktp: 75, guruPengampuId: 'g-prakarya', guruPengampuNama: 'Lestari Handayani, S.Pd.' },
   { id: 'informatika', kode: 'INF', nama: 'Informatika', kategori: 'Umum', kktp: 75, guruPengampuId: 'g-inf', guruPengampuNama: 'Rian Hidayat, S.Kom.' },
-  { id: 'mulok', kode: 'MULOK', nama: 'Bahasa & Aksara Lampung (Muatan Lokal)', kategori: 'Muatan Lokal', kktp: 75, guruPengampuId: 'g-mulok', guruPengampuNama: 'Nurhasanah, S.Pd.' }
+  { id: 'mulok', kode: 'MULOK', nama: 'Bahasa & Aksara Lampung (Muatan Lokal)', kategori: 'Muatan Lokal', kktp: 75, guruPengampuId: 'g-mulok', guruPengampuNama: 'Nurhasanah, S.Pd.' },
+  { id: 'mulok_tubaba', kode: 'PKT', nama: 'Pendidikan Karakter Tubaba', kategori: 'Muatan Lokal', kktp: 75, guruPengampuId: 'g-pkt', guruPengampuNama: 'PEBRIANSYAH., M.Pd' }
 ];
 
 export const initialLearningObjectives: TujuanPembelajaran[] = [
@@ -411,7 +412,11 @@ export const initialLearningObjectives: TujuanPembelajaran[] = [
 
   // Mulok (Bahasa Lampung)
   { id: 'tp-mulok-1', subjectId: 'mulok', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Aksara & Sastra Lampung', deskripsi: 'menulis dan membaca Aksara Lampung Had Lampung serta melafalkan sastra lisan Segata/Padih', semester: 'Ganjil' },
-  { id: 'tp-mulok-2', subjectId: 'mulok', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Unggah-ungguh Bahasa Lampung', deskripsi: 'menerapkan tata krama berbahasa Lampung dialek Menggala/Tulang Bawang dalam percakapan sopan', semester: 'Ganjil' }
+  { id: 'tp-mulok-2', subjectId: 'mulok', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Unggah-ungguh Bahasa Lampung', deskripsi: 'menerapkan tata krama berbahasa Lampung dialek Menggala/Tulang Bawang dalam percakapan sopan', semester: 'Ganjil' },
+
+  // Mulok (Pendidikan Karakter Tubaba)
+  { id: 'tp-pkt-1', subjectId: 'mulok_tubaba', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Falsafah Nenemo (Nemen, Nedes, Nerimo)', deskripsi: 'memahami dan menerapkan nilai falsafah Nenemo (kerja keras, pantang menyerah, dan ikhlas) dalam perilaku belajar serta pergaulan di sekolah', semester: 'Ganjil' },
+  { id: 'tp-pkt-2', subjectId: 'mulok_tubaba', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Prinsip Sederhana, Setara, dan Lestari', deskripsi: 'menginternalisasi sikap hidup sederhana, menghargai kesetaraan sosial, dan menjaga kelestarian lingkungan hidup khas kearifan lokal Tubaba', semester: 'Ganjil' }
 ];
 
 export const initialStudents: Student[] = [];

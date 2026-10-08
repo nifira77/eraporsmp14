@@ -229,10 +229,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             <div className="p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1">
               <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
                 <BookOpen className="w-4 h-4" />
-                <span>11 Mapel SP</span>
+                <span>Mapel Terpadu</span>
               </div>
               <p className="text-[11px] text-slate-300">
-                Prakarya, Mulok Lampung, dan 5 Agama terpadu.
+                Prakarya, Mulok Lampung & Karakter Tubaba, 5 Agama.
               </p>
             </div>
 

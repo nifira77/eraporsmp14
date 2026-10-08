@@ -146,8 +146,24 @@ export default function App() {
             students: remoteStudents,
             grades: remoteGrades,
             rombels: remoteRombels,
-            subjects: cloudData.subjects || prev.subjects,
-            learningObjectives: cloudData.learningObjectives || prev.learningObjectives,
+            subjects: (() => {
+              const base = cloudData.subjects || prev.subjects;
+              const ids = new Set(base.map((s: any) => s.id));
+              const merged = [...base];
+              prev.subjects.forEach(s => {
+                if (!ids.has(s.id)) merged.push(s);
+              });
+              return merged;
+            })(),
+            learningObjectives: (() => {
+              const base = cloudData.learningObjectives || prev.learningObjectives;
+              const ids = new Set(base.map((tp: any) => tp.id));
+              const merged = [...base];
+              prev.learningObjectives.forEach(tp => {
+                if (!ids.has(tp.id)) merged.push(tp);
+              });
+              return merged;
+            })(),
             attendances: (cloudData.attendances || prev.attendances).filter((a: any) => remoteValidStudentIds.has(a.studentId)),
             extracurriculars: cloudData.extracurriculars || prev.extracurriculars,
             studentExtracurriculars: (cloudData.studentExtracurriculars || prev.studentExtracurriculars).filter((se: any) => remoteValidStudentIds.has(se.studentId)),
@@ -543,7 +559,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50/90 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50/50 via-slate-50 to-indigo-50/40 flex flex-col font-sans">
       {/* Top Bar with School Emblem, Kemdikbud Brand, and Persona Switcher */}
       <Header
         school={state.school}

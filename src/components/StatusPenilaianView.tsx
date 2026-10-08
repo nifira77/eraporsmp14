@@ -52,7 +52,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Title & Filter */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">
             Status Kelengkapan Penilaian Rapor
@@ -70,7 +70,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
             <select
               value={selectedRombelId}
               onChange={(e) => setSelectedRombelId(e.target.value)}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               {rombels.map(r => (
                 <option key={r.id} value={r.id}>{r.nama}</option>
@@ -81,7 +81,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
       </div>
 
       {/* Progress Card */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+      <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
             <span className="text-xs font-bold text-slate-900">
@@ -92,7 +92,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-bold font-mono text-blue-600 tabular-nums">
+            <span className="text-2xl font-extrabold font-mono text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 tabular-nums">
               {progressPercent}%
             </span>
           </div>
@@ -100,14 +100,14 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
 
         <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
           <div 
-            className="bg-blue-600 h-3 rounded-full transition-all duration-500" 
+            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 h-3 rounded-full transition-all duration-500 shadow-2xs" 
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
 
       {/* Matrix Table: Students x Subjects */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <ClipboardList className="w-4 h-4 text-blue-600" />
@@ -120,7 +120,7 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-800 text-white">
+            <thead className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
               <tr>
                 <th className="py-2.5 px-3 font-semibold w-10 text-center">No</th>
                 <th className="py-2.5 px-3 font-semibold min-w-[160px] sticky left-0 bg-slate-800 z-10">

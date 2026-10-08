@@ -171,18 +171,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 min-h-[calc(100vh-4rem)] border-r border-slate-800 no-print">
+    <aside className="w-64 bg-gradient-to-b from-slate-900 via-[#0d1629] to-[#090f1d] text-slate-300 flex flex-col shrink-0 min-h-[calc(100vh-4.25rem)] border-r border-slate-800/90 shadow-xl no-print select-none">
       {/* Current Active Persona Banner */}
-      <div className="p-4 border-b border-slate-800/80 bg-slate-950/40">
+      <div className="p-4 border-b border-slate-800/80 bg-slate-950/50 backdrop-blur-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold shrink-0">
-            <GraduationCap className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 border border-blue-400/30 flex items-center justify-center text-white font-bold shrink-0 shadow-sm shadow-blue-500/25">
+            <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-white truncate">
+            <p className="text-xs font-semibold text-white truncate leading-snug">
               {currentUser.name}
             </p>
-            <p className="text-[11px] text-blue-400 font-medium">
+            <p className="text-[11px] text-sky-400 font-medium truncate mt-0.5">
               {currentUser.role === 'guru_mapel' && 'Guru Mata Pelajaran'}
               {currentUser.role === 'wali_kelas' && 'Wali Kelas & Guru Mapel'}
               {currentUser.role === 'admin' && 'Administrator e-Rapor'}
@@ -200,15 +200,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         {isLocked && (
-          <div className="mt-3 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
-            <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+          <div className="mt-3 px-2.5 py-1.5 rounded-md bg-amber-500/15 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-200">
+            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-400" />
             <span>Penginputan nilai dikunci</span>
           </div>
         )}
       </div>
 
       {/* Navigation Links organized in authentic groups */}
-      <div className="flex-1 py-3 px-3 space-y-3 overflow-y-auto">
+      <div className="flex-1 py-3 px-3 space-y-3.5 overflow-y-auto">
         {menuSections.map((section, sIdx) => {
           const visibleSectionItems = section.items.filter(item => 
             item.roles.includes(currentUser.role)
@@ -218,10 +218,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           return (
             <div key={sIdx} className="space-y-1">
-              <div className="px-2 pt-1 pb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                <span>{section.title}</span>
+              <div className="px-2 pt-1 pb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400/90">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-sky-500/80" />
+                  {section.title}
+                </span>
                 {section.tag && (
-                  <span className="text-[9px] font-normal lowercase tracking-normal text-slate-400 bg-slate-800/80 px-1.5 py-0.2 rounded border border-slate-700/60">
+                  <span className="text-[9px] font-normal lowercase tracking-normal text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/60">
                     {section.tag}
                   </span>
                 )}
@@ -236,24 +239,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     key={item.id}
                     type="button"
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    className={`w-full group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
                       isActive
-                        ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                        : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white font-semibold shadow-md shadow-indigo-950/40 ring-1 ring-white/20'
+                        : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-sky-300'}`} />
                       <span className="truncate">{item.label}</span>
                     </div>
                     {item.badge && (
                       <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded font-semibold shrink-0 ${
+                        className={`text-[10px] px-1.5 py-0.2 rounded-md font-semibold shrink-0 transition-colors ${
                           isActive 
-                            ? 'bg-blue-700 text-blue-100' 
+                            ? 'bg-white/20 text-white backdrop-blur-xs' 
                             : item.badge === 'Terkunci' 
                               ? 'bg-amber-900/60 text-amber-300 border border-amber-700/50' 
-                              : 'bg-slate-800 text-slate-400'
+                              : 'bg-slate-800/80 text-slate-400 group-hover:text-slate-200'
                         }`}
                       >
                         {item.badge}
@@ -282,12 +285,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* School Signature Info Footer */}
-      <div className="p-4 border-t border-slate-800 text-[11px] text-slate-400 space-y-1 bg-slate-950/20">
-        <p className="font-semibold text-slate-300">SMPN 14 Tulang Bawang Barat</p>
+      <div className="p-4 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1 bg-slate-950/50">
+        <p className="font-semibold text-slate-200">SMPN 14 Tulang Bawang Barat</p>
         <p className="text-[10px] text-slate-400">Kurikulum Merdeka · Fase D</p>
         <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400">
           <span>Versi e-Rapor 2024.1</span>
-          <span className="flex items-center gap-1 text-emerald-400">
+          <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Aktif
           </span>

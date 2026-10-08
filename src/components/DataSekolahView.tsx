@@ -903,6 +903,16 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                             Prakarya (Pengolahan & Kerajinan)
                           </span>
                         )}
+                        {s.id === 'mulok_tubaba' && (
+                          <span className="inline-block mt-0.5 text-[10px] font-semibold text-teal-800 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200">
+                            Kearifan Lokal Tubaba (Nenemo: Nemen, Nedes, Nerimo)
+                          </span>
+                        )}
+                        {s.id === 'mulok' && (
+                          <span className="inline-block mt-0.5 text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                            Bahasa & Aksara Daerah Lampung
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3.5">
                         <span className={`px-2 py-0.5 rounded text-[10.5px] font-semibold ${

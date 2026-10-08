@@ -672,7 +672,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Page Title & Filter Bar */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">
             Input Nilai Sumatif Kurikulum Merdeka
@@ -755,12 +755,12 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
             onClick={() => setAssessmentMode('tengah_semester')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               assessmentMode === 'tengah_semester'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>Sumatif Tengah Semester (STS / PTS)</span>
+            <span>Sumatif Tengah Semester (STS)</span>
           </button>
 
           <button
@@ -768,44 +768,48 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
             onClick={() => setAssessmentMode('akhir_semester')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               assessmentMode === 'akhir_semester'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Award className="w-3.5 h-3.5" />
-            <span>Sumatif Akhir Semester (SAS / SAT / Rapor)</span>
+            <span>Sumatif Akhir Semester (SAS / Rapor)</span>
           </button>
         </div>
       </div>
 
       {/* Mode Information Banner */}
       {assessmentMode === 'tengah_semester' ? (
-        <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 flex items-center justify-between text-xs text-blue-900">
-          <div className="flex items-center gap-2.5">
-            <Clock className="w-4 h-4 text-blue-600 shrink-0" />
+        <div className="bg-gradient-to-r from-blue-50/90 to-sky-50/70 border border-blue-200/80 rounded-2xl p-4 flex items-center justify-between text-xs text-blue-900 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Clock className="w-5 h-5" />
+            </div>
             <div>
-              <span className="font-bold">Mode Aktif: Sumatif Tengah Semester (STS)</span>
-              <p className="text-[11px] text-blue-800">
-                Fokus evaluasi paruh pertama: Menilai TP 1, TP 2, Penilaian Non-Tes (Projek/Praktik STS), dan Tes Tertulis STS.
+              <span className="font-bold text-slate-900">Mode Aktif: Sumatif Tengah Semester (STS)</span>
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                Penginputan Nilai Jadi STS langsung per siswa tanpa perlu pembagian bobot 60% : 40%.
               </p>
             </div>
           </div>
-          <span className="hidden sm:inline-block px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold text-[10px]">
-            Bobot: 60% LM + 40% STS
+          <span className="hidden sm:inline-block px-2.5 py-1 bg-blue-100 text-blue-900 rounded-lg font-bold text-[10.5px] border border-blue-200">
+            Nilai Jadi STS
           </span>
         </div>
       ) : (
-        <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3.5 flex items-center justify-between text-xs text-indigo-900">
-          <div className="flex items-center gap-2.5">
-            <Award className="w-4 h-4 text-indigo-600 shrink-0" />
+        <div className="bg-gradient-to-r from-indigo-50/90 to-purple-50/70 border border-indigo-200/80 rounded-2xl p-4 flex items-center justify-between text-xs text-indigo-900 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Award className="w-5 h-5" />
+            </div>
             <div>
-              <span className="font-bold">Mode Aktif: Sumatif Akhir Semester (SAS / SAT)</span>
-              <p className="text-[11px] text-indigo-800">
-                Fokus laporan akhir: Menilai seluruh TP (TP 1 s.d 4), Non-Tes SAS, Tes SAS, dan rumusan capaian kompetensi buku rapor resmi.
+              <span className="font-bold text-slate-900">Mode Aktif: Sumatif Akhir Semester (SAS / SAT)</span>
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                Fokus laporan akhir: Menilai seluruh TP (TP 1 s.d 4), Tes & Non-Tes SAS, dan perumusan deskripsi capaian rapor.
               </p>
             </div>
           </div>
-          <span className="hidden sm:inline-block px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-semibold text-[10px]">
+          <span className="hidden sm:inline-block px-2.5 py-1 bg-indigo-100 text-indigo-900 rounded-lg font-bold text-[10.5px] border border-indigo-200">
             Bobot: 60% LM + 40% SAS
           </span>
         </div>

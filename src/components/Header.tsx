@@ -107,7 +107,9 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-slate-200 border-t-3 border-blue-700 sticky top-0 z-30 shadow-xs no-print">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs no-print">
+      {/* Modern Radiant Gradient Top Accent Bar */}
+      <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-600 via-sky-500 to-emerald-500" />
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand & School Logo */}
@@ -115,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-1.5 shrink-0">
               {/* Logo Pemda */}
               {school.logoPemda && (
-                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5" title="Pemerintah Kabupaten Tulang Bawang Barat">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5" title="Pemerintah Kabupaten Tulang Bawang Barat">
                   <img 
                     src={school.logoPemda} 
                     alt="Logo Pemda" 
@@ -125,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
 
               {/* Logo Sekolah */}
-              <div className="w-10 h-10 rounded-lg bg-blue-900 border border-blue-950 flex items-center justify-center overflow-hidden shrink-0 shadow-xs p-0.5" title={school.namaSekolah}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-900 flex items-center justify-center overflow-hidden shrink-0 shadow-xs p-0.5" title={school.namaSekolah}>
                 <img 
                   src={school.logoSekolah || "/src/assets/images/school_logo_emblem_1790936910635.jpg"} 
                   alt="Logo Sekolah" 
@@ -139,11 +141,11 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-extrabold text-blue-900 tracking-tight leading-tight flex items-center gap-1.5">
-                  <span>e-Rapor SP</span>
+                <h1 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight flex items-center gap-1.5">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700">e-Rapor SP</span>
                   <span className="text-slate-800 font-bold">Kurikulum Merdeka</span>
                 </h1>
-                <span className="hidden sm:inline-block text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
+                <span className="hidden sm:inline-block text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/80">
                   Kemendikbudristek
                 </span>
               </div>
@@ -220,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
                 className="flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-left transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
               >
-                <div className="w-7 h-7 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-xs">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
                   {currentUser.name.charAt(0)}
                 </div>
                 <div className="hidden sm:block text-left">
