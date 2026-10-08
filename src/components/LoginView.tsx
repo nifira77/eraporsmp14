@@ -25,7 +25,11 @@ interface LoginViewProps {
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
-  const { school, users, rombels } = state;
+  const { school, users, rombels, subjects } = state;
+
+  const adminTeacher = users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah') || users[0];
+  const wali71Teacher = users.find(u => u.rombelId === '7.1') || users.find(u => u.role === 'wali_kelas') || users[1] || users[0];
+  const wali72Teacher = users.find(u => u.rombelId === '7.2') || users[2] || users[0];
 
   // Selected persona / custom input
   const defaultTeacher = users[1] || users[0];
@@ -321,26 +325,36 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
                       </option>
                     ))}
                   </optgroup>
-                  <optgroup label="Wali Kelas & Guru Mapel (Tingkat 7)">
-                    {users.filter(u => u.rombelId?.startsWith('7')).map(u => (
+                  <optgroup label="Wali Kelas (Tingkat 7)">
+                    {users.filter(u => u.role === 'wali_kelas' && u.rombelId?.startsWith('7')).map(u => (
                       <option key={u.id} value={u.id}>
                         {u.name} (Wali Kelas {u.rombelId})
                       </option>
                     ))}
                   </optgroup>
-                  <optgroup label="Wali Kelas & Guru Mapel (Tingkat 8)">
-                    {users.filter(u => u.rombelId?.startsWith('8')).map(u => (
+                  <optgroup label="Wali Kelas (Tingkat 8)">
+                    {users.filter(u => u.role === 'wali_kelas' && u.rombelId?.startsWith('8')).map(u => (
                       <option key={u.id} value={u.id}>
                         {u.name} (Wali Kelas {u.rombelId})
                       </option>
                     ))}
                   </optgroup>
-                  <optgroup label="Wali Kelas & Guru Mapel (Tingkat 9)">
-                    {users.filter(u => u.rombelId?.startsWith('9')).map(u => (
+                  <optgroup label="Wali Kelas (Tingkat 9)">
+                    {users.filter(u => u.role === 'wali_kelas' && u.rombelId?.startsWith('9')).map(u => (
                       <option key={u.id} value={u.id}>
                         {u.name} (Wali Kelas {u.rombelId})
                       </option>
                     ))}
+                  </optgroup>
+                  <optgroup label="Guru Mata Pelajaran">
+                    {users.filter(u => u.role === 'guru_mapel' || (!u.rombelId && u.role !== 'admin' && u.role !== 'kepala_sekolah')).map(u => {
+                      const subject = subjects?.find(s => s.id === u.subjectId);
+                      return (
+                        <option key={u.id} value={u.id}>
+                          {u.name} ({subject ? `Guru ${subject.nama}` : 'Guru Mapel'})
+                        </option>
+                      );
+                    })}
                   </optgroup>
                 </select>
                 <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
@@ -452,38 +466,38 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin')}
+                onClick={() => handleQuickLogin(adminTeacher?.id || 'admin')}
                 className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-blue-50 hover:border-blue-300 text-slate-800 text-left transition-colors cursor-pointer group"
               >
                 <div className="font-bold text-[11px] text-blue-900 group-hover:text-blue-700 flex items-center justify-between">
                   <span>👔 Administrator</span>
                   <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600" />
                 </div>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">Drs. H. Ahmad Fauzi</p>
+                <p className="text-[10px] text-slate-500 truncate mt-0.5">{adminTeacher?.name || 'Administrator'}</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('wali_7.1')}
+                onClick={() => handleQuickLogin(wali71Teacher?.id || 'wali_7.1')}
                 className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-emerald-50 hover:border-emerald-300 text-slate-800 text-left transition-colors cursor-pointer group"
               >
                 <div className="font-bold text-[11px] text-emerald-900 group-hover:text-emerald-700 flex items-center justify-between">
-                  <span>👩‍🏫 Wali Kelas 7.1</span>
+                  <span>👩‍🏫 Wali Kelas {wali71Teacher?.rombelId || '7.1'}</span>
                   <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-emerald-600" />
                 </div>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">Siti Rahmawati, S.Pd.</p>
+                <p className="text-[10px] text-slate-500 truncate mt-0.5">{wali71Teacher?.name || 'Wali Kelas 7.1'}</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('wali_7.2')}
+                onClick={() => handleQuickLogin(wali72Teacher?.id || 'wali_7.2')}
                 className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-purple-50 hover:border-purple-300 text-slate-800 text-left transition-colors cursor-pointer group"
               >
                 <div className="font-bold text-[11px] text-purple-900 group-hover:text-purple-700 flex items-center justify-between">
-                  <span>👨‍🏫 Wali Kelas 7.2</span>
+                  <span>👨‍🏫 Wali Kelas {wali72Teacher?.rombelId || '7.2'}</span>
                   <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-purple-600" />
                 </div>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">Budi Santoso, M.Pd.</p>
+                <p className="text-[10px] text-slate-500 truncate mt-0.5">{wali72Teacher?.name || 'Wali Kelas 7.2'}</p>
               </button>
             </div>
           </div>

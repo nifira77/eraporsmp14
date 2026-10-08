@@ -16,6 +16,7 @@ import {
   Sparkles,
   Info,
   CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   Lock,
   ChevronDown,
@@ -83,6 +84,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     tp4: number;
     nonTes: number;
     tes: number;
+    nilaiSTS?: number;
     status: 'Cocok' | 'Siswa Tidak Ditemukan';
   }>>([]);
   const importFileInputRef = useRef<HTMLInputElement>(null);
@@ -168,7 +170,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     setLocalGrades(map);
   }, [selectedRombelId, selectedSubjectId, grades, rombelStudents]);
 
-  // Recalculate grade calculations for a single student (supporting both STS and SAS)
+  // Recalculate grade calculations for a single student (supporting both direct STS and SAS)
   const recalculateGrade = (current: StudentGrade): StudentGrade => {
     const lmValues = Object.values(current.sumatifLM).map(v => Number(v) || 0);
     const validLMs = lmValues.filter(v => v > 0);
@@ -176,18 +178,10 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
       ? Math.round(validLMs.reduce((a, b) => a + b, 0) / validLMs.length) 
       : 0;
 
-    // Sumatif Tengah Semester (fokus LM 1 & LM 2)
-    const lm1 = Number(current.sumatifLM['tp-1']) || 0;
-    const lm2 = Number(current.sumatifLM['tp-2']) || 0;
-    const lmSTSValues = [lm1, lm2].filter(v => v > 0);
-    const avgLM_STS = lmSTSValues.length > 0 
-      ? Math.round(lmSTSValues.reduce((a, b) => a + b, 0) / lmSTSValues.length) 
-      : 0;
-
-    const nonTesSTS = Number(current.nonTesSTS) || 0;
-    const tesSTS = Number(current.tesSTS) || 0;
-    const avgSTS = (nonTesSTS > 0 || tesSTS > 0) ? Math.round((nonTesSTS + tesSTS) / 2) : 0;
-    const finalSTS = Math.round((avgLM_STS * 0.6) + (avgSTS * 0.4));
+    // Sumatif Tengah Semester: Langsung Nilai Jadi STS (tidak perlu pembagian 60% 40%)
+    const finalSTS = current.nilaiAkhirSTS !== undefined 
+      ? Number(current.nilaiAkhirSTS) || 0 
+      : (Number(current.tesSTS) || Number(current.nonTesSTS) || 0);
 
     // Sumatif Akhir Semester
     const nonTesSAS = Number(current.nonTesSAS) || 0;
@@ -210,7 +204,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
   // Handle score input change
   const handleScoreChange = (
     studentId: string, 
-    field: 'lm' | 'nonTesSTS' | 'tesSTS' | 'nonTesSAS' | 'tesSAS', 
+    field: 'lm' | 'nilaiAkhirSTS' | 'nonTesSTS' | 'tesSTS' | 'nonTesSAS' | 'tesSAS', 
     value: string, 
     tpKey?: string
   ) => {
@@ -221,7 +215,9 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
       const current = { ...prev[studentId] };
       if (!current) return prev;
 
-      if (field === 'lm' && tpKey) {
+      if (field === 'nilaiAkhirSTS') {
+        current.nilaiAkhirSTS = numValue;
+      } else if (field === 'lm' && tpKey) {
         current.sumatifLM = {
           ...current.sumatifLM,
           [tpKey]: numValue
@@ -253,20 +249,19 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
         const kktp = selectedSubject.kktp || 75;
 
         if (assessmentMode === 'tengah_semester') {
-          // STS Description
+          // STS Description directly based on Nilai Jadi STS
+          const stsScore = item.nilaiAkhirSTS ?? 0;
           const tp1 = currentTPs[0];
-          const tp1Score = item.sumatifLM['tp-1'] || 0;
-          const stsScore = item.nilaiAkhirSTS || 0;
 
           let desc = '';
           if (stsScore >= kktp) {
             desc = tp1 
-              ? `Menunjukkan penguasaan yang sangat baik dalam ${tp1.deskripsi} pada paruh pertama semester.`
-              : `Menunjukkan penguasaan materi tengah semester ${selectedSubject.nama} dengan memuaskan.`;
+              ? `Menunjukkan penguasaan yang sangat baik dalam ${tp1.deskripsi} pada asesmen tengah semester.`
+              : `Menunjukkan penguasaan materi tengah semester ${selectedSubject.nama} dengan sangat memuaskan.`;
           } else {
             desc = tp1
-              ? `Perlu bimbingan dan peningkatan pemahaman dalam ${tp1.deskripsi}.`
-              : `Perlu meningkatkan ketekunan dan belajar mandiri pada materi ${selectedSubject.nama}.`;
+              ? `Perlu bimbingan dan peningkatan pemahaman dalam ${tp1.deskripsi} pada asesmen tengah semester.`
+              : `Perlu meningkatkan ketekunan dan belajar mandiri pada materi tengah semester ${selectedSubject.nama}.`;
           }
 
           next[studentId] = {
@@ -341,13 +336,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
         if (assessmentMode === 'tengah_semester') {
           updated = {
             ...item,
-            sumatifLM: {
-              ...item.sumatifLM,
-              'tp-1': val,
-              'tp-2': val + 1
-            },
-            nonTesSTS: val + 2,
-            tesSTS: val,
+            nilaiAkhirSTS: val,
             updatedAt: new Date().toISOString()
           };
         } else {
@@ -391,10 +380,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
           'No': idx + 1,
           'NISN': s.nisn,
           'Nama Peserta Didik': s.nama,
-          'TP 1 (0-100)': g?.sumatifLM['tp-1'] ?? 80,
-          'TP 2 (0-100)': g?.sumatifLM['tp-2'] ?? 82,
-          'Non Tes STS (0-100)': g?.nonTesSTS ?? 85,
-          'Tes Tulis STS (0-100)': g?.tesSTS ?? 80
+          'Nilai Jadi STS (0-100)': g?.nilaiAkhirSTS ?? 80,
+          'Catatan Capaian STS': g?.deskripsiSTS ?? 'Menunjukkan penguasaan materi tengah semester yang baik.'
         };
       } else {
         return {
@@ -420,7 +407,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
       { 'Parameter': 'KKTP Mata Pelajaran', 'Keterangan': `${selectedSubject.kktp} / 100` },
       { 'Parameter': 'Mode Penilaian', 'Keterangan': isSTS ? 'Sumatif Tengah Semester (STS)' : 'Sumatif Akhir Semester (SAS)' },
       { 'Parameter': 'Petunjuk Pengisian', 'Keterangan': 'Rentang nilai angka 0 - 100. Jangan mengubah susunan kolom NISN.' },
-      { 'Parameter': 'Bobot Perhitungan', 'Keterangan': isSTS ? '60% Rata-rata LM + 40% Nilai STS' : '60% Rata-rata LM + 40% Nilai SAS' }
+      { 'Parameter': 'Sistem Perhitungan', 'Keterangan': isSTS ? 'Nilai Jadi STS langsung (tanpa pembagian 60% 40%)' : '60% Rata-rata LM + 40% Nilai SAS' }
     ];
 
     const wb = XLSX.utils.book_new();
@@ -480,6 +467,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
           tp4: number;
           nonTes: number;
           tes: number;
+          nilaiSTS?: number;
           status: 'Cocok' | 'Siswa Tidak Ditemukan';
         }> = [];
 
@@ -503,6 +491,9 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
             return 0;
           };
 
+          const nilaiJadiSTS = isSTS 
+            ? getScore(['nilai jadi sts', 'nilai sts', 'nilai akhir sts', 'sts', 'nilai']) 
+            : 0;
           const tp1 = getScore(['tp 1', 'tp1']);
           const tp2 = getScore(['tp 2', 'tp2']);
           const tp3 = getScore(['tp 3', 'tp3']);
@@ -513,6 +504,9 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
           const tes = isSTS 
             ? getScore(['tes tulis sts', 'tes sts', 'tes']) 
             : getScore(['tes tulis sas', 'tes sas', 'tes']);
+
+          // If isSTS, use direct score if present, else fallback
+          const stsFinal = isSTS ? (nilaiJadiSTS || tes || nonTes || 0) : 0;
 
           if (matchedStudent) {
             parsed.push({
@@ -525,6 +519,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
               tp4,
               nonTes,
               tes,
+              nilaiSTS: stsFinal,
               status: 'Cocok'
             });
           } else {
@@ -538,6 +533,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
               tp4,
               nonTes,
               tes,
+              nilaiSTS: stsFinal,
               status: 'Siswa Tidak Ditemukan'
             });
           }
@@ -592,13 +588,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
         if (isSTS) {
           updated = {
             ...current,
-            sumatifLM: {
-              ...current.sumatifLM,
-              'tp-1': item.tp1 || (current.sumatifLM['tp-1'] || 0),
-              'tp-2': item.tp2 || (current.sumatifLM['tp-2'] || 0)
-            },
-            nonTesSTS: item.nonTes || current.nonTesSTS || 0,
-            tesSTS: item.tes || current.tesSTS || 0,
+            nilaiAkhirSTS: item.nilaiSTS || item.tes || item.nonTes || current.nilaiAkhirSTS || 0,
             updatedAt: new Date().toISOString()
           };
         } else {
@@ -632,22 +622,20 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
   const handleExportCSV = () => {
     const isSTS = assessmentMode === 'tengah_semester';
     const headers = isSTS
-      ? ['NISN', 'Nama Siswa', 'TP 1', 'TP 2', 'Rerata LM (STS)', 'Non Tes STS', 'Tes Tulis STS', 'Nilai Akhir STS', 'Capaian Tengah Semester']
+      ? ['NISN', 'Nama Siswa', 'Nilai Jadi STS', 'KKTP', 'Status Ketercapaian', 'Capaian Tengah Semester']
       : ['NISN', 'Nama Siswa', 'TP 1', 'TP 2', 'TP 3', 'TP 4', 'Nilai Akhir LM', 'Non Tes SAS', 'Tes SAS', 'Nilai Akhir Rapor', 'Capaian Tertinggi', 'Capaian Terendah'];
 
     const rows = rombelStudents.map(student => {
       const g = localGrades[student.id];
       if (isSTS) {
-        const lmSTS = Math.round(((g?.sumatifLM['tp-1'] || 0) + (g?.sumatifLM['tp-2'] || 0)) / 2);
+        const stsScore = g?.nilaiAkhirSTS || 0;
+        const isPass = stsScore >= (selectedSubject.kktp || 75);
         return [
           `"${student.nisn}"`,
           `"${student.nama}"`,
-          g?.sumatifLM['tp-1'] || 0,
-          g?.sumatifLM['tp-2'] || 0,
-          lmSTS,
-          g?.nonTesSTS || 0,
-          g?.tesSTS || 0,
-          g?.nilaiAkhirSTS || 0,
+          stsScore,
+          selectedSubject.kktp || 75,
+          `"${isPass ? 'Tercapai' : 'Perlu Peningkatan'}"`,
           `"${(g?.deskripsiSTS || '').replace(/"/g, '""')}"`
         ].join(',');
       } else {
@@ -918,172 +906,134 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
       </div>
 
       {/* ============================================================== */}
-      {/* MODE 1: TABEL INPUT SUMATIF TENGAH SEMESTER (STS) */}
+      {/* MODE 1: TABEL INPUT SUMATIF TENGAH SEMESTER (STS) - NILAI JADI */}
       {/* ============================================================== */}
       {assessmentMode === 'tengah_semester' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-800 text-white border-b border-slate-700">
-                  <th rowSpan={2} className="py-3 px-3 w-10 text-center font-bold">No</th>
-                  <th rowSpan={2} className="py-3 px-3 min-w-[180px] font-bold">Nama Peserta Didik</th>
-                  <th colSpan={2} className="py-2 px-2 text-center font-bold border-l border-r border-slate-700 bg-blue-900/60">
-                    Sumatif LM (Tengah Semester)
-                  </th>
-                  <th rowSpan={2} className="py-3 px-2 text-center font-bold bg-slate-900/60 w-16">
-                    Rerata LM (60%)
-                  </th>
-                  <th colSpan={2} className="py-2 px-2 text-center font-bold border-l border-r border-slate-700 bg-slate-900/30">
-                    Asesmen Tengah Semester (STS)
-                  </th>
-                  <th rowSpan={2} className="py-3 px-2 text-center font-bold bg-slate-900/60 w-16">
-                    Rerata STS (40%)
-                  </th>
-                  <th rowSpan={2} className="py-3 px-3 text-center font-bold bg-blue-800 text-white w-20">
-                    Nilai Akhir STS
-                  </th>
-                  <th rowSpan={2} className="py-3 px-3 min-w-[260px] font-bold">
-                    Capaian Tengah Semester
-                  </th>
-                </tr>
-                <tr className="bg-slate-700 text-slate-200 border-b border-slate-600 text-[11px]">
-                  <th className="py-1 px-2 text-center border-l border-slate-600 w-16" title={currentTPs[0]?.deskripsi || 'TP 1'}>TP 1</th>
-                  <th className="py-1 px-2 text-center border-r border-slate-600 w-16" title={currentTPs[1]?.deskripsi || 'TP 2'}>TP 2</th>
-                  <th className="py-1 px-2 text-center border-l border-slate-600 w-18">Non-Tes (Projek)</th>
-                  <th className="py-1 px-2 text-center border-r border-slate-600 w-18">Tes Tulis</th>
-                </tr>
-              </thead>
+        <div className="space-y-3">
+          {/* Info Banner: Direct STS Score */}
+          <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3 flex items-center justify-between text-xs text-blue-900">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full font-bold bg-blue-600 text-white text-[10px]">
+                SISTEM NILAI JADI
+              </span>
+              <span className="font-medium">
+                Input Nilai Sumatif Tengah Semester (STS) langsung menggunakan <strong>Nilai Jadi (0 - 100)</strong> tanpa pembagian bobot 60% dan 40%.
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-[11px] font-semibold text-blue-800">
+              <span>KKTP Mapel: <strong className="font-mono text-xs">{selectedSubject.kktp || 75}</strong></span>
+            </div>
+          </div>
 
-              <tbody className="divide-y divide-slate-200">
-                {rombelStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-12 text-center text-slate-500">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Users className="w-8 h-8 text-slate-400" />
-                        <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}</p>
-                        <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
-                      </div>
-                    </td>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-800 text-white border-b border-slate-700">
+                    <th className="py-3 px-3 w-12 text-center font-bold">No</th>
+                    <th className="py-3 px-4 min-w-[220px] font-bold">Nama Peserta Didik</th>
+                    <th className="py-3 px-4 w-44 text-center font-bold bg-blue-900/80 border-l border-r border-slate-700">
+                      Nilai Jadi STS (0 - 100)
+                    </th>
+                    <th className="py-3 px-4 w-36 text-center font-bold bg-slate-900/60">
+                      Status KKTP ({selectedSubject.kktp || 75})
+                    </th>
+                    <th className="py-3 px-4 min-w-[280px] font-bold border-l border-slate-700">
+                      Capaian Kompetensi Tengah Semester
+                    </th>
                   </tr>
-                ) : (
-                  rombelStudents.map((student, idx) => {
-                  const grade = localGrades[student.id];
-                  const lm1 = grade?.sumatifLM['tp-1'] ?? 0;
-                  const lm2 = grade?.sumatifLM['tp-2'] ?? 0;
-                  const lmSTSValues = [lm1, lm2].filter(v => v > 0);
-                  const avgLM_STS = lmSTSValues.length > 0 
-                    ? Math.round(lmSTSValues.reduce((a, b) => a + b, 0) / lmSTSValues.length) 
-                    : 0;
+                </thead>
 
-                  const nonTesSTS = grade?.nonTesSTS ?? 0;
-                  const tesSTS = grade?.tesSTS ?? 0;
-                  const avgSTS = (nonTesSTS > 0 || tesSTS > 0) ? Math.round((nonTesSTS + tesSTS) / 2) : 0;
-                  const finalSTS = grade?.nilaiAkhirSTS ?? Math.round((avgLM_STS * 0.6) + (avgSTS * 0.4));
-                  const isPassing = finalSTS >= (selectedSubject.kktp || 75);
-
-                  return (
-                    <tr key={student.id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="py-2.5 px-3 text-center font-mono text-slate-500 font-medium">
-                        {idx + 1}
-                      </td>
-
-                      {/* Student Name */}
-                      <td className="py-2.5 px-3">
-                        <p className="font-semibold text-slate-900">{student.nama}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">NISN: {student.nisn}</p>
-                      </td>
-
-                      {/* TP 1 */}
-                      <td className="py-1.5 px-1 text-center border-l border-slate-100">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          disabled={!isEditable}
-                          value={grade?.sumatifLM['tp-1'] ?? ''}
-                          onChange={(e) => handleScoreChange(student.id, 'lm', e.target.value, 'tp-1')}
-                          className="w-14 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
-                        />
-                      </td>
-
-                      {/* TP 2 */}
-                      <td className="py-1.5 px-1 text-center border-r border-slate-100">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          disabled={!isEditable}
-                          value={grade?.sumatifLM['tp-2'] ?? ''}
-                          onChange={(e) => handleScoreChange(student.id, 'lm', e.target.value, 'tp-2')}
-                          className="w-14 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
-                        />
-                      </td>
-
-                      {/* Rata-rata LM STS */}
-                      <td className="py-2.5 px-2 text-center font-mono font-semibold text-slate-700 bg-slate-50/70">
-                        {avgLM_STS}
-                      </td>
-
-                      {/* Non-Tes STS (Projek / Portofolio) */}
-                      <td className="py-1.5 px-1 text-center border-l border-slate-100">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          disabled={!isEditable}
-                          value={grade?.nonTesSTS ?? ''}
-                          onChange={(e) => handleScoreChange(student.id, 'nonTesSTS', e.target.value)}
-                          className="w-14 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
-                        />
-                      </td>
-
-                      {/* Tes Tulis STS */}
-                      <td className="py-1.5 px-1 text-center border-r border-slate-100">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          disabled={!isEditable}
-                          value={grade?.tesSTS ?? ''}
-                          onChange={(e) => handleScoreChange(student.id, 'tesSTS', e.target.value)}
-                          className="w-14 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
-                        />
-                      </td>
-
-                      {/* Rata-rata STS */}
-                      <td className="py-2.5 px-2 text-center font-mono font-semibold text-slate-700 bg-slate-50/70">
-                        {avgSTS}
-                      </td>
-
-                      {/* Nilai Akhir STS */}
-                      <td className={`py-2.5 px-3 text-center font-mono font-bold text-sm ${
-                        isPassing ? 'bg-blue-50 text-blue-900' : 'bg-rose-50 text-rose-800'
-                      }`}>
-                        {finalSTS}
-                      </td>
-
-                      {/* Deskripsi Capaian STS */}
-                      <td className="py-2 px-3">
-                        <div className="space-y-1 text-[11px]">
-                          <p className="line-clamp-2 text-slate-700 leading-relaxed">
-                            {grade?.deskripsiSTS || 'Menunjukkan pencapaian kompetensi tengah semester yang baik.'}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => setEditingDeskripsiFor(student.id)}
-                            className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                            <span>Edit Catatan STS</span>
-                          </button>
+                <tbody className="divide-y divide-slate-200">
+                  {rombelStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-slate-500">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Users className="w-8 h-8 text-slate-400" />
+                          <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}</p>
+                          <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
                         </div>
                       </td>
                     </tr>
-                  );
-                }))}
-              </tbody>
-            </table>
+                  ) : (
+                    rombelStudents.map((student, idx) => {
+                    const grade = localGrades[student.id];
+                    const finalSTS = grade?.nilaiAkhirSTS ?? 0;
+                    const isPassing = finalSTS >= (selectedSubject.kktp || 75);
+
+                    return (
+                      <tr key={student.id} className="hover:bg-blue-50/40 transition-colors">
+                        <td className="py-3 px-3 text-center font-mono text-slate-500 font-medium">
+                          {idx + 1}
+                        </td>
+
+                        {/* Student Name */}
+                        <td className="py-3 px-4">
+                          <p className="font-semibold text-slate-900 text-xs">{student.nama}</p>
+                          <p className="text-[10.5px] text-slate-500 font-mono mt-0.5">NISN: {student.nisn}</p>
+                        </td>
+
+                        {/* Input Nilai Jadi STS */}
+                        <td className="py-2.5 px-4 text-center bg-blue-50/20 border-l border-r border-slate-100">
+                          <div className="flex items-center justify-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              disabled={!isEditable}
+                              value={grade?.nilaiAkhirSTS !== undefined && grade?.nilaiAkhirSTS !== 0 ? grade.nilaiAkhirSTS : (grade?.nilaiAkhirSTS === 0 ? '0' : '')}
+                              placeholder="0 - 100"
+                              onChange={(e) => handleScoreChange(student.id, 'nilaiAkhirSTS', e.target.value)}
+                              className={`w-24 py-2 px-3 text-center font-mono font-bold text-base rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                isPassing 
+                                  ? 'bg-white border-blue-400 text-blue-900 focus:border-blue-600 shadow-2xs' 
+                                  : finalSTS > 0 
+                                    ? 'bg-rose-50 border-rose-300 text-rose-900 focus:border-rose-500' 
+                                    : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-blue-500'
+                              }`}
+                            />
+                            <span className="text-[11px] font-semibold text-slate-400">/ 100</span>
+                          </div>
+                        </td>
+
+                        {/* Status KKTP */}
+                        <td className="py-3 px-4 text-center">
+                          {finalSTS > 0 ? (
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                              isPassing 
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                                : 'bg-rose-100 text-rose-800 border border-rose-300'
+                            }`}>
+                              {isPassing ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> : <AlertCircle className="w-3.5 h-3.5 text-rose-700" />}
+                              <span>{isPassing ? 'Tercapai' : 'Belum Tercapai'}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">Belum Diisi</span>
+                          )}
+                        </td>
+
+                        {/* Deskripsi Capaian STS */}
+                        <td className="py-3 px-4 border-l border-slate-100">
+                          <div className="space-y-1.5 text-xs">
+                            <p className="line-clamp-2 text-slate-700 leading-relaxed font-medium">
+                              {grade?.deskripsiSTS || 'Menunjukkan pencapaian kompetensi tengah semester yang baik.'}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setEditingDeskripsiFor(student.id)}
+                              className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              <span>Edit Catatan STS</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -1470,16 +1420,18 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                         <tr>
                           <th className="py-2 px-2.5 w-8 text-center">No</th>
                           <th className="py-2 px-3">Nama Siswa & NISN</th>
-                          <th className="py-2 px-2 text-center w-14">TP 1</th>
-                          <th className="py-2 px-2 text-center w-14">TP 2</th>
-                          {assessmentMode === 'akhir_semester' && (
+                          {assessmentMode === 'tengah_semester' ? (
+                            <th className="py-2 px-2 text-center w-28 bg-blue-100/70 text-blue-900 font-bold">Nilai Jadi STS</th>
+                          ) : (
                             <>
+                              <th className="py-2 px-2 text-center w-14">TP 1</th>
+                              <th className="py-2 px-2 text-center w-14">TP 2</th>
                               <th className="py-2 px-2 text-center w-14">TP 3</th>
                               <th className="py-2 px-2 text-center w-14">TP 4</th>
+                              <th className="py-2 px-2 text-center w-16">Non-Tes</th>
+                              <th className="py-2 px-2 text-center w-16">Tes Tulis</th>
                             </>
                           )}
-                          <th className="py-2 px-2 text-center w-16">Non-Tes</th>
-                          <th className="py-2 px-2 text-center w-16">Tes Tulis</th>
                           <th className="py-2 px-2 text-center w-24">Status</th>
                         </tr>
                       </thead>
@@ -1491,16 +1443,20 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                               <p className="font-semibold text-slate-900">{p.nama}</p>
                               <p className="text-[10px] text-slate-400 font-mono">{p.nisn}</p>
                             </td>
-                            <td className="py-2 px-2 text-center font-mono font-bold text-blue-900">{p.tp1}</td>
-                            <td className="py-2 px-2 text-center font-mono font-bold text-blue-900">{p.tp2}</td>
-                            {assessmentMode === 'akhir_semester' && (
+                            {assessmentMode === 'tengah_semester' ? (
+                              <td className="py-2 px-2 text-center font-mono font-bold text-sm text-blue-900 bg-blue-50/50">
+                                {p.nilaiSTS || p.tes || p.nonTes || 0}
+                              </td>
+                            ) : (
                               <>
+                                <td className="py-2 px-2 text-center font-mono font-bold text-blue-900">{p.tp1}</td>
+                                <td className="py-2 px-2 text-center font-mono font-bold text-blue-900">{p.tp2}</td>
                                 <td className="py-2 px-2 text-center font-mono font-bold text-blue-900">{p.tp3}</td>
                                 <td className="py-2 px-2 text-center font-mono font-bold text-blue-900">{p.tp4}</td>
+                                <td className="py-2 px-2 text-center font-mono text-slate-700">{p.nonTes}</td>
+                                <td className="py-2 px-2 text-center font-mono text-slate-700">{p.tes}</td>
                               </>
                             )}
-                            <td className="py-2 px-2 text-center font-mono text-slate-700">{p.nonTes}</td>
-                            <td className="py-2 px-2 text-center font-mono text-slate-700">{p.tes}</td>
                             <td className="py-2 px-2 text-center">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                                 p.status === 'Cocok' 

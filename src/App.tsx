@@ -117,6 +117,11 @@ export default function App() {
             jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
           }));
 
+          const remoteUsers = (cloudData.users && Array.isArray(cloudData.users) && cloudData.users.length > 0)
+            ? cloudData.users 
+            : prev.users;
+          const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
+
           return {
             ...prev,
             school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
@@ -130,7 +135,8 @@ export default function App() {
             studentExtracurriculars: (cloudData.studentExtracurriculars || prev.studentExtracurriculars).filter((se: any) => remoteValidStudentIds.has(se.studentId)),
             notes: (cloudData.notes || prev.notes).filter((n: any) => remoteValidStudentIds.has(n.studentId)),
             achievements: (cloudData.achievements || prev.achievements).filter((ach: any) => remoteValidStudentIds.has(ach.studentId)),
-            users: cloudData.users || prev.users,
+            users: remoteUsers,
+            currentUser: remoteCurrentUser,
             isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
           };
         });
@@ -311,12 +317,56 @@ export default function App() {
     }));
   };
 
-  // User / Teacher handlers
+  // User / Teacher handlers with instant persistence and cross-entity synchronization
   const handleAddUser = (newUser: UserProfile) => {
-    setState(prev => ({
-      ...prev,
-      users: [...prev.users, newUser]
-    }));
+    setState(prev => {
+      const updatedUsers = [...prev.users, newUser];
+
+      let updatedRombels = prev.rombels;
+      if (newUser.role === 'wali_kelas' && newUser.rombelId) {
+        updatedRombels = prev.rombels.map(r => {
+          if (r.id === newUser.rombelId) {
+            return {
+              ...r,
+              waliKelasNama: newUser.name,
+              waliKelasNip: newUser.nip || '-',
+              waliKelasId: newUser.id
+            };
+          }
+          return r;
+        });
+      }
+
+      let updatedSubjects = prev.subjects;
+      if (newUser.subjectId) {
+        updatedSubjects = prev.subjects.map(s => {
+          if (s.id === newUser.subjectId) {
+            return {
+              ...s,
+              guruPengampuNama: newUser.name,
+              guruPengampuId: newUser.id
+            };
+          }
+          return s;
+        });
+      }
+
+      const updatedSchool = (newUser.role === 'admin' || newUser.role === 'kepala_sekolah')
+        ? { ...prev.school, kepalaSekolah: newUser.name, nipKepalaSekolah: newUser.nip || prev.school.nipKepalaSekolah }
+        : prev.school;
+
+      const newState: ERaporState = {
+        ...prev,
+        school: updatedSchool,
+        users: updatedUsers,
+        rombels: updatedRombels,
+        subjects: updatedSubjects
+      };
+
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
   };
 
   const handleUpdateUser = (updatedUser: UserProfile) => {
@@ -332,7 +382,8 @@ export default function App() {
             return {
               ...r,
               waliKelasNama: updatedUser.name,
-              waliKelasNip: updatedUser.nip || '-'
+              waliKelasNip: updatedUser.nip || '-',
+              waliKelasId: updatedUser.id
             };
           }
           return r;
@@ -344,27 +395,67 @@ export default function App() {
         if (s.id === updatedUser.subjectId) {
           return {
             ...s,
-            guruPengampuNama: updatedUser.name
+            guruPengampuNama: updatedUser.name,
+            guruPengampuId: updatedUser.id
           };
         }
         return s;
       });
 
-      return {
+      // If updating headmaster / admin
+      const updatedSchool = (updatedUser.role === 'admin' || updatedUser.role === 'kepala_sekolah')
+        ? { ...prev.school, kepalaSekolah: updatedUser.name, nipKepalaSekolah: updatedUser.nip || prev.school.nipKepalaSekolah }
+        : prev.school;
+
+      const newState: ERaporState = {
+        ...prev,
+        school: updatedSchool,
+        users: updatedUsers,
+        currentUser: updatedCurrentUser,
+        rombels: updatedRombels,
+        subjects: updatedSubjects
+      };
+
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setState(prev => {
+      const updatedUsers = prev.users.filter(u => u.id !== userId);
+      const updatedCurrentUser = prev.currentUser.id === userId 
+        ? (updatedUsers[0] || prev.currentUser)
+        : prev.currentUser;
+
+      // Clean up references in rombels and subjects
+      const updatedRombels = prev.rombels.map(r => {
+        if (r.waliKelasId === userId) {
+          return { ...r, waliKelasNama: '-', waliKelasNip: '-', waliKelasId: undefined };
+        }
+        return r;
+      });
+
+      const updatedSubjects = prev.subjects.map(s => {
+        if (s.guruPengampuId === userId) {
+          return { ...s, guruPengampuNama: '-' };
+        }
+        return s;
+      });
+
+      const newState: ERaporState = {
         ...prev,
         users: updatedUsers,
         currentUser: updatedCurrentUser,
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
-    });
-  };
 
-  const handleDeleteUser = (userId: string) => {
-    setState(prev => ({
-      ...prev,
-      users: prev.users.filter(u => u.id !== userId)
-    }));
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
   };
 
   // Student handlers

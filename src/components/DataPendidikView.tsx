@@ -21,7 +21,11 @@ import {
   Layers,
   X,
   Edit3,
-  Save
+  Save,
+  FileSpreadsheet,
+  Upload,
+  FileCheck,
+  ShieldCheck
 } from 'lucide-react';
 
 interface DataPendidikViewProps {
@@ -42,6 +46,12 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
   const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Modal Impor Guru dari Excel
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [previewTeachers, setPreviewTeachers] = useState<UserProfile[]>([]);
 
   // Modal Tambah Guru
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -163,6 +173,150 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
     XLSX.writeFile(wb, `Data_Guru_PTK_${school.namaSekolah.replace(/\s+/g, '_')}.xlsx`);
   };
 
+  // Download template Excel untuk input guru
+  const handleDownloadTeacherTemplate = () => {
+    const templateRows = users.map((u, idx) => {
+      const subject = subjects.find(s => s.id === u.subjectId);
+      const rombel = rombels.find(r => r.id === u.rombelId);
+      return {
+        'No': idx + 1,
+        'Nama Lengkap & Gelar': u.name,
+        'NIP': u.nip,
+        'Peran Akses': u.role === 'guru_mapel' ? 'Guru Mapel' : u.role === 'wali_kelas' ? 'Wali Kelas' : 'Admin / Kepsek',
+        'Mata Pelajaran': subject?.nama || '',
+        'Rombel Binaan': rombel?.nama || (u.rombelId ? `Kelas ${u.rombelId}` : ''),
+        'Tugas Tambahan': u.pembinaEkskul ? `Pembina ${u.pembinaEkskul}` : ''
+      };
+    });
+
+    const infoRows = [
+      { 'Parameter': 'Petunjuk Pengisian Data Guru', 'Keterangan': 'Masukkan nama lengkap guru beserta gelar.' },
+      { 'Parameter': 'NIP', 'Keterangan': 'Isi dengan NIP resmi atau tanda "-" jika Non-NIP / Honorer.' },
+      { 'Parameter': 'Peran Akses', 'Keterangan': 'Pilih: Guru Mapel / Wali Kelas / Admin' },
+      { 'Parameter': 'Mata Pelajaran', 'Keterangan': 'Contoh: Matematika, Bahasa Indonesia, IPA, dll.' },
+      { 'Parameter': 'Rombel Binaan', 'Keterangan': 'Contoh: 7.1, 7.2, 8.1, dst. (Hanya untuk Wali Kelas).' },
+      { 'Parameter': 'Tugas Tambahan', 'Keterangan': 'Contoh: OSIS, Pramuka, Rohis, UKS, Seni Tari, Olah Raga' }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(templateRows);
+    ws['!cols'] = [
+      { wch: 6 },
+      { wch: 30 },
+      { wch: 24 },
+      { wch: 18 },
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 22 }
+    ];
+
+    const wsInfo = XLSX.utils.json_to_sheet(infoRows);
+    wsInfo['!cols'] = [{ wch: 25 }, { wch: 60 }];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Daftar_Guru');
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Petunjuk');
+    XLSX.writeFile(wb, `Template_Data_Guru_PTK_SMPN14Tubaba.xlsx`);
+  };
+
+  // Upload dan parse Excel guru
+  const handleTeacherFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFileName(file.name);
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsName = wb.SheetNames[0];
+        const ws = wb.Sheets[wsName];
+        const rawData: any[] = XLSX.utils.sheet_to_json(ws);
+
+        if (!rawData || rawData.length === 0) {
+          setImportError('File Excel tidak berisi data guru yang valid.');
+          return;
+        }
+
+        const parsed: UserProfile[] = rawData.map((row, idx) => {
+          const keys = Object.keys(row);
+          const findVal = (terms: string[]) => {
+            const foundKey = keys.find(k => terms.some(t => k.toLowerCase().trim().includes(t)));
+            return foundKey ? String(row[foundKey]).trim() : '';
+          };
+
+          const rawNama = findVal(['nama', 'guru', 'pendidik']) || `Guru ${idx + 1}`;
+          const rawNip = findVal(['nip']) || '-';
+          const rawPeran = findVal(['peran', 'role', 'jabatan']).toLowerCase();
+          const rawMapel = findVal(['mapel', 'mata pelajaran', 'pelajaran']).toLowerCase();
+          const rawRombel = findVal(['rombel', 'kelas', 'wali']).toLowerCase();
+          const rawEkskul = findVal(['tambahan', 'ekskul', 'pembina']);
+
+          let role: UserRole = 'guru_mapel';
+          if (rawPeran.includes('admin') || rawPeran.includes('kepala') || rawPeran.includes('kepsek')) {
+            role = 'admin';
+          } else if (rawPeran.includes('wali') || rawRombel) {
+            role = 'wali_kelas';
+          }
+
+          // Match subject
+          const matchedSubj = subjects.find(s => 
+            rawMapel.includes(s.kode.toLowerCase()) || rawMapel.includes(s.nama.toLowerCase())
+          );
+
+          // Match rombel
+          const matchedRombel = rombels.find(r => 
+            rawRombel.includes(r.id.toLowerCase()) || rawRombel.includes(r.nama.toLowerCase())
+          );
+
+          return {
+            id: `user-${Date.now().toString(36)}-${idx}`,
+            name: rawNama,
+            nip: rawNip,
+            role,
+            subjectId: matchedSubj?.id || (subjects[0]?.id || 'mtk'),
+            rombelId: role === 'wali_kelas' ? (matchedRombel?.id || '7.1') : undefined,
+            pembinaEkskul: rawEkskul ? rawEkskul.replace(/^pembina\s+/i, '') : undefined,
+            tugasTambahan: rawEkskul ? (rawEkskul.startsWith('Pembina') ? rawEkskul : `Pembina ${rawEkskul}`) : undefined
+          };
+        });
+
+        setPreviewTeachers(parsed);
+        setImportError(null);
+      } catch (err: any) {
+        console.error('Error parsing teacher excel:', err);
+        setImportError('Gagal memproses file Excel guru. Silakan gunakan template yang disediakan.');
+      }
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
+  // Terapkan guru hasil impor
+  const handleCommitTeacherImport = () => {
+    if (previewTeachers.length === 0) return;
+
+    previewTeachers.forEach(newTeacher => {
+      // Check if existing teacher with same NIP or name exists
+      const existing = users.find(u => 
+        (u.nip && u.nip !== '-' && u.nip === newTeacher.nip) ||
+        u.name.toLowerCase() === newTeacher.name.toLowerCase()
+      );
+      if (existing) {
+        onUpdateUser({ ...newTeacher, id: existing.id });
+      } else {
+        onAddUser(newTeacher);
+      }
+    });
+
+    setIsImportModalOpen(false);
+    setPreviewTeachers([]);
+    setImportFileName(null);
+    setSuccessMsg(`Berhasil mengimpor dan memperbarui ${previewTeachers.length} data pendidik SMPN 14.`);
+    setTimeout(() => setSuccessMsg(null), 4000);
+  };
+
   return (
     <div className="space-y-5">
       {/* Top Header */}
@@ -185,8 +339,33 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
+            onClick={handleDownloadTeacherTemplate}
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            title="Unduh format file Excel pengisian daftar guru"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-600" />
+            <span>Format Excel</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setPreviewTeachers([]);
+              setImportFileName(null);
+              setImportError(null);
+              setIsImportModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            title="Impor daftar guru SMPN 14 dari file Excel"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Impor Excel Guru</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Ekspor Excel</span>
@@ -195,12 +374,25 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Tambah Guru Baru</span>
           </button>
         </div>
+      </div>
+
+      {/* Cloud Persistence Assurance Banner */}
+      <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 text-xs text-emerald-900">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="font-medium">
+            <strong>Penyimpanan Permanen Aktif:</strong> Setiap penambahan, pengubahan nama, NIP, peran, maupun penghapusan guru langsung tersimpan di database lokal dan tersinkronisasi otomatis ke Cloud Firestore.
+          </span>
+        </div>
+        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+          <CheckCircle2 className="w-3 h-3" /> Auto-Save
+        </span>
       </div>
 
       {/* Notifications */}
@@ -656,6 +848,154 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Modal Impor Guru dari Excel */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+                <span>Impor Data Guru dari File Excel</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4 text-xs">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-3 text-emerald-900">
+                <FileCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Langkah Cepat Impor Guru SMPN 14:</p>
+                  <ol className="list-decimal list-inside space-y-1 mt-1 text-emerald-800">
+                    <li>Unduh template Excel dengan tombol <strong>"Unduh Format Excel"</strong> di bawah.</li>
+                    <li>Isi data nama lengkap guru, NIP, peran (Guru Mapel / Wali Kelas / Admin), mata pelajaran, dan rombel.</li>
+                    <li>Unggah file Excel yang telah diisi, tinjau pratinjau, lalu klik <strong>"Terapkan ke Sistem"</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Step 1: Download Template */}
+              <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
+                <div>
+                  <p className="font-semibold text-slate-800">1. Unduh Format Template Resmi</p>
+                  <p className="text-[11px] text-slate-500">Gunakan format ini agar data guru terbaca sempurna</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadTeacherTemplate}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Unduh Format Excel</span>
+                </button>
+              </div>
+
+              {/* Step 2: Upload File */}
+              <div>
+                <label className="block font-semibold text-slate-800 mb-1.5">
+                  2. Pilih File Excel (.xlsx, .xls)
+                </label>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .csv"
+                  onChange={handleTeacherFileUpload}
+                  className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-300 rounded-lg p-1"
+                />
+                {importFileName && (
+                  <p className="text-[11px] text-emerald-700 font-medium mt-1 flex items-center gap-1">
+                    <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    File terpilih: {importFileName}
+                  </p>
+                )}
+                {importError && (
+                  <p className="text-[11px] text-rose-600 font-medium mt-1">
+                    {importError}
+                  </p>
+                )}
+              </div>
+
+              {/* Step 3: Preview Teachers */}
+              {previewTeachers.length > 0 && (
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="bg-slate-50 p-2.5 border-b border-slate-200 flex items-center justify-between">
+                    <span className="font-bold text-slate-800">
+                      3. Pratinjau ({previewTeachers.length} Guru Terdeteksi)
+                    </span>
+                    <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Siap Diterapkan
+                    </span>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 text-slate-700 sticky top-0">
+                        <tr>
+                          <th className="py-2 px-2.5 w-8 text-center">No</th>
+                          <th className="py-2 px-3">Nama Lengkap & Gelar</th>
+                          <th className="py-2 px-3">NIP</th>
+                          <th className="py-2 px-3">Peran Akses</th>
+                          <th className="py-2 px-3">Mapel / Rombel</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {previewTeachers.map((t, idx) => {
+                          const subj = subjects.find(s => s.id === t.subjectId);
+                          const rombel = rombels.find(r => r.id === t.rombelId);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50">
+                              <td className="py-1.5 px-2.5 text-center font-mono text-slate-500">{idx + 1}</td>
+                              <td className="py-1.5 px-3 font-semibold text-slate-900">{t.name}</td>
+                              <td className="py-1.5 px-3 font-mono text-slate-600">{t.nip || '-'}</td>
+                              <td className="py-1.5 px-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  t.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                  t.role === 'wali_kelas' ? 'bg-emerald-100 text-emerald-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {t.role === 'admin' ? 'Admin' : t.role === 'wali_kelas' ? 'Wali Kelas' : 'Guru Mapel'}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-3 text-slate-600">
+                                {t.role === 'wali_kelas' ? (rombel?.nama || t.rombelId || '-') : (subj?.nama || '-')}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={previewTeachers.length === 0}
+                onClick={handleCommitTeacherImport}
+                className="px-5 py-2 font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileCheck className="w-4 h-4" />
+                <span>Terapkan {previewTeachers.length} Guru ke e-Rapor</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

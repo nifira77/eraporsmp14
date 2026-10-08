@@ -437,28 +437,15 @@ export const getInitialState = (): ERaporState => {
     try {
       const parsed = JSON.parse(savedState);
       if (parsed && parsed.school) {
-        // Ensure initial users have pembinaEkskul and tugasTambahan if they match initial users
-        const updatedUsers = (parsed.users || initialUsers).map((u: any) => {
-          const initU = initialUsers.find(iu => iu.id === u.id);
-          if (initU && initU.pembinaEkskul && !u.pembinaEkskul) {
-            return {
-              ...u,
-              pembinaEkskul: initU.pembinaEkskul,
-              tugasTambahan: initU.tugasTambahan
-            };
-          }
-          return u;
-        });
+        // Respect saved users faithfully: never re-inject deleted default users or overwrite custom SMPN 14 teachers
+        let updatedUsers: UserProfile[];
+        if (Array.isArray(parsed.users) && parsed.users.length > 0) {
+          updatedUsers = parsed.users;
+        } else {
+          updatedUsers = initialUsers;
+        }
 
-        // Ensure all 12 wali kelas users are present
-        const existingUserIds = new Set(updatedUsers.map((u: any) => u.id));
-        initialUsers.forEach(iu => {
-          if (!existingUserIds.has(iu.id)) {
-            updatedUsers.push(iu);
-          }
-        });
-
-        const activeUser = updatedUsers.find((u: any) => u.id === parsed.currentUser?.id) || updatedUsers[1];
+        const activeUser = updatedUsers.find((u: any) => u.id === parsed.currentUser?.id) || updatedUsers[0] || initialUsers[0];
 
         // Ensure standard 6 extracurriculars (OSIS, Pramuka, Rohis, UKS, Seni Tari, Olah Raga)
         const hasStandardEkskul = parsed.extracurriculars && parsed.extracurriculars.some((e: any) => e.id === 'ek-osis');

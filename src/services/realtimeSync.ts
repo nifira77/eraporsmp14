@@ -133,6 +133,17 @@ export async function syncStateToCloud(
         }, { merge: true }).catch(() => {});
       }
 
+      // Preserve teachers / users registry in Firestore
+      if (state.users && state.users.length > 0) {
+        const usersRegistryRef = doc(db, COLLECTION_NAME, 'users_registry');
+        await setDoc(usersRegistryRef, {
+          users: state.users,
+          count: state.users.length,
+          lastUpdatedBy: updatedBy,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(() => {});
+      }
+
       return true;
     } catch (error) {
       console.error('Failed to sync state to cloud:', error);
@@ -181,6 +192,16 @@ export async function fetchCloudStateOnce(): Promise<Partial<ERaporState> | null
           const registrySnap = await getDoc(doc(db, COLLECTION_NAME, 'students_registry'));
           if (registrySnap.exists() && registrySnap.data()?.students?.length > 0) {
             stateData.students = registrySnap.data().students;
+          }
+        } catch (e) {}
+      }
+
+      // If main_state users is empty, check users backup registry
+      if (!stateData.users || stateData.users.length === 0) {
+        try {
+          const uSnap = await getDoc(doc(db, COLLECTION_NAME, 'users_registry'));
+          if (uSnap.exists() && uSnap.data()?.users?.length > 0) {
+            stateData.users = uSnap.data().users;
           }
         } catch (e) {}
       }
