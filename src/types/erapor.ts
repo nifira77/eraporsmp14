@@ -109,6 +109,8 @@ export interface StudentGrade {
   deskripsiTertinggi: string;
   deskripsiTerendah: string;
   statusKetercapaian: 'Tercapai' | 'Perlu Peningkatan';
+  statusKirim?: 'draft' | 'terkirim' | 'perbaikan';
+  tanggalKirim?: string;
   updatedAt: string;
 }
 

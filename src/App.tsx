@@ -58,6 +58,7 @@ import { LoginView } from './components/LoginView';
 export default function App() {
   const [state, setState] = useState<ERaporState>(() => getInitialState());
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [activeSubjectIdForInput, setActiveSubjectIdForInput] = useState<string | undefined>(undefined);
   const [cloudStatus, setCloudStatus] = useState<'connected' | 'syncing' | 'offline'>('syncing');
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -111,7 +112,29 @@ export default function App() {
         setState(prev => {
           const remoteStudents = (cloudData.students || prev.students).filter((s: any) => !s.id?.startsWith('std-'));
           const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
-          const remoteGrades = (cloudData.grades || prev.grades).filter((g: any) => remoteValidStudentIds.has(g.studentId));
+          const remoteGrades = (() => {
+            const gradeMap = new Map<string, any>();
+            (prev.grades || []).forEach((g: any) => {
+              if (g && g.studentId && g.subjectId) {
+                gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
+              }
+            });
+            ((cloudData.grades as any[]) || []).forEach((g: any) => {
+              if (g && g.studentId && g.subjectId) {
+                const existing = gradeMap.get(`${g.studentId}-${g.subjectId}`);
+                if (!existing) {
+                  gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
+                } else {
+                  const cloudTime = new Date(g.updatedAt || 0).getTime();
+                  const localTime = new Date(existing.updatedAt || 0).getTime();
+                  if (cloudTime >= localTime || !existing.updatedAt) {
+                    gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
+                  }
+                }
+              }
+            });
+            return Array.from(gradeMap.values()).filter((g: any) => remoteValidStudentIds.has(g.studentId));
+          })();
           const remoteRombels = (cloudData.rombels || prev.rombels).map((r: any) => ({
             ...r,
             jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
@@ -122,14 +145,17 @@ export default function App() {
             : prev.users;
           const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
 
+          const isLegacyRemoteSchool = !cloudData.school ||
+            cloudData.school.kepalaSekolah !== 'PEBRIANSYAH., M.Pd' ||
+            cloudData.school.npsn !== '10809848' ||
+            cloudData.school.nss !== '20.1.1812.05.044 / 200441';
+
           const remoteSchool = cloudData.school ? {
             ...prev.school,
             ...cloudData.school,
-            ...(cloudData.school.kepalaSekolah === 'Drs. H. Ahmad Fauzi, M.Pd.' ? {
+            ...(isLegacyRemoteSchool ? {
               kepalaSekolah: prev.school.kepalaSekolah,
-              nipKepalaSekolah: prev.school.nipKepalaSekolah
-            } : {}),
-            ...(cloudData.school.npsn === '69987823' ? {
+              nipKepalaSekolah: prev.school.nipKepalaSekolah,
               npsn: prev.school.npsn,
               nss: prev.school.nss,
               alamat: prev.school.alamat,
@@ -269,9 +295,22 @@ export default function App() {
   // Grade updates
   const handleUpdateGrades = (updatedList: StudentGrade[]) => {
     setState(prev => {
-      const gradeMap = new Map(prev.grades.map(g => [g.id, g]));
+      const gradeMap = new Map<string, StudentGrade>();
+      // First register existing grades by unique key studentId-subjectId
+      (prev.grades || []).forEach(g => {
+        if (g && g.studentId && g.subjectId) {
+          gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
+        }
+      });
+      // Override or add updated grades
       updatedList.forEach(g => {
-        gradeMap.set(g.id, g);
+        if (g && g.studentId && g.subjectId) {
+          gradeMap.set(`${g.studentId}-${g.subjectId}`, {
+            ...g,
+            id: g.id || `grade-${g.studentId}-${g.subjectId}`,
+            updatedAt: g.updatedAt || new Date().toISOString()
+          });
+        }
       });
       return {
         ...prev,
@@ -606,13 +645,20 @@ export default function App() {
               state={state}
               onUpdateGrades={handleUpdateGrades}
               onUpdateSubjectKKTP={handleUpdateSubjectKKTP}
+              initialSubjectId={activeSubjectIdForInput}
             />
           )}
 
           {activeTab === 'rekap_status' && (
             <StatusPenilaianView
               state={state}
-              onOpenSubjectGrades={() => setActiveTab('input_nilai')}
+              onUpdateGrades={handleUpdateGrades}
+              onOpenSubjectGrades={(subjectId) => {
+                if (subjectId) {
+                  setActiveSubjectIdForInput(subjectId);
+                }
+                setActiveTab('input_nilai');
+              }}
             />
           )}
 

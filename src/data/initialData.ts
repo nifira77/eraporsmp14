@@ -530,10 +530,12 @@ export const getInitialState = (): ERaporState => {
         const savedLogoPemda = parsed.school?.logoPemda || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_pemda') : null) || defaultLogoPemda;
 
         const isLegacySchoolData = !parsed.school?.npsn || 
-          parsed.school.npsn === '69987823' || 
-          parsed.school.kepalaSekolah === 'Drs. H. Ahmad Fauzi, M.Pd.' ||
-          parsed.school.nss === '201121204014' ||
-          (parsed.school.alamat && parsed.school.alamat.includes('Pendidikan No. 14'));
+          parsed.school.npsn !== '10809848' || 
+          parsed.school.kepalaSekolah !== 'PEBRIANSYAH., M.Pd' ||
+          parsed.school.nipKepalaSekolah !== '197602182014071002' ||
+          parsed.school.nss !== '20.1.1812.05.044 / 200441' ||
+          !parsed.school.alamat ||
+          !parsed.school.alamat.includes('Marga Jaya');
 
         const currentSchool: SchoolInfo = {
           ...initialSchoolInfo,

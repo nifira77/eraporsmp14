@@ -61,6 +61,7 @@ export const PenilaianEkskulView: React.FC<PenilaianEkskulViewProps> = ({
 
   // Modal Tambah Siswa Aktif
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalRombelId, setModalRombelId] = useState<string>(rombels[0]?.id || '7.1');
   const [newStudentId, setNewStudentId] = useState(students[0]?.id || '');
   const [newPredikat, setNewPredikat] = useState<'Sangat Baik' | 'Baik' | 'Cukup' | 'Kurang'>('Sangat Baik');
   const [newKeterangan, setNewKeterangan] = useState('');
@@ -86,13 +87,17 @@ export const PenilaianEkskulView: React.FC<PenilaianEkskulViewProps> = ({
     });
   }, [localEkskuls, selectedEkskulId, selectedRombelFilter, searchQuery, students]);
 
-  // Students not yet enrolled in this extracurricular
+  // Students not yet enrolled in this extracurricular, filtered by modal selected class
   const availableStudentsToAdd = useMemo(() => {
     const existingStudentIds = new Set(
       localEkskuls.filter(entry => entry.ekskulId === selectedEkskulId).map(e => e.studentId)
     );
-    return students.filter(s => !existingStudentIds.has(s.id));
-  }, [students, localEkskuls, selectedEkskulId]);
+    let pool = students.filter(s => !existingStudentIds.has(s.id));
+    if (modalRombelId && modalRombelId !== 'all') {
+      pool = pool.filter(s => s.rombelId === modalRombelId);
+    }
+    return pool;
+  }, [students, localEkskuls, selectedEkskulId, modalRombelId]);
 
   // Handle predikat change
   const handlePredikatChange = (entryId: string, predikat: 'Sangat Baik' | 'Baik' | 'Cukup' | 'Kurang') => {
@@ -265,16 +270,21 @@ export const PenilaianEkskulView: React.FC<PenilaianEkskulViewProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (availableStudentsToAdd.length > 0) {
-                setNewStudentId(availableStudentsToAdd[0].id);
-                setNewPredikat('Sangat Baik');
-                setNewKeterangan('');
-                setIsAddModalOpen(true);
-              } else {
-                alert('Semua siswa di sekolah sudah terdaftar pada ekstrakurikuler ini.');
+              const initRombel = selectedRombelFilter !== 'all' ? selectedRombelFilter : (rombels[0]?.id || '7.1');
+              setModalRombelId(initRombel);
+              const existingStudentIds = new Set(
+                localEkskuls.filter(entry => entry.ekskulId === selectedEkskulId).map(e => e.studentId)
+              );
+              let pool = students.filter(s => !existingStudentIds.has(s.id));
+              if (initRombel !== 'all') {
+                pool = pool.filter(s => s.rombelId === initRombel);
               }
+              setNewStudentId(pool[0]?.id || '');
+              setNewPredikat('Sangat Baik');
+              setNewKeterangan('');
+              setIsAddModalOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Tambah Siswa Aktif</span>
@@ -489,25 +499,71 @@ export const PenilaianEkskulView: React.FC<PenilaianEkskulViewProps> = ({
             </div>
 
             <div className="mt-4 space-y-3.5 text-xs">
+              {/* Field Pilih Kelas / Rombel */}
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Pilih Peserta Didik
+                  Pilih Kelas / Rombel
                 </label>
                 <select
-                  required
-                  value={newStudentId}
-                  onChange={(e) => setNewStudentId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  {availableStudentsToAdd.map(s => {
-                    const r = rombels.find(item => item.id === s.rombelId);
-                    return (
-                      <option key={s.id} value={s.id}>
-                        {s.nama} ({r?.nama || s.rombelId} · NISN {s.nisn})
-                      </option>
+                  value={modalRombelId}
+                  onChange={(e) => {
+                    const rId = e.target.value;
+                    setModalRombelId(rId);
+                    const existingStudentIds = new Set(
+                      localEkskuls.filter(entry => entry.ekskulId === selectedEkskulId).map(entry => entry.studentId)
                     );
-                  })}
+                    let pool = students.filter(s => !existingStudentIds.has(s.id));
+                    if (rId !== 'all') {
+                      pool = pool.filter(s => s.rombelId === rId);
+                    }
+                    if (pool.length > 0) {
+                      setNewStudentId(pool[0].id);
+                    } else {
+                      setNewStudentId('');
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 cursor-pointer"
+                >
+                  <option value="all">Semua Kelas ({students.length} Siswa)</option>
+                  {rombels.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.nama} ({students.filter(s => s.rombelId === r.id).length} Siswa)
+                    </option>
+                  ))}
                 </select>
+              </div>
+
+              {/* Field Pilih Peserta Didik */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-slate-700">
+                    Pilih Peserta Didik di Kelas Terpilih
+                  </label>
+                  <span className="text-[11px] font-medium text-slate-500">
+                    {availableStudentsToAdd.length} siswa belum terdaftar
+                  </span>
+                </div>
+                {availableStudentsToAdd.length === 0 ? (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs">
+                    Semua siswa di kelas ini telah terdaftar di ekskul {currentEkskul.nama} atau belum ada data siswa pada rombel ini.
+                  </div>
+                ) : (
+                  <select
+                    required
+                    value={newStudentId}
+                    onChange={(e) => setNewStudentId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white cursor-pointer"
+                  >
+                    {availableStudentsToAdd.map(s => {
+                      const r = rombels.find(item => item.id === s.rombelId);
+                      return (
+                        <option key={s.id} value={s.id}>
+                          {s.nama} ({r?.nama || s.rombelId} · NISN {s.nisn})
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
               </div>
 
               <div>

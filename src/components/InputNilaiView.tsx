@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   ERaporState, 
@@ -30,19 +30,22 @@ import {
   FileCheck,
   X,
   AlertCircle,
-  Users
+  Users,
+  Send
 } from 'lucide-react';
 
 interface InputNilaiViewProps {
   state: ERaporState;
   onUpdateGrades: (updatedGrades: StudentGrade[]) => void;
   onUpdateSubjectKKTP?: (subjectId: string, newKKTP: number) => void;
+  initialSubjectId?: string;
 }
 
 export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
   state,
   onUpdateGrades,
-  onUpdateSubjectKKTP
+  onUpdateSubjectKKTP,
+  initialSubjectId
 }) => {
   const { 
     students, 
@@ -59,8 +62,14 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     currentUser.rombelId || rombels[0]?.id || '7.1'
   );
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
-    currentUser.subjectId || 'mtk'
+    initialSubjectId || currentUser.subjectId || 'mtk'
   );
+
+  useEffect(() => {
+    if (initialSubjectId && subjects.some(s => s.id === initialSubjectId)) {
+      setSelectedSubjectId(initialSubjectId);
+    }
+  }, [initialSubjectId, subjects]);
 
   // Assessment Mode: Sumatif Tengah Semester (STS) vs Sumatif Akhir Semester (SAS)
   const [assessmentMode, setAssessmentMode] = useState<AssessmentMode>('akhir_semester');
@@ -123,17 +132,82 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     );
   }, [learningObjectives, selectedSubjectId, selectedRombelId]);
 
-  // Filter students belonging to this rombel
+  // Check if subject is religion subject and detect required student religion
+  const religionRequirement = useMemo(() => {
+    const sId = (selectedSubjectId || '').toLowerCase();
+    const sName = (selectedSubject?.nama || '').toLowerCase();
+
+    if (sId === 'pak_kristen' || sName.includes('kristen protestan') || (sName.includes('kristen') && !sName.includes('katolik'))) {
+      return { 
+        isNonIslamReligion: true, 
+        agamaLabel: 'Kristen Protestan', 
+        matches: (ag: string) => ag.includes('kristen') || ag.includes('protestan') 
+      };
+    }
+    if (sId === 'pak_katolik' || sName.includes('katolik')) {
+      return { 
+        isNonIslamReligion: true, 
+        agamaLabel: 'Katolik', 
+        matches: (ag: string) => ag.includes('katolik') || ag.includes('khatolik') 
+      };
+    }
+    if (sId === 'pah_hindu' || sName.includes('hindu')) {
+      return { 
+        isNonIslamReligion: true, 
+        agamaLabel: 'Hindu', 
+        matches: (ag: string) => ag.includes('hindu') 
+      };
+    }
+    if (sId === 'pab_buddha' || sName.includes('buddha') || sName.includes('budha')) {
+      return { 
+        isNonIslamReligion: true, 
+        agamaLabel: 'Buddha', 
+        matches: (ag: string) => ag.includes('buddha') || ag.includes('budha') 
+      };
+    }
+    if (sName.includes('khonghucu')) {
+      return { 
+        isNonIslamReligion: true, 
+        agamaLabel: 'Khonghucu', 
+        matches: (ag: string) => ag.includes('khonghucu') || ag.includes('konghucu') 
+      };
+    }
+    return null;
+  }, [selectedSubjectId, selectedSubject]);
+
+  // Filter students belonging to this rombel, with strict faith filtering for religious subjects other than Islam
   const rombelStudents = useMemo(() => {
-    return students.filter(s => s.rombelId === selectedRombelId);
-  }, [students, selectedRombelId]);
+    const inClass = students.filter(s => s.rombelId === selectedRombelId);
+    if (religionRequirement?.isNonIslamReligion) {
+      return inClass.filter(s => {
+        const ag = (s.agama || '').toLowerCase();
+        return religionRequirement.matches(ag);
+      });
+    }
+    return inClass;
+  }, [students, selectedRombelId, religionRequirement]);
+
+  // Submission status of current subject & rombel
+  const currentSubmissionStatus = useMemo<'draft' | 'terkirim' | 'perbaikan'>(() => {
+    const list = Object.values(localGrades);
+    if (list.length === 0) return 'draft';
+    if (list.some(g => g.statusKirim === 'perbaikan')) return 'perbaikan';
+    if (list.some(g => g.statusKirim === 'terkirim')) return 'terkirim';
+    return 'draft';
+  }, [localGrades]);
+
+  const lastSubmittedTime = useMemo(() => {
+    const list = Object.values(localGrades);
+    const item = list.find(g => g.tanggalKirim);
+    return item?.tanggalKirim ? new Date(item.tanggalKirim).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : null;
+  }, [localGrades]);
 
   // Initialize or synchronize local editable state whenever filters change or external grades change
-  useMemo(() => {
+  useEffect(() => {
     const map: Record<string, StudentGrade> = {};
     rombelStudents.forEach(student => {
       const existingGrade = grades.find(
-        g => g.studentId === student.id && g.subjectId === selectedSubjectId && g.rombelId === selectedRombelId
+        g => g.studentId === student.id && g.subjectId === selectedSubjectId
       );
 
       if (existingGrade) {
@@ -163,6 +237,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
           deskripsiTertinggi: 'Menunjukkan pemahaman yang memadai terhadap materi yang diajarkan.',
           deskripsiTerendah: 'Perlu latihan lebih lanjut dalam materi yang belum dikuasai.',
           statusKetercapaian: 'Perlu Peningkatan',
+          statusKirim: 'draft',
           updatedAt: new Date().toISOString()
         };
       }
@@ -233,6 +308,11 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
       }
 
       const recalculated = recalculateGrade(current);
+      recalculated.updatedAt = new Date().toISOString();
+
+      // Immediately propagate to global state, localStorage, and Firestore cloud
+      onUpdateGrades([recalculated]);
+
       return {
         ...prev,
         [studentId]: recalculated
@@ -266,7 +346,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
 
           next[studentId] = {
             ...item,
-            deskripsiSTS: desc
+            deskripsiSTS: desc,
+            updatedAt: new Date().toISOString()
           };
         } else {
           // SAS Description
@@ -306,17 +387,20 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
           next[studentId] = {
             ...item,
             deskripsiTertinggi: highDesc,
-            deskripsiTerendah: lowDesc
+            deskripsiTerendah: lowDesc,
+            updatedAt: new Date().toISOString()
           };
         }
       });
+
+      onUpdateGrades(Object.values(next));
       return next;
     });
 
     setSaveSuccessMessage(
       assessmentMode === 'tengah_semester'
-        ? 'Deskripsi capaian Sumatif Tengah Semester (STS) berhasil digenerate otomatis.'
-        : 'Deskripsi capaian rapor Sumatif Akhir Semester (SAS) berhasil digenerate otomatis.'
+        ? 'Deskripsi capaian Sumatif Tengah Semester (STS) berhasil digenerate otomatis dan tersimpan.'
+        : 'Deskripsi capaian rapor Sumatif Akhir Semester (SAS) berhasil digenerate otomatis dan tersimpan.'
     );
     setTimeout(() => setSaveSuccessMessage(null), 4000);
   };
@@ -356,6 +440,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
 
         next[studentId] = recalculateGrade(updated);
       });
+
+      onUpdateGrades(Object.values(next));
       return next;
     });
   };
@@ -365,9 +451,53 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     const updatedList = Object.values(localGrades);
     onUpdateGrades(updatedList);
     setSaveSuccessMessage(
-      `Nilai ${assessmentMode === 'tengah_semester' ? 'Sumatif Tengah Semester (STS)' : 'Sumatif Akhir Semester (SAS)'} mata pelajaran ${selectedSubject.nama} berhasil disimpan.`
+      `✓ Nilai ${assessmentMode === 'tengah_semester' ? 'Sumatif Tengah Semester (STS)' : 'Sumatif Akhir Semester (SAS)'} mata pelajaran ${selectedSubject.nama} berhasil disimpan dan langsung tampil pada seluruh modul e-Rapor.`
     );
     setTimeout(() => setSaveSuccessMessage(null), 4000);
+  };
+
+  // Kirim Nilai ke Rapor
+  const handleKirimNilai = () => {
+    const now = new Date().toISOString();
+    const isPerbaikan = currentSubmissionStatus === 'perbaikan';
+    const updatedList = Object.values(localGrades).map(g => ({
+      ...g,
+      statusKirim: 'terkirim' as const,
+      tanggalKirim: now,
+      updatedAt: now
+    }));
+    const newMap: Record<string, StudentGrade> = {};
+    updatedList.forEach(g => {
+      newMap[g.studentId] = g;
+    });
+    setLocalGrades(newMap);
+    onUpdateGrades(updatedList);
+    setSaveSuccessMessage(
+      isPerbaikan
+        ? `✓ PERBAIKAN NILAI ${selectedSubject.nama} untuk ${selectedRombel.nama} BERHASIL DIKIRIM KE RAPOR!`
+        : `✓ NILAI ${selectedSubject.nama} untuk ${selectedRombel.nama} RESMI DIKIRIM KE RAPOR & WALI KELAS!`
+    );
+    setTimeout(() => setSaveSuccessMessage(null), 5000);
+  };
+
+  // Buka Status Perbaikan Nilai
+  const handleBukaPerbaikan = () => {
+    const now = new Date().toISOString();
+    const updatedList = Object.values(localGrades).map(g => ({
+      ...g,
+      statusKirim: 'perbaikan' as const,
+      updatedAt: now
+    }));
+    const newMap: Record<string, StudentGrade> = {};
+    updatedList.forEach(g => {
+      newMap[g.studentId] = g;
+    });
+    setLocalGrades(newMap);
+    onUpdateGrades(updatedList);
+    setSaveSuccessMessage(
+      `⚠️ MODE PERBAIKAN NILAI AKTIF untuk ${selectedSubject.nama} (${selectedRombel.nama}). Silakan sesuaikan nilai kemudian klik "Kirim Nilai Perbaikan".`
+    );
+    setTimeout(() => setSaveSuccessMessage(null), 5000);
   };
 
   // Download Excel Format Template for Grades
@@ -815,6 +945,30 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
         </div>
       )}
 
+      {/* Religion Filter Banner for non-Islamic religious subjects */}
+      {religionRequirement?.isNonIslamReligion && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs text-amber-900 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs font-bold text-sm">
+              ✝️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900">
+                  Filter Khusus Peserta Didik Beragama {religionRequirement.agamaLabel}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900">
+                  {rombelStudents.length} Siswa Terdaftar
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-800 mt-0.5">
+                Sesuai Kurikulum Merdeka Kemdikbud, penginputan nilai mata pelajaran ini <strong>hanya menampilkan peserta didik yang memeluk agama {religionRequirement.agamaLabel}</strong> di {selectedRombel.nama}. Siswa pemeluk agama lain tidak dicantumkan di sini.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Lock Warning if locked */}
       {!isEditable && (
         <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center gap-3 text-xs text-amber-800">
@@ -830,11 +984,70 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
 
       {/* Success Notification */}
       {saveSuccessMessage && (
-        <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 flex items-center gap-2.5 text-xs text-emerald-800 animate-in fade-in duration-200">
+        <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 flex items-center gap-2.5 text-xs text-emerald-800 animate-in fade-in duration-200 shadow-xs">
           <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
           <span className="font-medium">{saveSuccessMessage}</span>
         </div>
       )}
+
+      {/* Status Pengiriman & Sinkronisasi Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="font-bold text-slate-700">Status Penilaian:</span>
+            {currentSubmissionStatus === 'terkirim' ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg font-bold text-[11px]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                SUDAH DIKIRIM KE RAPOR {lastSubmittedTime && `(${lastSubmittedTime})`}
+              </span>
+            ) : currentSubmissionStatus === 'perbaikan' ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-lg font-bold text-[11px]">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                DALAM PERBAIKAN NILAI (MODE EDIT)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg font-semibold text-[11px]">
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
+                DRAFT (BELUM DIKIRIM)
+              </span>
+            )}
+          </div>
+
+          <div className="hidden md:flex items-center gap-1 text-[11px] text-slate-500 border-l border-slate-200 pl-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Tersimpan & tersinkron otomatis ke seluruh modul</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {currentSubmissionStatus === 'terkirim' && isEditable && (
+            <button
+              type="button"
+              onClick={handleBukaPerbaikan}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              title="Buka akses pengeditan untuk merevisi nilai yang sudah dikirim"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-amber-700" />
+              <span>Buka Status Perbaikan</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleKirimNilai}
+            disabled={!isEditable}
+            className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer ${
+              currentSubmissionStatus === 'terkirim'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white shadow-blue-500/20'
+            }`}
+            title="Kirim nilai resmi ke buku rapor dan wali kelas"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>{currentSubmissionStatus === 'perbaikan' ? 'Kirim Nilai Perbaikan' : currentSubmissionStatus === 'terkirim' ? 'Kirim Ulang Nilai' : 'Kirim Nilai ke Rapor'}</span>
+          </button>
+        </div>
+      </div>
 
       {/* Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-100/70 p-3 rounded-xl border border-slate-200">
@@ -952,10 +1165,20 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                   {rombelStudents.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-12 text-center text-slate-500">
-                        <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
                           <Users className="w-8 h-8 text-slate-400" />
-                          <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}</p>
-                          <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
+                          <p className="font-semibold text-slate-700">
+                            {religionRequirement?.isNonIslamReligion 
+                              ? `Tidak ada peserta didik beragama ${religionRequirement.agamaLabel} di ${selectedRombel?.nama || 'kelas ini'}`
+                              : `Belum ada peserta didik di ${selectedRombel?.nama || 'kelas ini'}`
+                            }
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {religionRequirement?.isNonIslamReligion
+                              ? `Mata pelajaran ${selectedSubject.nama} hanya ditempuh oleh peserta didik yang beragama ${religionRequirement.agamaLabel}. Siswa di rombel ini menempuh mapel agama yang sesuai dengan keyakinannya.`
+                              : `Silakan tambahkan data peserta didik melalui menu Data Siswa atau Impor File Excel.`
+                            }
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -1086,10 +1309,20 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                 {rombelStudents.length === 0 ? (
                   <tr>
                     <td colSpan={11} className="py-12 text-center text-slate-500">
-                      <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
                         <Users className="w-8 h-8 text-slate-400" />
-                        <p className="font-semibold text-slate-700">Belum ada peserta didik di {selectedRombel?.nama || 'kelas ini'}</p>
-                        <p className="text-xs text-slate-500">Silakan tambahkan data peserta didik asli SMPN 14 Tulang Bawang Barat melalui menu Data Siswa atau Impor File Excel.</p>
+                        <p className="font-semibold text-slate-700">
+                          {religionRequirement?.isNonIslamReligion 
+                            ? `Tidak ada peserta didik beragama ${religionRequirement.agamaLabel} di ${selectedRombel?.nama || 'kelas ini'}`
+                            : `Belum ada peserta didik di ${selectedRombel?.nama || 'kelas ini'}`
+                          }
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {religionRequirement?.isNonIslamReligion
+                            ? `Mata pelajaran ${selectedSubject.nama} hanya ditempuh oleh peserta didik yang beragama ${religionRequirement.agamaLabel}. Di rombel ini seluruh siswa menempuh mapel agama yang sesuai dengan agamanya.`
+                            : `Silakan tambahkan data peserta didik melalui menu Data Siswa atau Impor File Excel.`
+                          }
+                        </p>
                       </div>
                     </td>
                   </tr>

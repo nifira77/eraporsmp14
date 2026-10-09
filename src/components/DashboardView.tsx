@@ -54,13 +54,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
     : 0;
 
   // Calculate completion status per subject for active class
+  const activeClassStudentIds = new Set(activeClassStudents.map(s => s.id));
   const subjectProgress = subjects.map(subject => {
-    const subjectGrades = grades.filter(g => g.subjectId === subject.id && (g.rombelId === userRombel.id || g.rombelId === '7.1'));
-    const completedCount = subjectGrades.filter(g => g.nilaiAkhirRapor > 0).length;
-    const isComplete = (activeClassStudents.length > 0 || totalStudents > 0) && completedCount >= (activeClassStudents.length || totalStudents);
-    const avg = subjectGrades.length > 0
-      ? (subjectGrades.reduce((sum, g) => sum + g.nilaiAkhirRapor, 0) / subjectGrades.length).toFixed(1)
-      : '0';
+    const subjectGrades = grades.filter(g => 
+      g.subjectId === subject.id && 
+      (activeClassStudentIds.has(g.studentId) || g.rombelId === userRombel.id)
+    );
+    const completedCount = subjectGrades.filter(g => (g.nilaiAkhirRapor && g.nilaiAkhirRapor > 0) || (g.nilaiAkhirSTS && g.nilaiAkhirSTS > 0) || (g.nilaiAkhirLM && g.nilaiAkhirLM > 0)).length;
+    const targetStudentCount = activeClassStudents.length || totalStudents || 1;
+    const isComplete = completedCount >= targetStudentCount;
+    const validScores = subjectGrades.map(g => g.nilaiAkhirRapor || g.nilaiAkhirSTS || 0).filter(v => v > 0);
+    const avg = validScores.length > 0
+      ? (validScores.reduce((sum, v) => sum + v, 0) / validScores.length).toFixed(1)
+      : '-';
 
     return {
       ...subject,

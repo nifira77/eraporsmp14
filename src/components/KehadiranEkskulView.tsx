@@ -78,6 +78,7 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
 
   // New ekskul form modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalRombelId, setModalRombelId] = useState<string>(selectedRombelId);
   const [selectedStudentId, setSelectedStudentId] = useState(filteredStudents[0]?.id || students[0]?.id || '');
   const [selectedEkskulId, setSelectedEkskulId] = useState(extracurriculars[0]?.id || '');
   const [selectedPredikat, setSelectedPredikat] = useState<'Sangat Baik' | 'Baik' | 'Cukup'>('Baik');
@@ -423,16 +424,46 @@ export const KehadiranEkskulView: React.FC<KehadiranEkskulViewProps> = ({
             <div className="mt-4 space-y-3 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Pilih Peserta Didik
+                  Pilih Kelas / Rombel
+                </label>
+                <select
+                  value={modalRombelId}
+                  onChange={(e) => {
+                    const rId = e.target.value;
+                    setModalRombelId(rId);
+                    const classStudents = students.filter(s => rId === 'all' || s.rombelId === rId);
+                    if (classStudents.length > 0) {
+                      setSelectedStudentId(classStudents[0].id);
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 cursor-pointer"
+                >
+                  <option value="all">Semua Kelas ({students.length} Siswa)</option>
+                  {rombels.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.nama} ({students.filter(s => s.rombelId === r.id).length} Siswa)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Pilih Peserta Didik di Kelas Terpilih
                 </label>
                 <select
                   value={selectedStudentId}
                   onChange={(e) => setSelectedStudentId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white cursor-pointer"
                 >
-                  {students.map(s => (
-                    <option key={s.id} value={s.id}>{s.nama} ({s.nisn})</option>
-                  ))}
+                  {students.filter(s => modalRombelId === 'all' || s.rombelId === modalRombelId).map(s => {
+                    const r = rombels.find(item => item.id === s.rombelId);
+                    return (
+                      <option key={s.id} value={s.id}>
+                        {s.nama} ({r?.nama || s.rombelId} · NISN {s.nisn})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
