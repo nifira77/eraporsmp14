@@ -61,6 +61,9 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
   // Target cetak di mode lembar: 'single' (1 siswa terpilih) atau 'all' (semua siswa di kelas)
   const [printTarget, setPrintTarget] = useState<'single' | 'all'>('single');
 
+  // Watermark density / thickness for printing: 'tebal' (default), 'sangat_tebal', 'sedang'
+  const [watermarkDensity, setWatermarkDensity] = useState<'tebal' | 'sangat_tebal' | 'sedang'>('tebal');
+
   // Selected student id
   const [selectedStudentId, setSelectedStudentId] = useState<string>(() => {
     const inClass = students.filter(s => s.rombelId === (currentUser?.rombelId || rombels[0]?.id || '7.1'));
@@ -484,6 +487,23 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
               </select>
             </div>
           )}
+
+          {/* Watermark Thickness Selector in Lembar Mode */}
+          {viewMode === 'lembar' && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <label className="font-bold text-slate-700">Tebal Watermark:</label>
+              <select
+                value={watermarkDensity}
+                onChange={(e) => setWatermarkDensity(e.target.value as any)}
+                className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 bg-white cursor-pointer shadow-2xs"
+                title="Pilih tingkat kepekatan / ketebalan watermark saat dicetak ke kertas atau PDF"
+              >
+                <option value="tebal">Tebal (Rekomendasi Cetak)</option>
+                <option value="sangat_tebal">Sangat Tebal (Paling Jelas)</option>
+                <option value="sedang">Sedang (Halus)</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Search Input */}
@@ -562,12 +582,28 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
                   key={student.id}
                   className="relative bg-white text-black p-10 sm:p-14 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break space-y-5 overflow-hidden"
                 >
-                  {/* Watermark Buku INDUK siswa di belakang teks */}
+                  {/* Watermark Buku INDUK siswa di belakang teks (dibuat lebih tebal & jelas saat dicetak) */}
                   <div 
-                    className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.05] print:opacity-[0.07]"
+                    className={`pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 transition-opacity ${
+                      watermarkDensity === 'sangat_tebal'
+                        ? 'opacity-30 print:opacity-35'
+                        : watermarkDensity === 'sedang'
+                        ? 'opacity-14 print:opacity-18'
+                        : 'opacity-20 print:opacity-25'
+                    }`}
+                    style={{
+                      WebkitPrintColorAdjust: 'exact',
+                      printColorAdjust: 'exact'
+                    }}
                     aria-hidden="true"
                   >
-                    <span className="text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-widest text-slate-900 -rotate-45 transform whitespace-nowrap">
+                    <span 
+                      className="text-6xl sm:text-7xl md:text-8xl font-black uppercase tracking-[0.22em] text-slate-900 -rotate-45 transform whitespace-nowrap"
+                      style={{
+                        WebkitPrintColorAdjust: 'exact',
+                        printColorAdjust: 'exact'
+                      }}
+                    >
                       BUKU INDUK SISWA
                     </span>
                   </div>
