@@ -20,7 +20,9 @@ import {
   FileCheck,
   UserCheck,
   Calendar,
-  X
+  X,
+  Camera,
+  User
 } from 'lucide-react';
 
 interface DataSiswaViewProps {
@@ -63,10 +65,21 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
   const [formTempatLahir, setFormTempatLahir] = useState('Tubaba');
   const [formTanggalLahir, setFormTanggalLahir] = useState('2011-05-15');
   const [formAgama, setFormAgama] = useState('Islam');
+  const [formStatusKeluarga, setFormStatusKeluarga] = useState('Anak Kandung');
+  const [formAnakKe, setFormAnakKe] = useState('1');
+  const [formTahunMasuk, setFormTahunMasuk] = useState('2024');
+  const [formSekolahAsal, setFormSekolahAsal] = useState('SD / MI Sederajat');
+  const [formTerdaftarSebagai, setFormTerdaftarSebagai] = useState('Peserta Didik Baru');
+  const [formTelepon, setFormTelepon] = useState('-');
   const [formNamaAyah, setFormNamaAyah] = useState('');
   const [formNamaIbu, setFormNamaIbu] = useState('');
   const [formPekerjaan, setFormPekerjaan] = useState('Petani');
   const [formAlamat, setFormAlamat] = useState('Tulang Bawang Tengah');
+  const [formNamaWali, setFormNamaWali] = useState('-');
+  const [formPekerjaanWali, setFormPekerjaanWali] = useState('-');
+  const [formAlamatWali, setFormAlamatWali] = useState('-');
+  const [formFoto, setFormFoto] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Modal Impor Excel
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -98,6 +111,28 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     });
   }, [students, selectedRombelFilter, searchQuery]);
 
+  // Handle student photo file upload
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Harap pilih file gambar (JPG, PNG, WebP).');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg('Ukuran file foto maksimal 2 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setFormFoto(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handle open add modal
   const handleOpenAdd = () => {
     setEditingStudentId(null);
@@ -109,10 +144,20 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     setFormTempatLahir('Tulang Bawang Barat');
     setFormTanggalLahir('2011-06-15');
     setFormAgama('Islam');
+    setFormStatusKeluarga('Anak Kandung');
+    setFormAnakKe('1');
+    setFormTahunMasuk('2024');
+    setFormSekolahAsal('SD / MI Sederajat');
+    setFormTerdaftarSebagai('Peserta Didik Baru');
+    setFormTelepon('-');
     setFormNamaAyah('');
     setFormNamaIbu('');
     setFormPekerjaan('Wiraswasta');
     setFormAlamat('Kec. Tulang Bawang Tengah, Kab. Tulang Bawang Barat');
+    setFormNamaWali('-');
+    setFormPekerjaanWali('-');
+    setFormAlamatWali('-');
+    setFormFoto(null);
     setIsAddModalOpen(true);
   };
 
@@ -126,11 +171,21 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     setFormRombelId(student.rombelId);
     setFormTempatLahir(student.tempatLahir);
     setFormTanggalLahir(student.tanggalLahir);
-    setFormAgama(student.agama);
-    setFormNamaAyah(student.namaAyah);
-    setFormNamaIbu(student.namaIbu);
-    setFormPekerjaan(student.pekerjaanOrangTua);
-    setFormAlamat(student.alamat);
+    setFormAgama(student.agama || 'Islam');
+    setFormStatusKeluarga(student.statusKeluarga || 'Anak Kandung');
+    setFormAnakKe(student.anakKe?.toString() || '1');
+    setFormTahunMasuk(student.tahunMasuk || '2024');
+    setFormSekolahAsal(student.sekolahAsal || 'SD / MI Sederajat');
+    setFormTerdaftarSebagai(student.terdaftarSebagai || 'Peserta Didik Baru');
+    setFormTelepon(student.telepon || '-');
+    setFormNamaAyah(student.namaAyah || '');
+    setFormNamaIbu(student.namaIbu || '');
+    setFormPekerjaan(student.pekerjaanOrangTua || 'Wiraswasta');
+    setFormAlamat(student.alamat || '');
+    setFormNamaWali(student.namaWali || '-');
+    setFormPekerjaanWali(student.pekerjaanWali || '-');
+    setFormAlamatWali(student.alamatWali || '-');
+    setFormFoto(student.foto || null);
     setIsAddModalOpen(true);
   };
 
@@ -156,10 +211,20 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
             tempatLahir: formTempatLahir.trim(),
             tanggalLahir: formTanggalLahir.trim(),
             agama: formAgama.trim(),
+            statusKeluarga: formStatusKeluarga.trim(),
+            anakKe: formAnakKe.trim(),
+            tahunMasuk: formTahunMasuk.trim(),
+            sekolahAsal: formSekolahAsal.trim(),
+            terdaftarSebagai: formTerdaftarSebagai.trim(),
+            telepon: formTelepon.trim(),
             namaAyah: formNamaAyah.trim(),
             namaIbu: formNamaIbu.trim(),
             pekerjaanOrangTua: formPekerjaan.trim(),
-            alamat: formAlamat.trim()
+            alamat: formAlamat.trim(),
+            namaWali: formNamaWali.trim(),
+            pekerjaanWali: formPekerjaanWali.trim(),
+            alamatWali: formAlamatWali.trim(),
+            foto: formFoto || s.foto || undefined
           };
         }
         return s;
@@ -178,10 +243,20 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         tempatLahir: formTempatLahir.trim(),
         tanggalLahir: formTanggalLahir.trim(),
         agama: formAgama.trim(),
+        statusKeluarga: formStatusKeluarga.trim(),
+        anakKe: formAnakKe.trim(),
+        tahunMasuk: formTahunMasuk.trim(),
+        sekolahAsal: formSekolahAsal.trim(),
+        terdaftarSebagai: formTerdaftarSebagai.trim(),
+        telepon: formTelepon.trim(),
         namaAyah: formNamaAyah.trim(),
         namaIbu: formNamaIbu.trim(),
         pekerjaanOrangTua: formPekerjaan.trim(),
-        alamat: formAlamat.trim()
+        alamat: formAlamat.trim(),
+        namaWali: formNamaWali.trim(),
+        pekerjaanWali: formPekerjaanWali.trim(),
+        alamatWali: formAlamatWali.trim(),
+        foto: formFoto || undefined
       };
       onAddStudent(newStudent);
       setSuccessMsg(`Peserta didik baru "${formNama}" berhasil ditambahkan ke ${rombels.find(r => r.id === formRombelId)?.nama || formRombelId}.`);
@@ -212,10 +287,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Tempat Lahir': 'Panaragan',
         'Tanggal Lahir': '2013-04-12',
         'Agama': 'Islam',
+        'Status dalam Keluarga': 'Anak Kandung',
+        'Anak Ke': 1,
+        'Tahun Masuk': '2024',
+        'Sekolah Asal': 'SD Negeri 1 Panaragan',
+        'Terdaftar Sebagai': 'Peserta Didik Baru',
+        'Alamat': 'Jl. Diponegoro No. 12, Tirta Kencana, Tubaba',
+        'Nomor Telepon / HP': '081234567890',
         'Nama Ayah': 'Bambang Irawan',
         'Nama Ibu': 'Siti Maryam',
         'Pekerjaan Orang Tua': 'PNS',
-        'Alamat': 'Jl. Diponegoro No. 12, Tirta Kencana, Tubaba'
+        'Nama Wali': '-',
+        'Pekerjaan Wali': '-',
+        'Alamat Wali': '-'
       },
       {
         'NIS': '26002',
@@ -226,10 +310,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Tempat Lahir': 'Mulya Asri',
         'Tanggal Lahir': '2013-08-25',
         'Agama': 'Islam',
+        'Status dalam Keluarga': 'Anak Kandung',
+        'Anak Ke': 2,
+        'Tahun Masuk': '2024',
+        'Sekolah Asal': 'SD Negeri 2 Mulya Asri',
+        'Terdaftar Sebagai': 'Peserta Didik Baru',
+        'Alamat': 'Mulya Asri RT 03 RW 01, Tulang Bawang Tengah',
+        'Nomor Telepon / HP': '081398765432',
         'Nama Ayah': 'Suryanto',
         'Nama Ibu': 'Sri Wahyuni',
         'Pekerjaan Orang Tua': 'Wiraswasta',
-        'Alamat': 'Mulya Asri RT 03 RW 01, Tulang Bawang Tengah'
+        'Nama Wali': '-',
+        'Pekerjaan Wali': '-',
+        'Alamat Wali': '-'
       },
       {
         'NIS': '26003',
@@ -240,10 +333,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Tempat Lahir': 'Bandar Lampung',
         'Tanggal Lahir': '2013-06-18',
         'Agama': 'Kristen Protestan',
+        'Status dalam Keluarga': 'Anak Kandung',
+        'Anak Ke': 1,
+        'Tahun Masuk': '2024',
+        'Sekolah Asal': 'SD Xaverius Bandar Lampung',
+        'Terdaftar Sebagai': 'Peserta Didik Baru',
+        'Alamat': 'Tirta Kencana RT 01, Tulang Bawang Tengah',
+        'Nomor Telepon / HP': '082155667788',
         'Nama Ayah': 'Yohanes Daniel',
         'Nama Ibu': 'Maria Magdalena',
         'Pekerjaan Orang Tua': 'Karyawan Swasta',
-        'Alamat': 'Tirta Kencana RT 01, Tulang Bawang Tengah'
+        'Nama Wali': '-',
+        'Pekerjaan Wali': '-',
+        'Alamat Wali': '-'
       },
       {
         'NIS': '26004',
@@ -254,10 +356,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Tempat Lahir': 'Tubaba',
         'Tanggal Lahir': '2013-11-09',
         'Agama': 'Hindu',
+        'Status dalam Keluarga': 'Anak Kandung',
+        'Anak Ke': 3,
+        'Tahun Masuk': '2024',
+        'Sekolah Asal': 'SD Negeri 3 Dayamurni',
+        'Terdaftar Sebagai': 'Peserta Didik Baru',
+        'Alamat': 'Diyuk Kencana RT 04, Tulang Bawang Tengah',
+        'Nomor Telepon / HP': '085277889900',
         'Nama Ayah': 'I Made Sudarma',
         'Nama Ibu': 'Ni Ketut Wardani',
         'Pekerjaan Orang Tua': 'Petani',
-        'Alamat': 'Diyuk Kencana RT 04, Tulang Bawang Tengah'
+        'Nama Wali': '-',
+        'Pekerjaan Wali': '-',
+        'Alamat Wali': '-'
       }
     ];
 
@@ -267,8 +378,15 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
       { 'No': 3, 'Kolom': 'Jenis Kelamin', 'Ketentuan': 'Diisi "L" untuk Laki-laki atau "P" untuk Perempuan' },
       { 'No': 4, 'Kolom': 'Rombel / Kelas', 'Ketentuan': 'Diisi rombel sasaran terdaftar (contoh: Kelas 7.1, 7.2, 8.1, dst.)' },
       { 'No': 5, 'Kolom': 'Tanggal Lahir', 'Ketentuan': 'Gunakan format standar YYYY-MM-DD (contoh: 2013-05-15)' },
-      { 'No': 6, 'Kolom': 'Agama', 'Ketentuan': 'Diisi: Islam, Kristen Protestan, Katolik, Hindu, atau Buddha' },
-      { 'No': 7, 'Kolom': 'Tahun Pelajaran', 'Ketentuan': 'Tahun Ajaran Aktif e-Rapor: 2026/2027 (SMPN 14 Tulang Bawang Barat)' }
+      { 'No': 6, 'Kolom': 'Agama', 'Ketentuan': 'Diisi: Islam, Kristen Protestan, Katolik, Hindu, Buddha, Khonghucu' },
+      { 'No': 7, 'Kolom': 'Status dalam Keluarga', 'Ketentuan': 'Diisi: Anak Kandung, Anak Angkat, atau Anak Tiri' },
+      { 'No': 8, 'Kolom': 'Anak Ke', 'Ketentuan': 'Urutan kelahiran anak dalam keluarga (contoh: 1, 2, 3)' },
+      { 'No': 9, 'Kolom': 'Tahun Masuk', 'Ketentuan': 'Tahun pertama kali diterima di sekolah ini (contoh: 2024 atau 2026)' },
+      { 'No': 10, 'Kolom': 'Sekolah Asal', 'Ketentuan': 'Nama SD/MI atau sekolah sebelumnya (contoh: SD Negeri 1 Panaragan)' },
+      { 'No': 11, 'Kolom': 'Terdaftar Sebagai', 'Ketentuan': 'Status masuk siswa: "Peserta Didik Baru" atau "Pindahan"' },
+      { 'No': 12, 'Kolom': 'Alamat & Telepon', 'Ketentuan': 'Alamat lengkap tempat tinggal siswa dan nomor kontak aktif' },
+      { 'No': 13, 'Kolom': 'Orang Tua & Wali', 'Ketentuan': 'Nama dan pekerjaan ayah, ibu kandung, serta wali jika ada' },
+      { 'No': 14, 'Kolom': 'Tahun Pelajaran', 'Ketentuan': 'Tahun Ajaran Aktif e-Rapor: 2026/2027 (SMPN 14 Tulang Bawang Barat)' }
     ];
 
     const wb = XLSX.utils.book_new();
@@ -284,17 +402,26 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
       { wch: 16 }, // Tempat Lahir
       { wch: 14 }, // Tanggal Lahir
       { wch: 18 }, // Agama
+      { wch: 20 }, // Status Keluarga
+      { wch: 10 }, // Anak Ke
+      { wch: 14 }, // Tahun Masuk
+      { wch: 24 }, // Sekolah Asal
+      { wch: 20 }, // Terdaftar Sebagai
+      { wch: 35 }, // Alamat
+      { wch: 18 }, // Telepon
       { wch: 18 }, // Ayah
       { wch: 18 }, // Ibu
-      { wch: 18 }, // Pekerjaan
-      { wch: 35 }, // Alamat
+      { wch: 20 }, // Pekerjaan Ortu
+      { wch: 18 }, // Nama Wali
+      { wch: 18 }, // Pekerjaan Wali
+      { wch: 25 }, // Alamat Wali
     ];
 
     const wsPetunjuk = XLSX.utils.json_to_sheet(petunjukData);
     wsPetunjuk['!cols'] = [
       { wch: 6 },
-      { wch: 20 },
-      { wch: 65 }
+      { wch: 22 },
+      { wch: 70 }
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Format_Data_Siswa');
@@ -316,10 +443,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Tempat Lahir': s.tempatLahir,
         'Tanggal Lahir': s.tanggalLahir,
         'Agama': s.agama,
+        'Status dalam Keluarga': s.statusKeluarga || 'Anak Kandung',
+        'Anak Ke': s.anakKe || '1',
+        'Tahun Masuk': s.tahunMasuk || '2024',
+        'Sekolah Asal': s.sekolahAsal || 'SD / MI Sederajat',
+        'Terdaftar Sebagai': s.terdaftarSebagai || 'Peserta Didik Baru',
+        'Alamat': s.alamat,
+        'Nomor Telepon / HP': s.telepon || '-',
         'Nama Ayah': s.namaAyah,
         'Nama Ibu': s.namaIbu,
         'Pekerjaan Orang Tua': s.pekerjaanOrangTua,
-        'Alamat': s.alamat
+        'Nama Wali': s.namaWali || '-',
+        'Pekerjaan Wali': s.pekerjaanWali || '-',
+        'Alamat Wali': s.alamatWali || '-'
       };
     });
 
@@ -382,10 +518,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
           const tempatLahir = String(row['Tempat Lahir'] || row['tempat_lahir'] || 'Tulang Bawang Barat').trim();
           const tanggalLahir = String(row['Tanggal Lahir'] || row['tanggal_lahir'] || '2011-01-01').trim();
           const agama = String(row['Agama'] || row['agama'] || 'Islam').trim();
+          const statusKeluarga = String(row['Status dalam Keluarga'] || row['status_keluarga'] || row['Status Keluarga'] || 'Anak Kandung').trim();
+          const anakKe = String(row['Anak Ke'] || row['anak_ke'] || row['Anak ke'] || row['anak ke'] || row['Anak Ke-'] || row['Anak'] || '1').trim();
+          const tahunMasuk = String(row['Tahun Masuk'] || row['tahun_masuk'] || row['tahun masuk'] || row['Tahun Masuk Sekolah'] || '2024').trim();
+          const sekolahAsal = String(row['Sekolah Asal'] || row['sekolah_asal'] || row['sekolah asal'] || row['Asal Sekolah'] || row['Pendidikan Sebelumnya'] || 'SD / MI Sederajat').trim();
+          const terdaftarSebagai = String(row['Terdaftar Sebagai'] || row['terdaftar_sebagai'] || row['terdaftar sebagai'] || row['Status Terdaftar'] || 'Peserta Didik Baru').trim();
+          const alamat = String(row['Alamat'] || row['alamat'] || 'Kab. Tulang Bawang Barat').trim();
+          const telepon = String(row['Nomor Telepon / HP'] || row['Telepon / HP'] || row['Telepon'] || row['telepon'] || row['No HP'] || row['HP'] || '-').trim();
           const namaAyah = String(row['Nama Ayah'] || row['Ayah'] || row['ayah'] || '-').trim();
           const namaIbu = String(row['Nama Ibu'] || row['Ibu'] || row['ibu'] || '-').trim();
           const pekerjaan = String(row['Pekerjaan Orang Tua'] || row['Pekerjaan'] || row['pekerjaan'] || '-').trim();
-          const alamat = String(row['Alamat'] || row['alamat'] || 'Kab. Tulang Bawang Barat').trim();
+          const namaWali = String(row['Nama Wali'] || row['nama_wali'] || row['Wali'] || '-').trim();
+          const pekerjaanWali = String(row['Pekerjaan Wali'] || row['pekerjaan_wali'] || '-').trim();
+          const alamatWali = String(row['Alamat Wali'] || row['alamat_wali'] || '-').trim();
 
           return {
             id: `siswa-imp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
@@ -397,10 +542,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
             tempatLahir,
             tanggalLahir,
             agama,
+            statusKeluarga,
+            anakKe,
+            tahunMasuk,
+            sekolahAsal,
+            terdaftarSebagai,
+            alamat,
+            telepon,
             namaAyah,
             namaIbu,
             pekerjaanOrangTua: pekerjaan,
-            alamat
+            namaWali,
+            pekerjaanWali,
+            alamatWali
           };
         });
 
@@ -699,8 +853,12 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                         </span>
                       </td>
                       <td className="py-2.5 px-4 text-slate-600">
-                        <p>{s.tempatLahir}, {s.tanggalLahir}</p>
-                        <p className="text-[10px] text-slate-400">Agama: {s.agama}</p>
+                        <p className="font-medium text-slate-800">{s.tempatLahir}, {s.tanggalLahir}</p>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            {s.agama || 'Islam'}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-2.5 px-4 text-slate-600">
                         <p className="truncate max-w-xs">Ayah: {s.namaAyah} · Ibu: {s.namaIbu}</p>
@@ -848,6 +1006,124 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                 </div>
               </div>
 
+              {/* Field Agama & Pekerjaan Orang Tua */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Agama & Kepercayaan
+                  </label>
+                  <select
+                    value={formAgama}
+                    onChange={(e) => setFormAgama(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white cursor-pointer"
+                  >
+                    <option value="Islam">Islam</option>
+                    <option value="Kristen">Kristen Protestan</option>
+                    <option value="Katolik">Katolik</option>
+                    <option value="Hindu">Hindu</option>
+                    <option value="Buddha">Buddha</option>
+                    <option value="Khonghucu">Khonghucu</option>
+                    <option value="Kepercayaan">Penghayat Kepercayaan</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Pekerjaan Orang Tua / Wali
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Wiraswasta / Petani / PNS"
+                    value={formPekerjaan}
+                    onChange={(e) => setFormPekerjaan(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Status dalam Keluarga
+                  </label>
+                  <select
+                    value={formStatusKeluarga}
+                    onChange={(e) => setFormStatusKeluarga(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                  >
+                    <option value="Anak Kandung">Anak Kandung</option>
+                    <option value="Anak Angkat">Anak Angkat</option>
+                    <option value="Anak Tiri">Anak Tiri</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Anak Ke (Urutan Lahir)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 1, 2, atau 3"
+                    value={formAnakKe}
+                    onChange={(e) => setFormAnakKe(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Tahun Masuk / Diterima
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 2024 atau 2026"
+                    value={formTahunMasuk}
+                    onChange={(e) => setFormTahunMasuk(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Terdaftar Sebagai
+                  </label>
+                  <select
+                    value={formTerdaftarSebagai}
+                    onChange={(e) => setFormTerdaftarSebagai(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                  >
+                    <option value="Peserta Didik Baru">Peserta Didik Baru</option>
+                    <option value="Pindahan">Pindahan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Sekolah Asal (SD / MI)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: SD Negeri 1 Panaragan"
+                    value={formSekolahAsal}
+                    onChange={(e) => setFormSekolahAsal(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Nomor Telepon / HP
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 081234567890"
+                    value={formTelepon}
+                    onChange={(e) => setFormTelepon(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
@@ -883,6 +1159,80 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                   onChange={(e) => setFormAlamat(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+              </div>
+
+              {/* Data Wali (Opsional) */}
+              <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50 space-y-2.5">
+                <span className="font-bold text-slate-700 block text-[11px] uppercase tracking-wide">
+                  Data Wali Peserta Didik (Opsional / Jika Ada)
+                </span>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] text-slate-600 mb-1">Nama Wali</label>
+                    <input
+                      type="text"
+                      placeholder="-"
+                      value={formNamaWali}
+                      onChange={(e) => setFormNamaWali(e.target.value)}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-600 mb-1">Pekerjaan Wali</label>
+                    <input
+                      type="text"
+                      placeholder="-"
+                      value={formPekerjaanWali}
+                      onChange={(e) => setFormPekerjaanWali(e.target.value)}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Unggah Pasfoto Siswa */}
+              <div className="border border-slate-200 rounded-lg p-3 bg-blue-50/40">
+                <label className="block font-semibold text-slate-800 mb-1.5 flex items-center justify-between">
+                  <span>Pasfoto Resmi Siswa (3 x 4)</span>
+                  {formFoto && (
+                    <button
+                      type="button"
+                      onClick={() => setFormFoto(null)}
+                      className="text-red-600 hover:text-red-700 text-[11px] font-semibold"
+                    >
+                      Hapus Foto
+                    </button>
+                  )}
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-20 border-2 border-dashed border-slate-300 rounded-md bg-white overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
+                    {formFoto ? (
+                      <img src={formFoto} alt="Foto Siswa" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[9px] text-slate-400 text-center font-medium">3 x 4 cm</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{formFoto ? 'Ganti Foto' : 'Pilih Foto (Maks. 2MB)'}</span>
+                    </button>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Foto akan tampil otomatis pada lembar Biodata Rapor & Buku Induk Siswa.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1039,12 +1389,16 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                       <thead className="bg-slate-100 text-slate-700 sticky top-0">
                         <tr>
                           <th className="py-2 px-2.5 w-8 text-center">No</th>
-                          <th className="py-2 px-2.5 w-20">NIS</th>
-                          <th className="py-2 px-2.5 w-28">NISN</th>
+                          <th className="py-2 px-2.5 w-18">NIS</th>
+                          <th className="py-2 px-2.5 w-24">NISN</th>
                           <th className="py-2 px-3">Nama Siswa</th>
-                          <th className="py-2 px-2 w-12 text-center">JK</th>
-                          <th className="py-2 px-2.5 w-28">Rombel</th>
-                          <th className="py-2 px-3">Tempat, Tgl Lahir</th>
+                          <th className="py-2 px-2 w-10 text-center">JK</th>
+                          <th className="py-2 px-2.5 w-24">Rombel</th>
+                          <th className="py-2 px-2.5">Agama</th>
+                          <th className="py-2 px-2 text-center">Anak Ke</th>
+                          <th className="py-2 px-2 text-center">Thn Masuk</th>
+                          <th className="py-2 px-3">Sekolah Asal</th>
+                          <th className="py-2 px-2.5">Terdaftar Sbg</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -1056,7 +1410,15 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                             <td className="py-2 px-3 font-semibold text-slate-900">{s.nama}</td>
                             <td className="py-2 px-2 text-center font-bold">{s.jenisKelamin}</td>
                             <td className="py-2 px-2.5">{rombels.find(r => r.id === s.rombelId)?.nama || s.rombelId}</td>
-                            <td className="py-2 px-3 text-slate-500">{s.tempatLahir}, {s.tanggalLahir}</td>
+                            <td className="py-2 px-2.5">{s.agama}</td>
+                            <td className="py-2 px-2 text-center font-semibold text-slate-800">{s.anakKe || '1'}</td>
+                            <td className="py-2 px-2 text-center font-mono text-slate-700">{s.tahunMasuk || '2024'}</td>
+                            <td className="py-2 px-3 text-slate-600 truncate max-w-[140px]">{s.sekolahAsal || '-'}</td>
+                            <td className="py-2 px-2.5">
+                              <span className="px-1.5 py-0.5 rounded text-[10.5px] font-medium bg-blue-50 text-blue-700">
+                                {s.terdaftarSebagai || 'Siswa Baru'}
+                              </span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

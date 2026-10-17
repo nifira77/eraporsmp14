@@ -72,12 +72,13 @@ export const StatusPenilaianView: React.FC<StatusPenilaianViewProps> = ({
         g => g.subjectId === subject.id && eligibleStudentIds.has(g.studentId)
       );
 
-      // Check whether scores are filled
+      // Check whether scores are filled (immediately reflect any input made by teachers)
       const filledGrades = subjGrades.filter(g => {
         if (assessmentMode === 'tengah_semester') {
           return (g.nilaiAkhirSTS && g.nilaiAkhirSTS > 0) || (g.tesSTS && g.tesSTS > 0) || (g.nonTesSTS && g.nonTesSTS > 0);
         }
-        return (g.nilaiAkhirRapor && g.nilaiAkhirRapor > 0) || (g.nilaiAkhirSAS && g.nilaiAkhirSAS > 0) || (g.nilaiAkhirLM && g.nilaiAkhirLM > 0);
+        const hasLM = g.sumatifLM && Object.values(g.sumatifLM).some(v => Number(v) > 0);
+        return (g.nilaiAkhirRapor && g.nilaiAkhirRapor > 0) || (g.nilaiAkhirSAS && g.nilaiAkhirSAS > 0) || (g.nilaiAkhirLM && g.nilaiAkhirLM > 0) || hasLM;
       });
 
       const count = filledGrades.length;

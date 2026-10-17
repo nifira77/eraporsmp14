@@ -202,47 +202,81 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     return item?.tanggalKirim ? new Date(item.tanggalKirim).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : null;
   }, [localGrades]);
 
+  // Reference to track previous filter keys to only rebuild on filter change
+  const prevFilterRef = useRef<{ rombelId: string; subjectId: string }>({ rombelId: '', subjectId: '' });
+
   // Initialize or synchronize local editable state whenever filters change or external grades change
   useEffect(() => {
-    const map: Record<string, StudentGrade> = {};
-    rombelStudents.forEach(student => {
-      const existingGrade = grades.find(
-        g => g.studentId === student.id && g.subjectId === selectedSubjectId
-      );
+    const isFilterChanged = 
+      prevFilterRef.current.rombelId !== selectedRombelId || 
+      prevFilterRef.current.subjectId !== selectedSubjectId;
 
-      if (existingGrade) {
-        map[student.id] = { ...existingGrade };
-      } else {
-        // Create blank template
-        map[student.id] = {
-          id: `grade-${student.id}-${selectedSubjectId}`,
-          studentId: student.id,
-          subjectId: selectedSubjectId,
-          rombelId: selectedRombelId,
-          sumatifLM: {
-            'tp-1': 0,
-            'tp-2': 0,
-            'tp-3': 0,
-            'tp-4': 0
-          },
-          nilaiAkhirLM: 0,
-          nonTesSTS: 0,
-          tesSTS: 0,
-          nilaiAkhirSTS: 0,
-          deskripsiSTS: 'Menunjukkan penguasaan materi tengah semester yang baik.',
-          nonTesSAS: 0,
-          tesSAS: 0,
-          nilaiAkhirSAS: 0,
-          nilaiAkhirRapor: 0,
-          deskripsiTertinggi: 'Menunjukkan pemahaman yang memadai terhadap materi yang diajarkan.',
-          deskripsiTerendah: 'Perlu latihan lebih lanjut dalam materi yang belum dikuasai.',
-          statusKetercapaian: 'Perlu Peningkatan',
-          statusKirim: 'draft',
-          updatedAt: new Date().toISOString()
-        };
-      }
-    });
-    setLocalGrades(map);
+    if (isFilterChanged) {
+      prevFilterRef.current = { rombelId: selectedRombelId, subjectId: selectedSubjectId };
+      const map: Record<string, StudentGrade> = {};
+      rombelStudents.forEach(student => {
+        const existingGrade = grades.find(
+          g => g.studentId === student.id && g.subjectId === selectedSubjectId
+        );
+
+        if (existingGrade) {
+          map[student.id] = { ...existingGrade };
+        } else {
+          // Create blank template
+          map[student.id] = {
+            id: `grade-${student.id}-${selectedSubjectId}`,
+            studentId: student.id,
+            subjectId: selectedSubjectId,
+            rombelId: selectedRombelId,
+            sumatifLM: {
+              'tp-1': 0,
+              'tp-2': 0,
+              'tp-3': 0,
+              'tp-4': 0
+            },
+            nilaiAkhirLM: 0,
+            nonTesSTS: 0,
+            tesSTS: 0,
+            nilaiAkhirSTS: 0,
+            deskripsiSTS: 'Menunjukkan penguasaan materi tengah semester yang baik.',
+            nonTesSAS: 0,
+            tesSAS: 0,
+            nilaiAkhirSAS: 0,
+            nilaiAkhirRapor: 0,
+            deskripsiTertinggi: 'Menunjukkan pemahaman yang memadai terhadap materi yang diajarkan.',
+            deskripsiTerendah: 'Perlu latihan lebih lanjut dalam materi yang belum dikuasai.',
+            statusKetercapaian: 'Perlu Peningkatan',
+            statusKirim: 'draft',
+            updatedAt: new Date().toISOString()
+          };
+        }
+      });
+      setLocalGrades(map);
+    } else {
+      // Background external merge (e.g. cloud sync from another device) without overwriting active local typing
+      setLocalGrades(prev => {
+        let changed = false;
+        const next = { ...prev };
+        rombelStudents.forEach(student => {
+          const remote = grades.find(g => g.studentId === student.id && g.subjectId === selectedSubjectId);
+          const local = prev[student.id];
+          if (remote) {
+            if (!local) {
+              next[student.id] = { ...remote };
+              changed = true;
+            } else {
+              const remoteTime = new Date(remote.updatedAt || 0).getTime();
+              const localTime = new Date(local.updatedAt || 0).getTime();
+              if (remoteTime > localTime) {
+                next[student.id] = { ...remote };
+                changed = true;
+              }
+            }
+          }
+        });
+        return changed ? next : prev;
+      });
+    }
   }, [selectedRombelId, selectedSubjectId, grades, rombelStudents]);
 
   // Recalculate grade calculations for a single student (supporting both direct STS and SAS)
@@ -276,7 +310,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
     };
   };
 
-  // Handle score input change
+  // Handle score input change with immediate local display and synchronized propagation
   const handleScoreChange = (
     studentId: string, 
     field: 'lm' | 'nilaiAkhirSTS' | 'nonTesSTS' | 'tesSTS' | 'nonTesSAS' | 'tesSAS', 
@@ -285,39 +319,61 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
   ) => {
     if (isLocked && isTeacherRole) return;
 
-    const numValue = Math.min(100, Math.max(0, parseInt(value, 10) || 0));
-    setLocalGrades(prev => {
-      const current = { ...prev[studentId] };
-      if (!current) return prev;
+    const numValue = value === '' ? 0 : Math.min(100, Math.max(0, parseInt(value, 10) || 0));
 
-      if (field === 'nilaiAkhirSTS') {
-        current.nilaiAkhirSTS = numValue;
-      } else if (field === 'lm' && tpKey) {
-        current.sumatifLM = {
-          ...current.sumatifLM,
-          [tpKey]: numValue
-        };
-      } else if (field === 'nonTesSTS') {
-        current.nonTesSTS = numValue;
-      } else if (field === 'tesSTS') {
-        current.tesSTS = numValue;
-      } else if (field === 'nonTesSAS') {
-        current.nonTesSAS = numValue;
-      } else if (field === 'tesSAS') {
-        current.tesSAS = numValue;
-      }
+    // Get current student grade from local map or fallback
+    const current = localGrades[studentId] || {
+      id: `grade-${studentId}-${selectedSubjectId}`,
+      studentId,
+      subjectId: selectedSubjectId,
+      rombelId: selectedRombelId,
+      sumatifLM: { 'tp-1': 0, 'tp-2': 0, 'tp-3': 0, 'tp-4': 0 },
+      nilaiAkhirLM: 0,
+      nonTesSTS: 0,
+      tesSTS: 0,
+      nilaiAkhirSTS: 0,
+      deskripsiSTS: 'Menunjukkan penguasaan materi tengah semester yang baik.',
+      nonTesSAS: 0,
+      tesSAS: 0,
+      nilaiAkhirSAS: 0,
+      nilaiAkhirRapor: 0,
+      deskripsiTertinggi: 'Menunjukkan pemahaman yang memadai terhadap materi yang diajarkan.',
+      deskripsiTerendah: 'Perlu latihan lebih lanjut dalam materi yang belum dikuasai.',
+      statusKetercapaian: 'Perlu Peningkatan',
+      statusKirim: currentSubmissionStatus === 'perbaikan' ? 'perbaikan' : 'draft',
+      updatedAt: new Date().toISOString()
+    };
 
-      const recalculated = recalculateGrade(current);
-      recalculated.updatedAt = new Date().toISOString();
+    const updated = { ...current };
 
-      // Immediately propagate to global state, localStorage, and Firestore cloud
-      onUpdateGrades([recalculated]);
-
-      return {
-        ...prev,
-        [studentId]: recalculated
+    if (field === 'nilaiAkhirSTS') {
+      updated.nilaiAkhirSTS = numValue;
+    } else if (field === 'lm' && tpKey) {
+      updated.sumatifLM = {
+        ...updated.sumatifLM,
+        [tpKey]: numValue
       };
-    });
+    } else if (field === 'nonTesSTS') {
+      updated.nonTesSTS = numValue;
+    } else if (field === 'tesSTS') {
+      updated.tesSTS = numValue;
+    } else if (field === 'nonTesSAS') {
+      updated.nonTesSAS = numValue;
+    } else if (field === 'tesSAS') {
+      updated.tesSAS = numValue;
+    }
+
+    const recalculated = recalculateGrade(updated);
+    recalculated.updatedAt = new Date().toISOString();
+
+    // 1. Immediately update local state so the input and all UI elements display instantly
+    setLocalGrades(prev => ({
+      ...prev,
+      [studentId]: recalculated
+    }));
+
+    // 2. Propagate to global state and real-time cloud storage
+    onUpdateGrades([recalculated]);
   };
 
   // Auto-generate descriptions based on TPs and performance
@@ -1208,7 +1264,7 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                               min="0"
                               max="100"
                               disabled={!isEditable}
-                              value={grade?.nilaiAkhirSTS !== undefined && grade?.nilaiAkhirSTS !== 0 ? grade.nilaiAkhirSTS : (grade?.nilaiAkhirSTS === 0 ? '0' : '')}
+                              value={grade?.nilaiAkhirSTS !== undefined && grade?.nilaiAkhirSTS > 0 ? grade.nilaiAkhirSTS : ''}
                               placeholder="0 - 100"
                               onChange={(e) => handleScoreChange(student.id, 'nilaiAkhirSTS', e.target.value)}
                               className={`w-24 py-2 px-3 text-center font-mono font-bold text-base rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -1350,7 +1406,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                           min="0"
                           max="100"
                           disabled={!isEditable}
-                          value={grade?.sumatifLM['tp-1'] ?? ''}
+                          value={grade?.sumatifLM?.['tp-1'] ? grade.sumatifLM['tp-1'] : ''}
+                          placeholder="-"
                           onChange={(e) => handleScoreChange(student.id, 'lm', e.target.value, 'tp-1')}
                           className="w-12 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
                         />
@@ -1363,7 +1420,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                           min="0"
                           max="100"
                           disabled={!isEditable}
-                          value={grade?.sumatifLM['tp-2'] ?? ''}
+                          value={grade?.sumatifLM?.['tp-2'] ? grade.sumatifLM['tp-2'] : ''}
+                          placeholder="-"
                           onChange={(e) => handleScoreChange(student.id, 'lm', e.target.value, 'tp-2')}
                           className="w-12 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
                         />
@@ -1376,7 +1434,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                           min="0"
                           max="100"
                           disabled={!isEditable}
-                          value={grade?.sumatifLM['tp-3'] ?? ''}
+                          value={grade?.sumatifLM?.['tp-3'] ? grade.sumatifLM['tp-3'] : ''}
+                          placeholder="-"
                           onChange={(e) => handleScoreChange(student.id, 'lm', e.target.value, 'tp-3')}
                           className="w-12 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
                         />
@@ -1389,7 +1448,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                           min="0"
                           max="100"
                           disabled={!isEditable}
-                          value={grade?.sumatifLM['tp-4'] ?? ''}
+                          value={grade?.sumatifLM?.['tp-4'] ? grade.sumatifLM['tp-4'] : ''}
+                          placeholder="-"
                           onChange={(e) => handleScoreChange(student.id, 'lm', e.target.value, 'tp-4')}
                           className="w-12 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
                         />
@@ -1407,7 +1467,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                           min="0"
                           max="100"
                           disabled={!isEditable}
-                          value={grade?.nonTesSAS ?? ''}
+                          value={grade?.nonTesSAS ? grade.nonTesSAS : ''}
+                          placeholder="-"
                           onChange={(e) => handleScoreChange(student.id, 'nonTesSAS', e.target.value)}
                           className="w-12 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
                         />
@@ -1420,7 +1481,8 @@ export const InputNilaiView: React.FC<InputNilaiViewProps> = ({
                           min="0"
                           max="100"
                           disabled={!isEditable}
-                          value={grade?.tesSAS ?? ''}
+                          value={grade?.tesSAS ? grade.tesSAS : ''}
+                          placeholder="-"
                           onChange={(e) => handleScoreChange(student.id, 'tesSAS', e.target.value)}
                           className="w-12 py-1 text-center font-mono font-medium text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:border-blue-600 focus:outline-none"
                         />

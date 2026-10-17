@@ -1167,111 +1167,177 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                 </p>
               </div>
             ) : (
-              targetStudents.map((student) => (
-              <div 
-                key={student.id}
-                className="bg-white text-black p-10 sm:p-14 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break space-y-6"
-              >
-                <div className="text-center pb-4 border-b-2 border-black space-y-1">
-                  <h2 className="text-sm font-bold uppercase tracking-wide">
-                    IDENTITAS PESERTA DIDIK
-                  </h2>
-                  <p className="text-xs font-medium">
-                    KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI
-                  </p>
-                </div>
+              targetStudents.map((student) => {
+                const studentRombel = rombels.find(r => r.id === student.rombelId) || selectedRombel;
 
-                <div className="space-y-3 leading-relaxed text-xs">
-                  <div className="flex">
-                    <span className="w-8 font-mono">1.</span>
-                    <span className="w-56 font-semibold">Nama Lengkap Siswa</span>
-                    <span className="w-4">:</span>
-                    <span className="font-bold uppercase">{student.nama}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">2.</span>
-                    <span className="w-56 font-semibold">Nomor Induk Siswa (NIS)</span>
-                    <span className="w-4">:</span>
-                    <span className="font-mono">{student.nis}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">3.</span>
-                    <span className="w-56 font-semibold">Nomor Induk Siswa Nasional (NISN)</span>
-                    <span className="w-4">:</span>
-                    <span className="font-mono font-semibold">{student.nisn}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">4.</span>
-                    <span className="w-56 font-semibold">Tempat, Tanggal Lahir</span>
-                    <span className="w-4">:</span>
-                    <span>{student.tempatLahir}, {student.tanggalLahir}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">5.</span>
-                    <span className="w-56 font-semibold">Jenis Kelamin</span>
-                    <span className="w-4">:</span>
-                    <span>{student.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">6.</span>
-                    <span className="w-56 font-semibold">Agama</span>
-                    <span className="w-4">:</span>
-                    <span>{student.agama}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">7.</span>
-                    <span className="w-56 font-semibold">Pendidikan Sebelumnya</span>
-                    <span className="w-4">:</span>
-                    <span>Sekolah Dasar (SD / MI)</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">8.</span>
-                    <span className="w-56 font-semibold">Alamat Peserta Didik</span>
-                    <span className="w-4">:</span>
-                    <span>{student.alamat}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">9.</span>
-                    <span className="w-56 font-semibold">Nama Orang Tua</span>
-                    <span className="w-4">:</span>
-                    <div className="space-y-1">
-                      <p>a. Ayah : {student.namaAyah}</p>
-                      <p>b. Ibu : {student.namaIbu}</p>
+                return (
+                  <div 
+                    key={student.id}
+                    className="bg-white text-black p-10 sm:p-14 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break space-y-5"
+                  >
+                    <div className="text-center pb-3 border-b-2 border-black space-y-1">
+                      <h2 className="text-sm sm:text-base font-bold uppercase tracking-wide">
+                        IDENTITAS PESERTA DIDIK
+                      </h2>
+                      <p className="text-xs font-medium">
+                        KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI
+                      </p>
+                    </div>
+
+                    {/* List Identitas Lengkap Siswa (Persis Sama dengan Buku Induk Siswa) */}
+                    <div className="space-y-2.5 leading-relaxed text-xs">
+                      <div className="flex">
+                        <span className="w-8 font-mono">1.</span>
+                        <span className="w-64 font-semibold text-slate-900">Nama Lengkap Siswa</span>
+                        <span className="w-4">:</span>
+                        <span className="font-bold uppercase text-slate-900 flex-1">{student.nama}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">2.</span>
+                        <span className="w-64 font-semibold text-slate-900">Nomor Induk Siswa (NIS)</span>
+                        <span className="w-4">:</span>
+                        <span className="font-mono font-medium flex-1">{student.nis}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">3.</span>
+                        <span className="w-64 font-semibold text-slate-900">Nomor Induk Siswa Nasional (NISN)</span>
+                        <span className="w-4">:</span>
+                        <span className="font-mono font-bold flex-1">{student.nisn}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">4.</span>
+                        <span className="w-64 font-semibold text-slate-900">Tempat, Tanggal Lahir</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.tempatLahir}, {student.tanggalLahir}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">5.</span>
+                        <span className="w-64 font-semibold text-slate-900">Jenis Kelamin</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">6.</span>
+                        <span className="w-64 font-semibold text-slate-900">Agama & Kepercayaan</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.agama || 'Islam'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">7.</span>
+                        <span className="w-64 font-semibold text-slate-900">Status dalam Keluarga</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.statusKeluarga || 'Anak Kandung'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">8.</span>
+                        <span className="w-64 font-semibold text-slate-900">Anak Ke</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.anakKe || '1'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">9.</span>
+                        <span className="w-64 font-semibold text-slate-900">Sekolah Asal (Pendidikan Sebelumnya)</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.sekolahAsal || 'Sekolah Dasar (SD / MI)'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">10.</span>
+                        <span className="w-64 font-semibold text-slate-900">Diterima di Sekolah Ini</span>
+                        <span className="w-4">:</span>
+                        <div className="space-y-1 flex-1">
+                          <p>a. Di Kelas / Rombel : <span className="font-semibold">{studentRombel?.nama || student.rombelId} ({studentRombel?.fase || 'Fase D'})</span></p>
+                          <p>b. Pada Tanggal / Tahun Masuk : <span className="font-semibold">{student.tahunMasuk || '2024'}</span></p>
+                          <p>c. Terdaftar Sebagai : <span className="font-semibold">{student.terdaftarSebagai || 'Peserta Didik Baru'}</span></p>
+                        </div>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">11.</span>
+                        <span className="w-64 font-semibold text-slate-900">Alamat Peserta Didik</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1 leading-normal">{student.alamat}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">12.</span>
+                        <span className="w-64 font-semibold text-slate-900">Nomor Telepon / HP</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.telepon || '-'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">13.</span>
+                        <span className="w-64 font-semibold text-slate-900">Nama Orang Tua Kandung</span>
+                        <span className="w-4">:</span>
+                        <div className="space-y-1 flex-1">
+                          <p>a. Ayah : <span className="font-semibold">{student.namaAyah || '-'}</span></p>
+                          <p>b. Ibu  : <span className="font-semibold">{student.namaIbu || '-'}</span></p>
+                        </div>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">14.</span>
+                        <span className="w-64 font-semibold text-slate-900">Pekerjaan Orang Tua</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1">{student.pekerjaanOrangTua || 'Wiraswasta / Petani'}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">15.</span>
+                        <span className="w-64 font-semibold text-slate-900">Alamat Orang Tua</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1 leading-normal">{student.alamat}</span>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-8 font-mono">16.</span>
+                        <span className="w-64 font-semibold text-slate-900">Wali Peserta Didik (jika ada)</span>
+                        <span className="w-4">:</span>
+                        <div className="space-y-1 flex-1">
+                          <p>a. Nama Wali : <span className="font-semibold">{student.namaWali || '-'}</span></p>
+                          <p>b. Pekerjaan Wali : <span className="font-semibold">{student.pekerjaanWali || '-'}</span></p>
+                          <p>c. Alamat Wali : <span className="font-semibold">{student.alamatWali || '-'}</span></p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pasfoto & TTD Kepala Sekolah */}
+                    <div className="pt-6 flex justify-between items-end">
+                      <div className="w-28 h-36 border-2 border-black flex items-center justify-center text-[10px] text-slate-400 font-mono overflow-hidden bg-slate-50 shadow-2xs">
+                        {student.foto ? (
+                          <img src={student.foto} alt={student.nama} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-center p-2">
+                            <span className="font-bold text-slate-600">Pasfoto</span>
+                            <span className="text-[9px]">3 x 4 cm</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-center space-y-16">
+                        <div>
+                          <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '15 Juli 2024'}</p>
+                          <p className="font-semibold">Kepala {school.namaSekolah},</p>
+                        </div>
+                        <div>
+                          <p className="font-bold underline uppercase text-[12px]">{school.kepalaSekolah}</p>
+                          <p className="font-mono text-[10.5px]">NIP. {school.nipKepalaSekolah}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">10.</span>
-                    <span className="w-56 font-semibold">Pekerjaan Orang Tua</span>
-                    <span className="w-4">:</span>
-                    <span>{student.pekerjaanOrangTua}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="w-8 font-mono">11.</span>
-                    <span className="w-56 font-semibold">Alamat Orang Tua</span>
-                    <span className="w-4">:</span>
-                    <span>{student.alamat}</span>
-                  </div>
-                </div>
-
-                {/* Pasfoto & TTD Kepala Sekolah */}
-                <div className="pt-12 flex justify-between items-end">
-                  <div className="w-28 h-36 border border-black flex items-center justify-center text-[10px] text-slate-400 font-mono">
-                    Pasfoto 3 x 4
-                  </div>
-
-                  <div className="text-center space-y-16">
-                    <div>
-                      <p>{school.tempatRapor}, 15 Juli 2024</p>
-                      <p className="font-semibold">Kepala {school.namaSekolah},</p>
-                    </div>
-                    <div>
-                      <p className="font-bold underline uppercase">{school.kepalaSekolah}</p>
-                      <p className="font-mono text-[10px]">NIP. {school.nipKepalaSekolah}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )))}
+                );
+              })
+            )}
           </div>
         )}
 

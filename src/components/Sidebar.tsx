@@ -16,6 +16,7 @@ import {
   Award,
   Users,
   School,
+  BookOpen,
   LogOut
 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ export type ActiveTab =
   | 'data_sekolah'
   | 'data_pendidik'
   | 'data_siswa'
+  | 'buku_induk'
   | 'penilaian_ekskul';
 
 interface SidebarProps {
@@ -89,6 +91,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: Users,
           roles: ['admin', 'kepala_sekolah', 'wali_kelas'],
           badge: 'Siswa'
+        },
+        {
+          id: 'buku_induk' as ActiveTab,
+          label: 'Buku Induk Siswa',
+          icon: BookOpen,
+          roles: ['admin', 'kepala_sekolah', 'wali_kelas', 'guru_mapel'],
+          badge: 'Induk'
         }
       ]
     },

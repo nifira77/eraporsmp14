@@ -53,6 +53,7 @@ import { DataSekolahView } from './components/DataSekolahView';
 import { PenilaianEkskulView } from './components/PenilaianEkskulView';
 import { DataPendidikView } from './components/DataPendidikView';
 import { DataSiswaView } from './components/DataSiswaView';
+import { BukuIndukView } from './components/BukuIndukView';
 import { LoginView } from './components/LoginView';
 
 export default function App() {
@@ -722,6 +723,14 @@ export default function App() {
               onUpdateStudents={handleUpdateStudents}
               onAddStudent={handleAddStudent}
               onDeleteStudent={handleDeleteStudent}
+            />
+          )}
+
+          {activeTab === 'buku_induk' && (
+            <BukuIndukView
+              state={state}
+              onNavigate={setActiveTab}
+              onUpdateStudents={handleUpdateStudents}
             />
           )}
         </main>

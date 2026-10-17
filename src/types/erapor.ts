@@ -84,6 +84,16 @@ export interface Student {
   namaIbu: string;
   pekerjaanOrangTua: string;
   alamat: string;
+  foto?: string; // Base64 data URL or photo URL
+  sekolahAsal?: string;
+  anakKe?: number | string;
+  statusKeluarga?: string;
+  telepon?: string;
+  tahunMasuk?: string;
+  terdaftarSebagai?: string;
+  namaWali?: string;
+  pekerjaanWali?: string;
+  alamatWali?: string;
 }
 
 export type AssessmentMode = 'tengah_semester' | 'akhir_semester';
