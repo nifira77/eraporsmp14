@@ -1255,7 +1255,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         <span className="w-4">:</span>
                         <div className="space-y-1 flex-1">
                           <p>a. Di Kelas / Rombel : <span className="font-semibold">{studentRombel?.nama || student.rombelId} ({studentRombel?.fase || 'Fase D'})</span></p>
-                          <p>b. Pada Tanggal / Tahun Masuk : <span className="font-semibold">{student.tahunMasuk || '2024'}</span></p>
+                          <p>b. Pada Tanggal / Tahun Masuk : <span className="font-semibold">{student.tahunMasuk || (school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026')}</span></p>
                           <p>c. Terdaftar Sebagai : <span className="font-semibold">{student.terdaftarSebagai || 'Peserta Didik Baru'}</span></p>
                         </div>
                       </div>

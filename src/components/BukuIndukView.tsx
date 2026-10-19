@@ -63,6 +63,8 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
 
   // Watermark density / thickness for printing: 'tebal' (default), 'sangat_tebal', 'sedang'
   const [watermarkDensity, setWatermarkDensity] = useState<'tebal' | 'sangat_tebal' | 'sedang'>('tebal');
+  // Watermark size: 'proporsional' (default, fit diagonal without clipping), 'kecil', 'sedang'
+  const [watermarkSize, setWatermarkSize] = useState<'proporsional' | 'kecil' | 'sedang'>('proporsional');
 
   // Selected student id
   const [selectedStudentId, setSelectedStudentId] = useState<string>(() => {
@@ -90,7 +92,7 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
   const [formRombelId, setFormRombelId] = useState('');
   const [formStatusKeluarga, setFormStatusKeluarga] = useState('Anak Kandung');
   const [formAnakKe, setFormAnakKe] = useState('1');
-  const [formTahunMasuk, setFormTahunMasuk] = useState('2024');
+  const [formTahunMasuk, setFormTahunMasuk] = useState(() => school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026');
   const [formSekolahAsal, setFormSekolahAsal] = useState('SD / MI Sederajat');
   const [formTerdaftarSebagai, setFormTerdaftarSebagai] = useState('Peserta Didik Baru');
   const [formAlamat, setFormAlamat] = useState('');
@@ -145,6 +147,7 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
 
   // Open Edit Modal for a specific student
   const handleOpenEdit = (student: Student) => {
+    const defaultSchoolYear = school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026';
     setEditingStudent(student);
     setFormNama(student.nama || '');
     setFormNis(student.nis || '');
@@ -156,7 +159,7 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
     setFormRombelId(student.rombelId || rombels[0]?.id || '7.1');
     setFormStatusKeluarga(student.statusKeluarga || 'Anak Kandung');
     setFormAnakKe(student.anakKe ? String(student.anakKe) : '1');
-    setFormTahunMasuk(student.tahunMasuk || '2024');
+    setFormTahunMasuk(student.tahunMasuk || defaultSchoolYear);
     setFormSekolahAsal(student.sekolahAsal || 'Sekolah Dasar (SD / MI)');
     setFormTerdaftarSebagai(student.terdaftarSebagai || 'Peserta Didik Baru');
     setFormAlamat(student.alamat || '');
@@ -488,20 +491,36 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
             </div>
           )}
 
-          {/* Watermark Thickness Selector in Lembar Mode */}
+          {/* Watermark Density & Size Selectors in Lembar Mode */}
           {viewMode === 'lembar' && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <label className="font-bold text-slate-700">Tebal Watermark:</label>
-              <select
-                value={watermarkDensity}
-                onChange={(e) => setWatermarkDensity(e.target.value as any)}
-                className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 bg-white cursor-pointer shadow-2xs"
-                title="Pilih tingkat kepekatan / ketebalan watermark saat dicetak ke kertas atau PDF"
-              >
-                <option value="tebal">Tebal (Rekomendasi Cetak)</option>
-                <option value="sangat_tebal">Sangat Tebal (Paling Jelas)</option>
-                <option value="sedang">Sedang (Halus)</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <label className="font-bold text-slate-700">Tebal Watermark:</label>
+                <select
+                  value={watermarkDensity}
+                  onChange={(e) => setWatermarkDensity(e.target.value as any)}
+                  className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 bg-white cursor-pointer shadow-2xs"
+                  title="Pilih tingkat kepekatan / ketebalan watermark saat dicetak ke kertas atau PDF"
+                >
+                  <option value="tebal">Tebal (Jelas di Kertas)</option>
+                  <option value="sangat_tebal">Sangat Tebal (Kontras Maksimal)</option>
+                  <option value="sedang">Sedang (Halus)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <label className="font-bold text-slate-700">Ukuran Watermark:</label>
+                <select
+                  value={watermarkSize}
+                  onChange={(e) => setWatermarkSize(e.target.value as any)}
+                  className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 bg-white cursor-pointer shadow-2xs"
+                  title="Ukuran watermark teks diagonal agar pas di bidang kertas tanpa terpotong"
+                >
+                  <option value="proporsional">Proporsional (Pas Diagonal)</option>
+                  <option value="kecil">Kecil (Kompak)</option>
+                  <option value="sedang">Sedang</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
@@ -582,14 +601,14 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
                   key={student.id}
                   className="relative bg-white text-black p-10 sm:p-14 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break space-y-5 overflow-hidden"
                 >
-                  {/* Watermark Buku INDUK siswa di belakang teks (dibuat lebih tebal & jelas saat dicetak) */}
+                  {/* Watermark Buku INDUK siswa di belakang teks - Diperkecil presisi SVG agar muat diagonal tanpa pernah terpotong */}
                   <div 
-                    className={`pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 transition-opacity ${
+                    className={`pointer-events-none select-none absolute inset-0 z-0 flex items-center justify-center transition-opacity ${
                       watermarkDensity === 'sangat_tebal'
-                        ? 'opacity-30 print:opacity-35'
+                        ? 'opacity-35 print:opacity-45'
                         : watermarkDensity === 'sedang'
-                        ? 'opacity-14 print:opacity-18'
-                        : 'opacity-20 print:opacity-25'
+                        ? 'opacity-15 print:opacity-20'
+                        : 'opacity-24 print:opacity-30'
                     }`}
                     style={{
                       WebkitPrintColorAdjust: 'exact',
@@ -597,15 +616,30 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
                     }}
                     aria-hidden="true"
                   >
-                    <span 
-                      className="text-6xl sm:text-7xl md:text-8xl font-black uppercase tracking-[0.22em] text-slate-900 -rotate-45 transform whitespace-nowrap"
-                      style={{
-                        WebkitPrintColorAdjust: 'exact',
-                        printColorAdjust: 'exact'
-                      }}
+                    <svg 
+                      viewBox="0 0 794 1123" 
+                      className="w-full h-full"
+                      preserveAspectRatio="xMidYMid meet"
+                      xmlns="http://www.w3.org/2000/svg"
                     >
-                      BUKU INDUK SISWA
-                    </span>
+                      <text
+                        x="397"
+                        y="561.5"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        transform="rotate(-45 397 561.5)"
+                        className="fill-slate-900 font-black uppercase"
+                        style={{
+                          fontSize: watermarkSize === 'kecil' ? '24px' : watermarkSize === 'sedang' ? '36px' : '29px',
+                          fontWeight: 900,
+                          letterSpacing: '0.22em',
+                          WebkitPrintColorAdjust: 'exact',
+                          printColorAdjust: 'exact'
+                        }}
+                      >
+                        BUKU INDUK SISWA
+                      </text>
+                    </svg>
                   </div>
 
                   <div className="relative z-10 space-y-5">
@@ -687,7 +721,7 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
                         <span className="w-4">:</span>
                         <div className="space-y-1 flex-1">
                           <p>a. Di Kelas / Rombel : <span className="font-semibold">{studentRombel?.nama || student.rombelId} ({studentRombel?.fase || 'Fase D'})</span></p>
-                          <p>b. Pada Tanggal / Tahun Masuk : <span className="font-semibold">{student.tahunMasuk || '2024'}</span></p>
+                          <p>b. Pada Tanggal / Tahun Masuk : <span className="font-semibold">{student.tahunMasuk || (school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026')}</span></p>
                           <p>c. Terdaftar Sebagai : <span className="font-semibold">{student.terdaftarSebagai || 'Peserta Didik Baru'}</span></p>
                         </div>
                       </div>

@@ -67,7 +67,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
   const [formAgama, setFormAgama] = useState('Islam');
   const [formStatusKeluarga, setFormStatusKeluarga] = useState('Anak Kandung');
   const [formAnakKe, setFormAnakKe] = useState('1');
-  const [formTahunMasuk, setFormTahunMasuk] = useState('2024');
+  const [formTahunMasuk, setFormTahunMasuk] = useState(() => school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026');
   const [formSekolahAsal, setFormSekolahAsal] = useState('SD / MI Sederajat');
   const [formTerdaftarSebagai, setFormTerdaftarSebagai] = useState('Peserta Didik Baru');
   const [formTelepon, setFormTelepon] = useState('-');
@@ -135,18 +135,19 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
 
   // Handle open add modal
   const handleOpenAdd = () => {
+    const intakeYear = school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026';
     setEditingStudentId(null);
-    setFormNis(`240${(students.length + 1).toString().padStart(2, '0')}`);
-    setFormNisn(`011${Math.floor(1000000 + Math.random() * 9000000)}`);
+    setFormNis(`260${(students.length + 1).toString().padStart(2, '0')}`);
+    setFormNisn(`012${Math.floor(1000000 + Math.random() * 9000000)}`);
     setFormNama('');
     setFormJk('L');
     setFormRombelId(selectedRombelFilter === 'all' ? (rombels[0]?.id || '7.1') : selectedRombelFilter);
     setFormTempatLahir('Tulang Bawang Barat');
-    setFormTanggalLahir('2011-06-15');
+    setFormTanggalLahir('2013-05-15');
     setFormAgama('Islam');
     setFormStatusKeluarga('Anak Kandung');
     setFormAnakKe('1');
-    setFormTahunMasuk('2024');
+    setFormTahunMasuk(intakeYear);
     setFormSekolahAsal('SD / MI Sederajat');
     setFormTerdaftarSebagai('Peserta Didik Baru');
     setFormTelepon('-');
@@ -163,6 +164,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
 
   // Handle open edit modal
   const handleOpenEdit = (student: Student) => {
+    const intakeYear = school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026';
     setEditingStudentId(student.id);
     setFormNis(student.nis);
     setFormNisn(student.nisn);
@@ -174,7 +176,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     setFormAgama(student.agama || 'Islam');
     setFormStatusKeluarga(student.statusKeluarga || 'Anak Kandung');
     setFormAnakKe(student.anakKe?.toString() || '1');
-    setFormTahunMasuk(student.tahunMasuk || '2024');
+    setFormTahunMasuk(student.tahunMasuk || intakeYear);
     setFormSekolahAsal(student.sekolahAsal || 'SD / MI Sederajat');
     setFormTerdaftarSebagai(student.terdaftarSebagai || 'Peserta Didik Baru');
     setFormTelepon(student.telepon || '-');
@@ -277,6 +279,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
 
   // Download Excel Template for Students
   const handleDownloadExcelTemplate = () => {
+    const intakeDefaultYear = school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026';
     const templateData = [
       {
         'NIS': '26001',
@@ -289,7 +292,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Agama': 'Islam',
         'Status dalam Keluarga': 'Anak Kandung',
         'Anak Ke': 1,
-        'Tahun Masuk': '2024',
+        'Tahun Masuk': intakeDefaultYear,
         'Sekolah Asal': 'SD Negeri 1 Panaragan',
         'Terdaftar Sebagai': 'Peserta Didik Baru',
         'Alamat': 'Jl. Diponegoro No. 12, Tirta Kencana, Tubaba',
@@ -312,7 +315,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Agama': 'Islam',
         'Status dalam Keluarga': 'Anak Kandung',
         'Anak Ke': 2,
-        'Tahun Masuk': '2024',
+        'Tahun Masuk': intakeDefaultYear,
         'Sekolah Asal': 'SD Negeri 2 Mulya Asri',
         'Terdaftar Sebagai': 'Peserta Didik Baru',
         'Alamat': 'Mulya Asri RT 03 RW 01, Tulang Bawang Tengah',
@@ -335,7 +338,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Agama': 'Kristen Protestan',
         'Status dalam Keluarga': 'Anak Kandung',
         'Anak Ke': 1,
-        'Tahun Masuk': '2024',
+        'Tahun Masuk': intakeDefaultYear,
         'Sekolah Asal': 'SD Xaverius Bandar Lampung',
         'Terdaftar Sebagai': 'Peserta Didik Baru',
         'Alamat': 'Tirta Kencana RT 01, Tulang Bawang Tengah',
@@ -358,7 +361,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Agama': 'Hindu',
         'Status dalam Keluarga': 'Anak Kandung',
         'Anak Ke': 3,
-        'Tahun Masuk': '2024',
+        'Tahun Masuk': intakeDefaultYear,
         'Sekolah Asal': 'SD Negeri 3 Dayamurni',
         'Terdaftar Sebagai': 'Peserta Didik Baru',
         'Alamat': 'Diyuk Kencana RT 04, Tulang Bawang Tengah',
@@ -445,7 +448,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         'Agama': s.agama,
         'Status dalam Keluarga': s.statusKeluarga || 'Anak Kandung',
         'Anak Ke': s.anakKe || '1',
-        'Tahun Masuk': s.tahunMasuk || '2024',
+        'Tahun Masuk': s.tahunMasuk || (school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026'),
         'Sekolah Asal': s.sekolahAsal || 'SD / MI Sederajat',
         'Terdaftar Sebagai': s.terdaftarSebagai || 'Peserta Didik Baru',
         'Alamat': s.alamat,
@@ -465,6 +468,103 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     XLSX.writeFile(wb, `Data_Siswa_${school.namaSekolah.replace(/\s+/g, '_')}.xlsx`);
   };
 
+  // Helper function to extract cell value from formatted & raw excel rows
+  const getFlexibleRowVal = (
+    rowFmt: Record<string, any>,
+    rowRaw: Record<string, any>,
+    candidateKeys: string[]
+  ): { str: string; raw: any } => {
+    // 1. Direct exact match in rowFmt or rowRaw
+    for (const k of candidateKeys) {
+      if (rowFmt[k] !== undefined && rowFmt[k] !== null && String(rowFmt[k]).trim() !== '') {
+        return { str: String(rowFmt[k]).trim(), raw: rowRaw[k] };
+      }
+      if (rowRaw[k] !== undefined && rowRaw[k] !== null && String(rowRaw[k]).trim() !== '') {
+        return { str: String(rowRaw[k]).trim(), raw: rowRaw[k] };
+      }
+    }
+
+    // 2. Normalized match (remove spaces, symbols, lowercase)
+    const normCandidates = candidateKeys.map(k => k.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
+    for (const [colName, colVal] of Object.entries(rowFmt)) {
+      if (colVal === undefined || colVal === null || String(colVal).trim() === '') continue;
+      const cleanCol = colName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      // Exact normalized match
+      if (normCandidates.includes(cleanCol)) {
+        return { str: String(colVal).trim(), raw: rowRaw[colName] };
+      }
+
+      // Partial containment for descriptive candidates
+      for (const cand of normCandidates) {
+        if (cand.length >= 4 && (cleanCol.includes(cand) || cand.includes(cleanCol))) {
+          return { str: String(colVal).trim(), raw: rowRaw[colName] };
+        }
+      }
+    }
+
+    return { str: '', raw: undefined };
+  };
+
+  // Helper to parse dates from Excel (handles JS Date, serial number, YYYY-MM-DD, DD/MM/YYYY)
+  const parseExcelDate = (raw: any): string => {
+    if (!raw) return '2013-05-15';
+    if (raw instanceof Date) {
+      const y = raw.getFullYear();
+      const m = String(raw.getMonth() + 1).padStart(2, '0');
+      const d = String(raw.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    if (typeof raw === 'number' && raw > 25000 && raw < 70000) {
+      const d = new Date(Math.round((raw - 25569) * 86400 * 1000));
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    const s = String(raw).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmy) {
+      return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+    }
+    return s || '2013-05-15';
+  };
+
+  // Helper to parse Tahun Masuk from Excel
+  const parseTahunMasukVal = (valStr: string, rawVal: any, fallbackYear: string): string => {
+    if (valStr && valStr.trim() !== '') {
+      const s = valStr.trim();
+      // If pure 4 digits year or e.g. 2026/2027
+      if (/^\d{4}$/.test(s) || /^\d{4}\/\d{4}$/.test(s)) {
+        return s;
+      }
+      // If it contains a 4-digit year e.g. "Tahun 2026" or "15 Juli 2026"
+      const m = s.match(/\b(20\d{2})\b/);
+      if (m && s.length <= 10) {
+        return m[1];
+      }
+      return s;
+    }
+
+    if (rawVal instanceof Date) {
+      return String(rawVal.getFullYear());
+    }
+
+    if (typeof rawVal === 'number') {
+      if (rawVal >= 1990 && rawVal <= 2050) {
+        return String(Math.round(rawVal));
+      }
+      if (rawVal > 25000 && rawVal < 70000) {
+        const d = new Date(Math.round((rawVal - 25569) * 86400 * 1000));
+        return String(d.getUTCFullYear());
+      }
+    }
+
+    return fallbackYear;
+  };
+
   // Parse Excel file on file input change
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -476,64 +576,206 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
     reader.onload = (evt) => {
       try {
         const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws) as any[];
+        const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
+        
+        // Intelligent sheet detection: select sheet containing student data
+        let targetWsName = wb.SheetNames[0];
+        for (const name of wb.SheetNames) {
+          const lower = name.toLowerCase();
+          if (lower.includes('siswa') || lower.includes('peserta') || lower.includes('format') || lower.includes('data')) {
+            targetWsName = name;
+            break;
+          }
+        }
+        const ws = wb.Sheets[targetWsName];
 
-        if (!data || data.length === 0) {
-          setErrorMsg('File Excel tidak berisi data yang dapat dibaca.');
+        // Read formatted strings and raw cell objects
+        const dataFormatted = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false }) as Record<string, any>[];
+        const dataRaw = XLSX.utils.sheet_to_json(ws, { defval: '', raw: true }) as Record<string, any>[];
+
+        if (!dataFormatted || dataFormatted.length === 0) {
+          setErrorMsg('File Excel tidak berisi data yang dapat dibaca. Pastikan sheet berisi baris data siswa.');
           return;
         }
 
+        const intakeDefaultYear = school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026';
+
         // Map excel columns to Student objects
-        const parsed: Student[] = data.map((row, idx) => {
-          // Normalize column names
-          const nis = String(row['NIS'] || row['nis'] || row['No Induk'] || `240${(students.length + idx + 1).toString().padStart(2, '0')}`).trim();
-          const nisn = String(row['NISN'] || row['nisn'] || row['Nomor Induk Siswa Nasional'] || `011${Math.floor(1000000 + Math.random() * 9000000)}`).trim();
-          const nama = String(row['Nama Lengkap'] || row['Nama Siswa'] || row['Nama'] || row['nama'] || `Peserta Didik ${idx + 1}`).trim();
-          
+        const parsed: Student[] = dataFormatted.map((rowFmt, idx) => {
+          const rowRaw = dataRaw[idx] || {};
+
+          // 1. NIS
+          const rawNis = getFlexibleRowVal(rowFmt, rowRaw, [
+            'NIS', 'NIS / No Induk', 'No Induk', 'Nomor Induk', 'No. Induk', 'nis', 'noinduk'
+          ]);
+          const nis = rawNis.str || `260${(students.length + idx + 1).toString().padStart(2, '0')}`;
+
+          // 2. NISN
+          const rawNisn = getFlexibleRowVal(rowFmt, rowRaw, [
+            'NISN', 'Nomor Induk Siswa Nasional', 'No. Induk Siswa Nasional', 'No Induk Siswa Nasional', 'nisn'
+          ]);
+          const nisn = rawNisn.str || `012${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+          // 3. Nama Lengkap
+          const rawNama = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Nama Lengkap', 'Nama Siswa', 'Nama Peserta Didik', 'Nama', 'namalengkap', 'namasiswa'
+          ]);
+          const nama = rawNama.str || `Peserta Didik ${idx + 1}`;
+
+          // 4. Jenis Kelamin
+          const rawJk = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Jenis Kelamin', 'JK', 'Gender', 'Kelamin', 'L/P', 'jeniskelamin'
+          ]);
           let jk: 'L' | 'P' = 'L';
-          const rawJk = String(row['Jenis Kelamin'] || row['JK'] || row['jk'] || '').toUpperCase();
-          if (rawJk.includes('P') || rawJk.includes('PEREMPUAN') || rawJk === 'WANITA') {
-            jk = 'P';
+          if (rawJk.str) {
+            const up = rawJk.str.toUpperCase();
+            if (up.includes('P') || up.includes('PEREMPUAN') || up === 'WANITA' || up === 'F') {
+              jk = 'P';
+            }
           }
 
-          // Rombel resolution
+          // 5. Rombel / Kelas
           let resolvedRombelId = rombels[0]?.id || '7.1';
           if (importTargetRombel !== 'auto') {
             resolvedRombelId = importTargetRombel;
           } else {
-            const rawRombel = String(row['Rombel / Kelas'] || row['Rombel'] || row['Kelas'] || row['kelas'] || '').trim().toLowerCase();
-            const matchedRombel = rombels.find(r => 
-              r.nama.toLowerCase().includes(rawRombel) || 
-              r.id.toLowerCase() === rawRombel ||
-              rawRombel.includes(r.id.toLowerCase())
-            );
-            if (matchedRombel) {
-              resolvedRombelId = matchedRombel.id;
+            const rawRombel = getFlexibleRowVal(rowFmt, rowRaw, [
+              'Rombel / Kelas', 'Rombel', 'Kelas', 'Kelas / Rombel', 'Rombel/Kelas', 'rombel', 'kelas'
+            ]);
+            if (rawRombel.str) {
+              const valLower = rawRombel.str.toLowerCase();
+              const matched = rombels.find(r => 
+                r.nama.toLowerCase().includes(valLower) ||
+                valLower.includes(r.nama.toLowerCase()) ||
+                r.id.toLowerCase() === valLower ||
+                valLower.includes(r.id.toLowerCase())
+              );
+              if (matched) {
+                resolvedRombelId = matched.id;
+              }
             }
           }
 
-          const tempatLahir = String(row['Tempat Lahir'] || row['tempat_lahir'] || 'Tulang Bawang Barat').trim();
-          const tanggalLahir = String(row['Tanggal Lahir'] || row['tanggal_lahir'] || '2011-01-01').trim();
-          const agama = String(row['Agama'] || row['agama'] || 'Islam').trim();
-          const statusKeluarga = String(row['Status dalam Keluarga'] || row['status_keluarga'] || row['Status Keluarga'] || 'Anak Kandung').trim();
-          const anakKe = String(row['Anak Ke'] || row['anak_ke'] || row['Anak ke'] || row['anak ke'] || row['Anak Ke-'] || row['Anak'] || '1').trim();
-          const tahunMasuk = String(row['Tahun Masuk'] || row['tahun_masuk'] || row['tahun masuk'] || row['Tahun Masuk Sekolah'] || '2024').trim();
-          const sekolahAsal = String(row['Sekolah Asal'] || row['sekolah_asal'] || row['sekolah asal'] || row['Asal Sekolah'] || row['Pendidikan Sebelumnya'] || 'SD / MI Sederajat').trim();
-          const terdaftarSebagai = String(row['Terdaftar Sebagai'] || row['terdaftar_sebagai'] || row['terdaftar sebagai'] || row['Status Terdaftar'] || 'Peserta Didik Baru').trim();
-          const alamat = String(row['Alamat'] || row['alamat'] || 'Kab. Tulang Bawang Barat').trim();
-          const telepon = String(row['Nomor Telepon / HP'] || row['Telepon / HP'] || row['Telepon'] || row['telepon'] || row['No HP'] || row['HP'] || '-').trim();
-          const namaAyah = String(row['Nama Ayah'] || row['Ayah'] || row['ayah'] || '-').trim();
-          const namaIbu = String(row['Nama Ibu'] || row['Ibu'] || row['ibu'] || '-').trim();
-          const pekerjaan = String(row['Pekerjaan Orang Tua'] || row['Pekerjaan'] || row['pekerjaan'] || '-').trim();
-          const namaWali = String(row['Nama Wali'] || row['nama_wali'] || row['Wali'] || '-').trim();
-          const pekerjaanWali = String(row['Pekerjaan Wali'] || row['pekerjaan_wali'] || '-').trim();
-          const alamatWali = String(row['Alamat Wali'] || row['alamat_wali'] || '-').trim();
+          // 6. Tempat Lahir
+          const rawTempat = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Tempat Lahir', 'Tempat', 'Kota Lahir', 'tempatlahir'
+          ]);
+          const tempatLahir = rawTempat.str || 'Tulang Bawang Barat';
+
+          // 7. Tanggal Lahir
+          const rawTanggal = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Tanggal Lahir', 'Tgl Lahir', 'Tanggal', 'Tgl', 'tanggallahir'
+          ]);
+          const tanggalLahir = parseExcelDate(rawTanggal.raw || rawTanggal.str);
+
+          // 8. Agama
+          const rawAgama = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Agama', 'Agama & Kepercayaan', 'Kepercayaan', 'agama'
+          ]);
+          const agama = rawAgama.str || 'Islam';
+
+          // 9. Status dalam Keluarga
+          const rawStatus = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Status dalam Keluarga', 'Status Keluarga', 'Status Anak', 'Hubungan Keluarga', 'statusdalamkeluarga'
+          ]);
+          const statusKeluarga = rawStatus.str || 'Anak Kandung';
+
+          // 10. Anak Ke
+          const rawAnak = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Anak Ke', 'Anak ke', 'anak ke', 'Anak Ke-', 'Anak', 'Urutan Anak', 'Anak Ke (1, 2, 3...)', 'anak_ke', 'anakke'
+          ]);
+          let anakKe = '1';
+          if (rawAnak.str) {
+            const s = rawAnak.str.trim();
+            const numMatch = s.match(/\d+/);
+            anakKe = numMatch ? numMatch[0] : s;
+          }
+
+          // 11. Tahun Masuk (Dioptimalkan agar terbaca sempurna dari variasi format user)
+          const rawTahun = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Tahun Masuk', 'TAHUN MASUK', 'tahun masuk', 'Thn Masuk', 'Tahun Masuk Sekolah',
+            'Tahun Diterima', 'Tahun Diterima di Sekolah Ini', 'Tahun Ajaran Masuk',
+            'Tanggal Masuk', 'Tgl Masuk', 'Tahun Masuk (Thn)', 'Tahun Masuk Siswa',
+            'Tahun Masuk / Terdaftar', 'Masuk', 'Tahun', 'tahunmasuk', 'thnmasuk', 'tahunditerima'
+          ]);
+          const tahunMasuk = parseTahunMasukVal(rawTahun.str, rawTahun.raw, intakeDefaultYear);
+
+          // 12. Sekolah Asal
+          const rawSekolah = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Sekolah Asal', 'SEKOLAH ASAL', 'sekolah asal', 'Sekolah Asal (SD / MI)',
+            'Asal Sekolah', 'Pendidikan Sebelumnya', 'SD Asal', 'Asal SD',
+            'Sekolah Dasar / Asal', 'Sekolah Sebelumnya', 'Nama SD', 'sekolahasal'
+          ]);
+          const sekolahAsal = rawSekolah.str || 'SD / MI Sederajat';
+
+          // 13. Terdaftar Sebagai
+          const rawTerdaftar = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Terdaftar Sebagai', 'TERDAFTAR SEBAGAI', 'terdaftar sebagai',
+            'Status Terdaftar', 'Status Masuk', 'Status Siswa', 'Pendaftaran',
+            'Jenis Pendaftaran', 'Status Penerimaan', 'Status Pendaftaran',
+            'terdaftarsebagai', 'statusmasuk'
+          ]);
+          let terdaftarSebagai = 'Peserta Didik Baru';
+          if (rawTerdaftar.str) {
+            const s = rawTerdaftar.str.trim();
+            if (s.toLowerCase().includes('pindah')) {
+              terdaftarSebagai = 'Pindahan';
+            } else if (s.toLowerCase().includes('baru')) {
+              terdaftarSebagai = 'Peserta Didik Baru';
+            } else {
+              terdaftarSebagai = s;
+            }
+          }
+
+          // 14. Alamat
+          const rawAlamat = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Alamat', 'Alamat Peserta Didik', 'Alamat Siswa', 'Alamat Rumah',
+            'Tempat Tinggal', 'Domisili', 'alamat'
+          ]);
+          const alamat = rawAlamat.str || 'Kab. Tulang Bawang Barat';
+
+          // 15. Telepon
+          const rawTelepon = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Nomor Telepon / HP', 'Telepon / HP', 'Nomor Telepon', 'Telepon',
+            'No HP', 'No. HP', 'HP', 'Nomor HP', 'Kontak', 'WhatsApp', 'WA', 'telepon'
+          ]);
+          const telepon = rawTelepon.str || '-';
+
+          // 16. Nama Ayah & Ibu
+          const rawAyah = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Nama Ayah', 'Nama Ayah Kandung', 'Ayah', 'Ayah Kandung', 'namaayah'
+          ]);
+          const namaAyah = rawAyah.str || '-';
+
+          const rawIbu = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Nama Ibu', 'Nama Ibu Kandung', 'Ibu', 'Ibu Kandung', 'namaibu'
+          ]);
+          const namaIbu = rawIbu.str || '-';
+
+          // 17. Pekerjaan Orang Tua
+          const rawPekerjaan = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Pekerjaan Orang Tua', 'Pekerjaan Ortu', 'Pekerjaan', 'Pekerjaan Ayah', 'Pekerjaan Ibu', 'pekerjaanorangtua'
+          ]);
+          const pekerjaanOrangTua = rawPekerjaan.str || '-';
+
+          // 18. Wali Siswa
+          const rawNamaWali = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Nama Wali', 'Wali', 'Wali Murid', 'Nama Wali Siswa', 'namawali'
+          ]);
+          const namaWali = rawNamaWali.str || '-';
+
+          const rawPekerjaanWali = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Pekerjaan Wali', 'Profesi Wali', 'pekerjaanwali'
+          ]);
+          const pekerjaanWali = rawPekerjaanWali.str || '-';
+
+          const rawAlamatWali = getFlexibleRowVal(rowFmt, rowRaw, [
+            'Alamat Wali', 'Domisili Wali', 'alamatwali'
+          ]);
+          const alamatWali = rawAlamatWali.str || '-';
 
           return {
-            id: `siswa-imp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
+            id: `siswa-imp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
             nis,
             nisn,
             nama,
@@ -551,7 +793,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
             telepon,
             namaAyah,
             namaIbu,
-            pekerjaanOrangTua: pekerjaan,
+            pekerjaanOrangTua,
             namaWali,
             pekerjaanWali,
             alamatWali
@@ -561,7 +803,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
         setPreviewStudents(parsed);
       } catch (err: any) {
         console.error('Error parsing Excel:', err);
-        setErrorMsg('Gagal membaca file Excel. Pastikan format kolom sesuai dengan template.');
+        setErrorMsg('Gagal membaca file Excel. Pastikan file dalam format .xlsx atau .xls yang valid.');
       }
     };
 
@@ -577,15 +819,33 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
 
     if (importMode === 'replace') {
       onUpdateStudents(previewStudents);
-      setSuccessMsg(`Berhasil mengimpor dan memperbarui ${previewStudents.length} peserta didik.`);
+      setSuccessMsg(`Berhasil mengimpor dan mengganti seluruh data dengan ${previewStudents.length} peserta didik.`);
     } else {
-      // Append mode: avoid duplicate NISN
-      const existingNisns = new Set(students.map(s => s.nisn));
-      const newItems = previewStudents.filter(s => !existingNisns.has(s.nisn));
-      const duplicatesCount = previewStudents.length - newItems.length;
+      // Smart Merge mode: if student with same NISN exists, update their identity (including tahunMasuk, sekolahAsal, etc.)
+      // while preserving their student ID, existing grades, attendances, and photos!
+      const studentMap = new Map(students.map(s => [s.nisn, s]));
+      let updatedCount = 0;
+      let newCount = 0;
 
-      onUpdateStudents([...students, ...newItems]);
-      setSuccessMsg(`Berhasil menambahkan ${newItems.length} peserta didik baru.${duplicatesCount > 0 ? ` (${duplicatesCount} siswa dengan NISN sama diabaikan).` : ''}`);
+      previewStudents.forEach(imported => {
+        if (studentMap.has(imported.nisn)) {
+          const existing = studentMap.get(imported.nisn)!;
+          studentMap.set(imported.nisn, {
+            ...existing,
+            ...imported,
+            id: existing.id, // preserve ID so grades & attendances stay linked
+            foto: imported.foto || existing.foto // keep photo if existing has photo
+          });
+          updatedCount++;
+        } else {
+          studentMap.set(imported.nisn, imported);
+          newCount++;
+        }
+      });
+
+      const mergedList = Array.from(studentMap.values());
+      onUpdateStudents(mergedList);
+      setSuccessMsg(`Sinkronisasi Excel selesai: ${updatedCount} data siswa diperbarui dan ${newCount} siswa baru ditambahkan.`);
     }
 
     setIsImportModalOpen(false);
@@ -854,10 +1114,18 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                       </td>
                       <td className="py-2.5 px-4 text-slate-600">
                         <p className="font-medium text-slate-800">{s.tempatLahir}, {s.tanggalLahir}</p>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                             {s.agama || 'Islam'}
                           </span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            Masuk: {s.tahunMasuk || (school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026')}
+                          </span>
+                          {s.sekolahAsal && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] text-slate-600 bg-slate-100 max-w-[150px] truncate" title={s.sekolahAsal}>
+                              {s.sekolahAsal}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-2.5 px-4 text-slate-600">
@@ -1412,7 +1680,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
                             <td className="py-2 px-2.5">{rombels.find(r => r.id === s.rombelId)?.nama || s.rombelId}</td>
                             <td className="py-2 px-2.5">{s.agama}</td>
                             <td className="py-2 px-2 text-center font-semibold text-slate-800">{s.anakKe || '1'}</td>
-                            <td className="py-2 px-2 text-center font-mono text-slate-700">{s.tahunMasuk || '2024'}</td>
+                            <td className="py-2 px-2 text-center font-mono font-bold text-blue-700 bg-blue-50/50">{s.tahunMasuk || (school.tahunAjaran ? school.tahunAjaran.split('/')[0] : '2026')}</td>
                             <td className="py-2 px-3 text-slate-600 truncate max-w-[140px]">{s.sekolahAsal || '-'}</td>
                             <td className="py-2 px-2.5">
                               <span className="px-1.5 py-0.5 rounded text-[10.5px] font-medium bg-blue-50 text-blue-700">
