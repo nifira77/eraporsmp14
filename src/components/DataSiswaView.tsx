@@ -45,6 +45,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
 
   // Clear all students handler
   const handleConfirmClearAll = () => {
@@ -270,11 +271,7 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
 
   // Delete student
   const handleDelete = (student: Student) => {
-    if (confirm(`Hapus peserta didik "${student.nama}" (NISN: ${student.nisn}) dari sistem e-Rapor?`)) {
-      onDeleteStudent(student.id);
-      setSuccessMsg(`Peserta didik "${student.nama}" berhasil dihapus.`);
-      setTimeout(() => setSuccessMsg(null), 3000);
-    }
+    setStudentToDelete(student);
   };
 
   // Download Excel Template for Students
@@ -1757,6 +1754,59 @@ export const DataSiswaView: React.FC<DataSiswaViewProps> = ({
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Ya, Kosongkan Semua Siswa</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Satu Siswa (In-App Dialog) */}
+      {studentToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-rose-600 mb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Hapus Peserta Didik?</h3>
+                <p className="text-xs text-slate-500">Tindakan ini tidak dapat dibatalkan</p>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5 my-3">
+              <p>
+                Nama Lengkap: <strong className="text-slate-900">{studentToDelete.nama}</strong>
+              </p>
+              <p>
+                NIS / NISN: <span className="font-mono">{studentToDelete.nis} / {studentToDelete.nisn}</span>
+              </p>
+              <p>
+                Kelas: <span className="font-semibold">{rombels.find(r => r.id === studentToDelete.rombelId)?.nama || studentToDelete.rombelId}</span>
+              </p>
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setStudentToDelete(null)}
+                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const deletedName = studentToDelete.nama;
+                  onDeleteStudent(studentToDelete.id);
+                  setStudentToDelete(null);
+                  setSuccessMsg(`Peserta didik "${deletedName}" berhasil dihapus.`);
+                  setTimeout(() => setSuccessMsg(null), 3000);
+                }}
+                className="px-4 py-2 font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Siswa</span>
               </button>
             </div>
           </div>

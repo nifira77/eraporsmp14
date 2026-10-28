@@ -56,7 +56,7 @@ export interface Subject {
   nama: string;
   kategori: 'Umum' | 'Kejuruan' | 'Muatan Lokal';
   kktp: number; // Kriteria Ketercapaian Tujuan Pembelajaran (default: 75)
-  guruPengampuId: string;
+  guruPengampuId?: string;
   guruPengampuNama: string;
 }
 

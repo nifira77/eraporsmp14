@@ -375,17 +375,71 @@ export default function App() {
 
   // Rombel handlers
   const handleAddRombel = (newRombel: any) => {
-    setState(prev => ({
-      ...prev,
-      rombels: [...prev.rombels, newRombel]
-    }));
+    setState(prev => {
+      const updatedRombels = [...prev.rombels, newRombel];
+      const newState: ERaporState = {
+        ...prev,
+        rombels: updatedRombels
+      };
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
+  };
+
+  const handleUpdateRombel = (updatedRombel: any) => {
+    setState(prev => {
+      const updatedRombels = prev.rombels.map(r => r.id === updatedRombel.id ? updatedRombel : r);
+
+      // Bidirectional sync with users:
+      // If updatedRombel has a waliKelasId, make sure that teacher's role is wali_kelas and rombelId is updatedRombel.id
+      let updatedUsers = prev.users;
+      if (updatedRombel.waliKelasId) {
+        updatedUsers = prev.users.map(u => {
+          if (u.id === updatedRombel.waliKelasId) {
+            return {
+              ...u,
+              name: updatedRombel.waliKelasNama || u.name,
+              nip: updatedRombel.waliKelasNip || u.nip,
+              role: u.role === 'admin' || u.role === 'kepala_sekolah' ? u.role : 'wali_kelas',
+              rombelId: updatedRombel.id
+            };
+          }
+          // If another teacher previously had this rombel assigned, clear it
+          if (u.id !== updatedRombel.waliKelasId && u.rombelId === updatedRombel.id) {
+            return {
+              ...u,
+              rombelId: undefined
+            };
+          }
+          return u;
+        });
+      }
+
+      const newState: ERaporState = {
+        ...prev,
+        rombels: updatedRombels,
+        users: updatedUsers
+      };
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
   };
 
   const handleDeleteRombel = (rombelId: string) => {
-    setState(prev => ({
-      ...prev,
-      rombels: prev.rombels.filter(r => r.id !== rombelId)
-    }));
+    setState(prev => {
+      const updatedRombels = prev.rombels.filter(r => r.id !== rombelId);
+      const updatedUsers = prev.users.map(u => u.rombelId === rombelId ? { ...u, rombelId: undefined } : u);
+      const newState: ERaporState = {
+        ...prev,
+        rombels: updatedRombels,
+        users: updatedUsers
+      };
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
   };
 
   // Subject KKTP update handler
@@ -450,38 +504,73 @@ export default function App() {
 
   const handleUpdateUser = (updatedUser: UserProfile) => {
     setState(prev => {
-      const updatedUsers = prev.users.map(u => u.id === updatedUser.id ? updatedUser : u);
       const updatedCurrentUser = prev.currentUser.id === updatedUser.id ? updatedUser : prev.currentUser;
-      
-      // If this teacher is a Wali Kelas, synchronize rombel waliKelasNama & waliKelasNip
-      let updatedRombels = prev.rombels;
-      if (updatedUser.role === 'wali_kelas' && updatedUser.rombelId) {
-        updatedRombels = prev.rombels.map(r => {
-          if (r.id === updatedUser.rombelId || r.waliKelasId === updatedUser.id) {
-            return {
-              ...r,
-              waliKelasNama: updatedUser.name,
-              waliKelasNip: updatedUser.nip || '-',
-              waliKelasId: updatedUser.id
-            };
-          }
-          return r;
-        });
-      }
 
-      // If this teacher has an assigned subject, synchronize subject guruPengampuNama
+      // 1. Synchronize Rombels:
+      // Clear previous assignment if user changed rombel or is no longer a wali_kelas
+      let updatedRombels = prev.rombels.map(r => {
+        // If this rombel was previously assigned to this teacher, but teacher is no longer wali or moved:
+        if (r.waliKelasId === updatedUser.id && (updatedUser.role !== 'wali_kelas' || r.id !== updatedUser.rombelId)) {
+          return {
+            ...r,
+            waliKelasNama: '-',
+            waliKelasNip: '-',
+            waliKelasId: undefined
+          };
+        }
+        // If this rombel is the newly assigned rombel for this teacher:
+        if (updatedUser.role === 'wali_kelas' && r.id === updatedUser.rombelId) {
+          return {
+            ...r,
+            waliKelasNama: updatedUser.name,
+            waliKelasNip: updatedUser.nip || '-',
+            waliKelasId: updatedUser.id
+          };
+        }
+        // If this rombel still belongs to this teacher, ensure name & NIP are updated:
+        if (r.waliKelasId === updatedUser.id) {
+          return {
+            ...r,
+            waliKelasNama: updatedUser.name,
+            waliKelasNip: updatedUser.nip || '-'
+          };
+        }
+        return r;
+      });
+
+      // 2. Synchronize Users list:
+      // If updatedUser became wali of a rombel that was previously held by another teacher, clear the other teacher's rombelId
+      const updatedUsers = prev.users.map(u => {
+        if (u.id === updatedUser.id) {
+          return updatedUser;
+        }
+        if (updatedUser.role === 'wali_kelas' && updatedUser.rombelId && u.rombelId === updatedUser.rombelId && u.id !== updatedUser.id) {
+          return {
+            ...u,
+            rombelId: undefined
+          };
+        }
+        return u;
+      });
+
+      // 3. Synchronize Subjects:
       const updatedSubjects = prev.subjects.map(s => {
-        if (s.id === updatedUser.subjectId) {
+        if (s.id === updatedUser.subjectId && updatedUser.subjectId) {
           return {
             ...s,
             guruPengampuNama: updatedUser.name,
             guruPengampuId: updatedUser.id
           };
+        } else if (s.guruPengampuId === updatedUser.id && s.id !== updatedUser.subjectId) {
+          return {
+            ...s,
+            guruPengampuNama: '-'
+          };
         }
         return s;
       });
 
-      // If updating headmaster / admin
+      // 4. Synchronize School Headmaster if role is admin or kepala_sekolah
       const updatedSchool = (updatedUser.role === 'admin' || updatedUser.role === 'kepala_sekolah')
         ? { ...prev.school, kepalaSekolah: updatedUser.name, nipKepalaSekolah: updatedUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
@@ -503,6 +592,7 @@ export default function App() {
 
   const handleDeleteUser = (userId: string) => {
     setState(prev => {
+      const userToDelete = prev.users.find(u => u.id === userId);
       const updatedUsers = prev.users.filter(u => u.id !== userId);
       const updatedCurrentUser = prev.currentUser.id === userId 
         ? (updatedUsers[0] || prev.currentUser)
@@ -510,15 +600,15 @@ export default function App() {
 
       // Clean up references in rombels and subjects
       const updatedRombels = prev.rombels.map(r => {
-        if (r.waliKelasId === userId) {
+        if (r.waliKelasId === userId || (userToDelete && r.waliKelasNama === userToDelete.name)) {
           return { ...r, waliKelasNama: '-', waliKelasNip: '-', waliKelasId: undefined };
         }
         return r;
       });
 
       const updatedSubjects = prev.subjects.map(s => {
-        if (s.guruPengampuId === userId) {
-          return { ...s, guruPengampuNama: '-' };
+        if (s.guruPengampuId === userId || (userToDelete && s.guruPengampuNama === userToDelete.name)) {
+          return { ...s, guruPengampuNama: '-', guruPengampuId: '' };
         }
         return s;
       });
@@ -533,6 +623,68 @@ export default function App() {
 
       saveStateToLocalStorage(newState);
       syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
+      return newState;
+    });
+  };
+
+  const handleReplaceUsers = (newUsers: UserProfile[]) => {
+    setState(prev => {
+      if (!newUsers || newUsers.length === 0) return prev;
+
+      // Ensure an active admin or first user
+      const adminUser = newUsers.find(u => u.role === 'admin' || u.role === 'kepala_sekolah') || newUsers[0];
+
+      // Reassign rombels based on new users
+      const updatedRombels = prev.rombels.map(r => {
+        const assignedWali = newUsers.find(u => u.role === 'wali_kelas' && u.rombelId === r.id);
+        if (assignedWali) {
+          return {
+            ...r,
+            waliKelasNama: assignedWali.name,
+            waliKelasNip: assignedWali.nip || '-',
+            waliKelasId: assignedWali.id
+          };
+        }
+        return {
+          ...r,
+          waliKelasNama: '-',
+          waliKelasNip: '-',
+          waliKelasId: undefined
+        };
+      });
+
+      // Reassign subjects based on new users
+      const updatedSubjects = prev.subjects.map(s => {
+        const assignedTeacher = newUsers.find(u => u.subjectId === s.id);
+        if (assignedTeacher) {
+          return {
+            ...s,
+            guruPengampuNama: assignedTeacher.name,
+            guruPengampuId: assignedTeacher.id
+          };
+        }
+        return {
+          ...s,
+          guruPengampuNama: '-',
+          guruPengampuId: ''
+        };
+      });
+
+      const updatedSchool = adminUser
+        ? { ...prev.school, kepalaSekolah: adminUser.name, nipKepalaSekolah: adminUser.nip || prev.school.nipKepalaSekolah }
+        : prev.school;
+
+      const newState: ERaporState = {
+        ...prev,
+        school: updatedSchool,
+        users: newUsers,
+        currentUser: adminUser,
+        rombels: updatedRombels,
+        subjects: updatedSubjects
+      };
+
+      saveStateToLocalStorage(newState);
+      syncStateToCloud(newState, adminUser.name, { immediate: true });
       return newState;
     });
   };
@@ -701,6 +853,7 @@ export default function App() {
               onToggleLock={handleToggleLock}
               onResetData={handleResetData}
               onAddRombel={handleAddRombel}
+              onUpdateRombel={handleUpdateRombel}
               onDeleteRombel={handleDeleteRombel}
               onAddUser={handleAddUser}
               onUpdateUser={handleUpdateUser}
@@ -714,6 +867,7 @@ export default function App() {
               onAddUser={handleAddUser}
               onUpdateUser={handleUpdateUser}
               onDeleteUser={handleDeleteUser}
+              onReplaceUsers={handleReplaceUsers}
             />
           )}
 

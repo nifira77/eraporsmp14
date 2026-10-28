@@ -75,14 +75,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: 'data_sekolah' as ActiveTab,
           label: 'Profil Satuan Pendidikan',
           icon: School,
-          roles: ['admin', 'kepala_sekolah', 'wali_kelas'],
+          roles: ['admin', 'kepala_sekolah', 'wali_kelas', 'guru_mapel'],
           badge: null
         },
         {
           id: 'data_pendidik' as ActiveTab,
-          label: 'Data Pendidik & PTK',
+          label: 'Data Guru & Wali Kelas',
           icon: GraduationCap,
-          roles: ['admin', 'kepala_sekolah'],
+          roles: ['admin', 'kepala_sekolah', 'wali_kelas', 'guru_mapel'],
           badge: 'PTK'
         },
         {

@@ -27,45 +27,13 @@ interface LoginViewProps {
 export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
   const { school, users, rombels, subjects } = state;
 
-  const adminTeacher = users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah') || users[0];
-  const wali71Teacher = users.find(u => u.rombelId === '7.1') || users.find(u => u.role === 'wali_kelas') || users[1] || users[0];
-  const wali72Teacher = users.find(u => u.rombelId === '7.2') || users[2] || users[0];
-
-  // Selected persona / custom input
-  const defaultTeacher = users[1] || users[0];
-  const [selectedUserId, setSelectedUserId] = useState<string>(defaultTeacher?.id || 'user-siti');
-  const [usernameInput, setUsernameInput] = useState<string>(defaultTeacher?.name || 'Siti Rahmawati, S.Pd.');
-  const [passwordInput, setPasswordInput] = useState<string>('123456');
+  const [usernameInput, setUsernameInput] = useState<string>('');
+  const [passwordInput, setPasswordInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // When persona dropdown changes, update username directly to teacher name
-  const handleSelectPersona = (userId: string) => {
-    setSelectedUserId(userId);
-    const targetUser = users.find(u => u.id === userId);
-    if (targetUser) {
-      setUsernameInput(targetUser.name);
-      setErrorMessage(null);
-    }
-  };
-
-  // Handle direct one-click quick login for testing
-  const handleQuickLogin = (roleOrId: string) => {
-    let target = users.find(u => u.id === roleOrId);
-    if (!target) {
-      if (roleOrId === 'admin') target = users.find(u => u.role === 'admin');
-      else if (roleOrId === 'wali_7.1') target = users.find(u => u.rombelId === '7.1');
-      else if (roleOrId === 'wali_7.2') target = users.find(u => u.rombelId === '7.2');
-    }
-    if (target) {
-      setSelectedUserId(target.id);
-      setUsernameInput(target.name);
-      setPasswordInput('123456');
-      performLogin(target);
-    }
-  };
+  const [showTeacherList, setShowTeacherList] = useState(false);
 
   const performLogin = (userToLogin: UserProfile) => {
     setIsLoading(true);
@@ -75,12 +43,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
     }, 300);
   };
 
-  // Helper to strip academic titles for flexible matching
-  const stripTitles = (name: string): string => {
+  // Helper to normalize teacher names and strip academic titles
+  const normalizeName = (name: string): string => {
     return name
       .toLowerCase()
-      .replace(/^(drs\.|dra\.|ir\.|h\.|hj\.)\s*/gi, '')
-      .replace(/,\s*(s\.pd|m\.pd|s\.kom|s\.th|s\.pd\.i|m\.si|m\.m)\.?/gi, '')
+      .replace(/^(drs\.|dra\.|ir\.|h\.|hj\.|ust\.|prof\.|dr\.)\s*/gi, '')
+      .replace(/,\s*(s\.pd|m\.pd|s\.kom|s\.th|s\.pd\.i|m\.si|m\.m|s\.ag|m\.ag|s\.t|m\.t|s\.e|s\.sos|m\.ed|s\.psi|gr|a\.ma|s\.si|m\.sc)\.?/gi, '')
       .replace(/[^a-z0-9]/g, '');
   };
 
@@ -91,47 +59,65 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
 
     const inputTrim = usernameInput.trim();
     if (!inputTrim) {
-      setErrorMessage('Silakan masukkan Username (Nama Guru).');
+      setErrorMessage('Silakan ketik nama guru yang terdaftar pada kolom Username.');
       return;
     }
 
     const passTrim = passwordInput.trim();
     if (!passTrim) {
-      setErrorMessage('Silakan masukkan Kata Sandi (Password).');
+      setErrorMessage('Silakan masukkan Kata Sandi (guru123456).');
       return;
     }
 
-    // Password must be 123456 (or admin123 as alternative fallback)
-    if (passTrim !== '123456' && passTrim !== 'admin123') {
-      setErrorMessage('Kata sandi salah! Password yang berlaku adalah: 123456');
+    // Password must be guru123456 (case-insensitive, with 123456 as backwards-compatible fallback)
+    const cleanPass = passTrim.toLowerCase();
+    if (cleanPass !== 'guru123456' && passTrim !== '123456' && cleanPass !== 'admin123') {
+      setErrorMessage('Kata sandi salah! Password yang berlaku adalah: guru123456');
       return;
     }
 
-    // Try finding teacher by name
-    const inputClean = stripTitles(inputTrim);
-    let matchedUser = users.find(u => u.name.toLowerCase() === inputTrim.toLowerCase());
+    // 1. Try finding teacher by exact name (case-insensitive)
+    let matchedUser = users.find(u => u.name.trim().toLowerCase() === inputTrim.toLowerCase());
     
     if (!matchedUser) {
-      // Try matching by stripped title (e.g. "Siti Rahmawati" matches "Siti Rahmawati, S.Pd.")
-      matchedUser = users.find(u => stripTitles(u.name) === inputClean);
+      // 2. Try matching by normalized title-stripped name
+      const inputNorm = normalizeName(inputTrim);
+      matchedUser = users.find(u => normalizeName(u.name) === inputNorm);
     }
 
     if (!matchedUser) {
-      // Try substring match
-      matchedUser = users.find(u => u.name.toLowerCase().includes(inputTrim.toLowerCase()));
+      // 3. Try word tokens matching (e.g. typing "Budi" or "Siti" matches full name)
+      const inputWords = inputTrim.toLowerCase().split(/[\s,.-]+/).filter(w => w.length >= 2);
+      if (inputWords.length > 0) {
+        matchedUser = users.find(u => {
+          const uWords = u.name.toLowerCase().split(/[\s,.-]+/).filter(w => w.length >= 2);
+          return inputWords.every(w => uWords.some(uw => uw.includes(w) || w.includes(uw)));
+        });
+      }
     }
 
-    if (!matchedUser && (inputTrim.toLowerCase() === 'admin' || inputClean === 'admin')) {
+    if (!matchedUser) {
+      // 4. Try substring match
+      matchedUser = users.find(u => 
+        u.name.toLowerCase().includes(inputTrim.toLowerCase()) ||
+        inputTrim.toLowerCase().includes(u.name.toLowerCase())
+      );
+    }
+
+    if (!matchedUser) {
+      // 5. Try match by NIP if user typed NIP
+      const digitsOnly = inputTrim.replace(/\D/g, '');
+      if (digitsOnly.length >= 4) {
+        matchedUser = users.find(u => u.nip && u.nip.replace(/\D/g, '') === digitsOnly);
+      }
+    }
+
+    if (!matchedUser && (inputTrim.toLowerCase() === 'admin' || inputTrim.toLowerCase() === 'operator' || inputTrim.toLowerCase() === 'kepsek')) {
       matchedUser = users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah');
     }
 
-    // If still not matched, check if user chose from dropdown
-    if (!matchedUser && selectedUserId) {
-      matchedUser = users.find(u => u.id === selectedUserId);
-    }
-
     if (!matchedUser) {
-      setErrorMessage(`Nama guru "${usernameInput}" tidak ditemukan di sistem. Silakan pilih nama dari daftar guru yang terdaftar.`);
+      setErrorMessage(`Nama guru "${usernameInput}" belum ditemukan. Pastikan nama sesuai dengan yang didaftarkan di menu Data Guru.`);
       return;
     }
 
@@ -291,7 +277,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
               Selamat Datang
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Silakan pilih atau masukkan identitas akun Pendidik / Tenaga Kependidikan untuk masuk ke dashboard e-Rapor.
+              Silakan masukkan nama guru yang terdaftar dan kata sandi untuk masuk ke sistem e-Rapor.
             </p>
           </div>
 
@@ -305,72 +291,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             </div>
           )}
 
-          {/* FORM LOGIN */}
+          {/* FORM LOGIN: HANYA USERNAME DAN PASSWORD */}
           <form onSubmit={handleSubmit} className="mt-6 space-y-4.5">
-            {/* Field 1: Pilih Akun Guru / Persona (Dropdown) */}
-            <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                Pilih Akun Guru / Tenaga Pendidik
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedUserId}
-                  onChange={(e) => handleSelectPersona(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 hover:border-slate-400 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-colors appearance-none pr-8 cursor-pointer shadow-2xs"
-                >
-                  <optgroup label="Administrator & Pimpinan Sekolah">
-                    {users.filter(u => u.role === 'admin' || u.role === 'kepala_sekolah').map(u => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} (Administrator / Kepala Sekolah)
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Wali Kelas (Tingkat 7)">
-                    {users.filter(u => u.role === 'wali_kelas' && u.rombelId?.startsWith('7')).map(u => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} (Wali Kelas {u.rombelId})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Wali Kelas (Tingkat 8)">
-                    {users.filter(u => u.role === 'wali_kelas' && u.rombelId?.startsWith('8')).map(u => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} (Wali Kelas {u.rombelId})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Wali Kelas (Tingkat 9)">
-                    {users.filter(u => u.role === 'wali_kelas' && u.rombelId?.startsWith('9')).map(u => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} (Wali Kelas {u.rombelId})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Guru Mata Pelajaran">
-                    {users.filter(u => u.role === 'guru_mapel' || (!u.rombelId && u.role !== 'admin' && u.role !== 'kepala_sekolah')).map(u => {
-                      const subject = subjects?.find(s => s.id === u.subjectId);
-                      return (
-                        <option key={u.id} value={u.id}>
-                          {u.name} ({subject ? `Guru ${subject.nama}` : 'Guru Mapel'})
-                        </option>
-                      );
-                    })}
-                  </optgroup>
-                </select>
-                <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
-                  <ChevronRight className="w-4 h-4 rotate-90" />
-                </div>
-              </div>
-            </div>
-
-            {/* Field 2: Username (Nama Guru) */}
+            {/* Field 1: Username (Nama Guru) */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-800">
                   Username (Nama Guru)
                 </label>
                 <span className="text-[10px] text-blue-600 font-medium">
-                  Sesuai Nama Guru
+                  Tulis nama guru terdaftar
                 </span>
               </div>
               <div className="relative">
@@ -380,22 +310,34 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
                 <input
                   type="text"
                   required
+                  list="daftar-guru-options"
                   value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="Ketik atau pilih nama guru..."
+                  onChange={(e) => {
+                    setUsernameInput(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Ketik nama guru terdaftar (contoh: Siti Rahmawati)..."
                   className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-colors shadow-2xs"
+                  autoComplete="off"
                 />
+                <datalist id="daftar-guru-options">
+                  {users.map(u => (
+                    <option key={u.id} value={u.name}>
+                      {u.role === 'admin' ? 'Administrator' : u.role === 'wali_kelas' ? `Wali Kelas ${u.rombelId}` : 'Guru Mapel'}
+                    </option>
+                  ))}
+                </datalist>
               </div>
             </div>
 
-            {/* Field 3: Kata Sandi (Password) */}
+            {/* Field 2: Kata Sandi (Password) */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-800">
                   Kata Sandi (Password)
                 </label>
                 <span className="text-[10px] text-blue-600 font-medium">
-                  Default: 123456
+                  Password: guru123456
                 </span>
               </div>
               <div className="relative">
@@ -406,8 +348,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="Masukkan kata sandi..."
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Masukkan kata sandi (guru123456)..."
                   className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-colors shadow-2xs"
                 />
                 <button
@@ -421,7 +366,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
               </div>
             </div>
 
-            {/* Checkbox Ingat Saya & Info Bantuan */}
+            {/* Checkbox Ingat Saya */}
             <div className="flex items-center justify-between text-xs pt-1">
               <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
                 <input
@@ -458,48 +403,45 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             </button>
           </form>
 
-          {/* Quick Access / Instant Login Preset Chips */}
-          <div className="mt-8 pt-6 border-t border-slate-100 space-y-2.5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Akses Cepat Pengujian (1-Klik):
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin(adminTeacher?.id || 'admin')}
-                className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-blue-50 hover:border-blue-300 text-slate-800 text-left transition-colors cursor-pointer group"
-              >
-                <div className="font-bold text-[11px] text-blue-900 group-hover:text-blue-700 flex items-center justify-between">
-                  <span>👔 Administrator</span>
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600" />
-                </div>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">{adminTeacher?.name || 'Administrator'}</p>
-              </button>
+          {/* Referensi Nama Guru Terdaftar (Dropdown / Panel yang Dapat Dibuka) */}
+          <div className="mt-6 pt-5 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setShowTeacherList(!showTeacherList)}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center justify-between w-full py-1 cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-blue-500" />
+                <span>Lihat Referensi Nama Guru Terdaftar ({users.length} Guru)</span>
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                {showTeacherList ? 'Tutup ▲' : 'Buka ▼'}
+              </span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => handleQuickLogin(wali71Teacher?.id || 'wali_7.1')}
-                className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-emerald-50 hover:border-emerald-300 text-slate-800 text-left transition-colors cursor-pointer group"
-              >
-                <div className="font-bold text-[11px] text-emerald-900 group-hover:text-emerald-700 flex items-center justify-between">
-                  <span>👩‍🏫 Wali Kelas {wali71Teacher?.rombelId || '7.1'}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-emerald-600" />
+            {showTeacherList && (
+              <div className="mt-2.5 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2 max-h-48 overflow-y-auto animate-in fade-in duration-150">
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Klik nama guru di bawah untuk mengisi kolom username secara otomatis:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {users.map(u => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => {
+                        setUsernameInput(u.name);
+                        setPasswordInput('guru123456');
+                        setShowTeacherList(false);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-blue-50 hover:border-blue-300 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-800 transition-colors text-left cursor-pointer shadow-2xs"
+                    >
+                      {u.name} <span className="text-[10px] text-slate-400">({u.role === 'admin' ? 'Admin' : u.role === 'wali_kelas' ? `Wali ${u.rombelId}` : 'Mapel'})</span>
+                    </button>
+                  ))}
                 </div>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">{wali71Teacher?.name || 'Wali Kelas 7.1'}</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin(wali72Teacher?.id || 'wali_7.2')}
-                className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-purple-50 hover:border-purple-300 text-slate-800 text-left transition-colors cursor-pointer group"
-              >
-                <div className="font-bold text-[11px] text-purple-900 group-hover:text-purple-700 flex items-center justify-between">
-                  <span>👨‍🏫 Wali Kelas {wali72Teacher?.rombelId || '7.2'}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-purple-600" />
-                </div>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">{wali72Teacher?.name || 'Wali Kelas 7.2'}</p>
-              </button>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 

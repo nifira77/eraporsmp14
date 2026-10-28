@@ -33,13 +33,15 @@ interface DataPendidikViewProps {
   onAddUser: (user: UserProfile) => void;
   onUpdateUser: (user: UserProfile) => void;
   onDeleteUser: (userId: string) => void;
+  onReplaceUsers?: (users: UserProfile[]) => void;
 }
 
 export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
   state,
   onAddUser,
   onUpdateUser,
-  onDeleteUser
+  onDeleteUser,
+  onReplaceUsers
 }) => {
   const { users, subjects, rombels, school } = state;
 
@@ -47,11 +49,15 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // In-app delete confirmation modal state
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+
   // Modal Impor Guru dari Excel
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [previewTeachers, setPreviewTeachers] = useState<UserProfile[]>([]);
+  const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge');
 
   // Modal Tambah Guru
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -92,7 +98,7 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
       name: editNama.trim(),
       nip: editNip.trim() || '-',
       role: editRole,
-      subjectId: editRole === 'guru_mapel' ? editSubjectId : (subjects[0]?.id || 'mtk'),
+      subjectId: editSubjectId || subjects[0]?.id || 'mtk',
       rombelId: editRole === 'wali_kelas' ? editRombelId : undefined,
       tugasTambahan: editPembinaEkskul ? `Pembina ${editPembinaEkskul}` : undefined,
       pembinaEkskul: editPembinaEkskul || undefined
@@ -147,8 +153,8 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
     setGuruNama('');
     setGuruNip('');
     setGuruPembinaEkskul('');
-    setSuccessMsg(`Pendidik "${newTeacher.name}" berhasil ditambahkan ke database e-Rapor.`);
-    setTimeout(() => setSuccessMsg(null), 3500);
+    setSuccessMsg(`Pendidik "${newTeacher.name}" berhasil ditambahkan. Guru ini sekarang dapat langsung login dengan Username nama beliau dan Password: guru123456`);
+    setTimeout(() => setSuccessMsg(null), 5000);
   };
 
   // Export teachers list to Excel
@@ -297,6 +303,17 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
   const handleCommitTeacherImport = () => {
     if (previewTeachers.length === 0) return;
 
+    if (importMode === 'replace' && onReplaceUsers) {
+      onReplaceUsers(previewTeachers);
+      setIsImportModalOpen(false);
+      setPreviewTeachers([]);
+      setImportFileName(null);
+      setSuccessMsg(`Berhasil mengganti seluruh data guru dengan ${previewTeachers.length} data pendidik resmi sekolah.`);
+      setTimeout(() => setSuccessMsg(null), 4000);
+      return;
+    }
+
+    // Default mode: gabung dan perbarui
     previewTeachers.forEach(newTeacher => {
       // Check if existing teacher with same NIP or name exists
       const existing = users.find(u => 
@@ -530,17 +547,11 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
 
-                        {users.length > 1 && u.role !== 'admin' && (
+                        {users.length > 1 && (
                           <button
                             type="button"
-                            onClick={() => {
-                              if (confirm(`Hapus guru "${u.name}" dari sistem e-Rapor?`)) {
-                                onDeleteUser(u.id);
-                                setSuccessMsg(`Pendidik "${u.name}" berhasil dihapus.`);
-                                setTimeout(() => setSuccessMsg(null), 3000);
-                              }
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                            onClick={() => setUserToDelete(u)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
                             title="Hapus Guru"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -611,7 +622,7 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                 </select>
               </div>
 
-              {guruRole === 'guru_mapel' && (
+              {(guruRole === 'guru_mapel' || guruRole === 'wali_kelas') && (
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
                     Mata Pelajaran yang Diampu
@@ -638,7 +649,7 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                   <select
                     value={guruRombelId}
                     onChange={(e) => setGuruRombelId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/50"
                   >
                     {rombels.map(r => (
                       <option key={r.id} value={r.id}>
@@ -769,8 +780,8 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                 </select>
               </div>
 
-              {/* Pilihan Mapel jika guru mapel */}
-              {editRole === 'guru_mapel' && (
+              {/* Pilihan Mapel jika guru mapel atau wali kelas */}
+              {(editRole === 'guru_mapel' || editRole === 'wali_kelas') && (
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
                     Mata Pelajaran yang Diampu
@@ -798,8 +809,9 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                   <select
                     value={editRombelId}
                     onChange={(e) => setEditRombelId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/50"
                   >
+                    <option value="">- Belum Ditugaskan ke Rombel (Kosongkan) -</option>
                     {rombels.map(r => (
                       <option key={r.id} value={r.id}>
                         {r.nama} ({r.fase})
@@ -975,6 +987,43 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                   </div>
                 </div>
               )}
+              {/* Pilihan Metode Impor: Gabung atau Ganti Semua */}
+              {previewTeachers.length > 0 && (
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                  <p className="font-bold text-slate-800">4. Metode Penerapan Data ke Sistem:</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setImportMode('merge')}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        importMode === 'merge'
+                          ? 'bg-blue-50/80 border-blue-400 text-blue-900 ring-1 ring-blue-400'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100/70'
+                      }`}
+                    >
+                      <p className="font-semibold text-xs">Perbarui & Gabung Data</p>
+                      <p className="text-[10.5px] text-slate-500 mt-0.5 leading-snug">
+                        Memperbarui guru yang cocok (NIP/Nama) dan menambahkan guru baru. Guru yang sudah ada tidak dihapus.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setImportMode('replace')}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        importMode === 'replace'
+                          ? 'bg-rose-50/80 border-rose-400 text-rose-900 ring-1 ring-rose-400'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100/70'
+                      }`}
+                    >
+                      <p className="font-semibold text-xs text-rose-800">Ganti Seluruh Data Guru</p>
+                      <p className="text-[10.5px] text-slate-500 mt-0.5 leading-snug">
+                        Menghapus seluruh daftar guru bawaan/sampel dan menggantinya dengan daftar guru resmi sekolah Anda dari file Excel ini.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
@@ -989,10 +1038,74 @@ export const DataPendidikView: React.FC<DataPendidikViewProps> = ({
                 type="button"
                 disabled={previewTeachers.length === 0}
                 onClick={handleCommitTeacherImport}
-                className="px-5 py-2 font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className={`px-5 py-2 font-semibold text-white disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer ${
+                  importMode === 'replace' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                }`}
               >
                 <FileCheck className="w-4 h-4" />
-                <span>Terapkan {previewTeachers.length} Guru ke e-Rapor</span>
+                <span>
+                  {importMode === 'replace' 
+                    ? `Ganti Semua dengan ${previewTeachers.length} Guru Baru` 
+                    : `Terapkan ${previewTeachers.length} Guru ke e-Rapor`}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Guru (In-App Dialog, Bebas Kendala Sandbox Iframe) */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-rose-600 mb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Hapus Data Pendidik?</h3>
+                <p className="text-xs text-slate-500">Tindakan ini akan menghapus akun guru dari sistem</p>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5 my-3">
+              <p>
+                Nama Lengkap: <strong className="text-slate-900">{userToDelete.name}</strong>
+              </p>
+              <p>
+                NIP: <span className="font-mono">{userToDelete.nip || '-'}</span>
+              </p>
+              <p>
+                Peran: <span className="font-semibold">{userToDelete.role === 'wali_kelas' ? 'Wali Kelas' : userToDelete.role === 'guru_mapel' ? 'Guru Mapel' : 'Admin / Kepsek'}</span>
+              </p>
+              {userToDelete.role === 'wali_kelas' && (
+                <p className="text-amber-800 bg-amber-50 p-2 rounded border border-amber-200 font-medium text-[11px] mt-1.5">
+                  Perhatian: Guru ini tercatat sebagai Wali Kelas. Status wali kelas pada kelas binaannya akan otomatis dikosongkan secara aman.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const deletedName = userToDelete.name;
+                  onDeleteUser(userToDelete.id);
+                  setUserToDelete(null);
+                  setSuccessMsg(`Pendidik "${deletedName}" berhasil dihapus.`);
+                  setTimeout(() => setSuccessMsg(null), 3000);
+                }}
+                className="px-4 py-2 font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Pendidik</span>
               </button>
             </div>
           </div>

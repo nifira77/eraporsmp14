@@ -41,6 +41,7 @@ interface DataSekolahViewProps {
   onToggleLock: () => void;
   onResetData: () => void;
   onAddRombel: (rombel: Rombel) => void;
+  onUpdateRombel?: (rombel: Rombel) => void;
   onDeleteRombel: (rombelId: string) => void;
   onAddUser: (user: UserProfile) => void;
   onUpdateUser: (user: UserProfile) => void;
@@ -53,6 +54,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   onToggleLock,
   onResetData,
   onAddRombel,
+  onUpdateRombel,
   onDeleteRombel,
   onAddUser,
   onUpdateUser,
@@ -77,6 +79,51 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   const [rombelFase, setRombelFase] = useState('Fase D');
   const [rombelWaliId, setRombelWaliId] = useState(users[0]?.id || '');
   const [rombelJumlahSiswa, setRombelJumlahSiswa] = useState<number>(30);
+
+  // Modal Edit Rombel & Wali Kelas
+  const [editingRombel, setEditingRombel] = useState<Rombel | null>(null);
+  const [editRombelNama, setEditRombelNama] = useState('');
+  const [editRombelTingkat, setEditRombelTingkat] = useState<number>(7);
+  const [editRombelFase, setEditRombelFase] = useState('Fase D');
+  const [editRombelWaliId, setEditRombelWaliId] = useState('');
+  const [editRombelJumlahSiswa, setEditRombelJumlahSiswa] = useState<number>(30);
+
+  // In-app deletion modals state
+  const [rombelToDelete, setRombelToDelete] = useState<Rombel | null>(null);
+  const [guruToDelete, setGuruToDelete] = useState<UserProfile | null>(null);
+
+  const handleOpenEditRombel = (r: Rombel) => {
+    setEditingRombel(r);
+    setEditRombelNama(r.nama);
+    setEditRombelTingkat(r.tingkat);
+    setEditRombelFase(r.fase);
+    setEditRombelWaliId(r.waliKelasId || '');
+    setEditRombelJumlahSiswa(r.jumlahSiswa);
+  };
+
+  const handleSubmitEditRombel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRombel || !editRombelNama.trim()) return;
+
+    const selectedTeacher = users.find(u => u.id === editRombelWaliId);
+    const updated: Rombel = {
+      ...editingRombel,
+      nama: editRombelNama.trim(),
+      tingkat: Number(editRombelTingkat),
+      fase: editRombelFase,
+      waliKelasNama: selectedTeacher ? selectedTeacher.name : '-',
+      waliKelasNip: selectedTeacher ? (selectedTeacher.nip || '-') : '-',
+      waliKelasId: selectedTeacher ? selectedTeacher.id : undefined,
+      jumlahSiswa: Number(editRombelJumlahSiswa) || editingRombel.jumlahSiswa
+    };
+
+    if (onUpdateRombel) {
+      onUpdateRombel(updated);
+    }
+    setEditingRombel(null);
+    setSuccessMsg(`Data rombel "${updated.nama}" dan Wali Kelas berhasil diperbarui.`);
+    setTimeout(() => setSuccessMsg(null), 3500);
+  };
 
   // Modal Tambah Guru
   const [isAddGuruOpen, setIsAddGuruOpen] = useState(false);
@@ -115,7 +162,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
       name: editGuruNama.trim(),
       nip: editGuruNip.trim() || '-',
       role: editGuruRole,
-      subjectId: editGuruRole === 'guru_mapel' ? editGuruSubjectId : (subjects[0]?.id || 'mtk'),
+      subjectId: editGuruSubjectId || subjects[0]?.id || 'mtk',
       rombelId: editGuruRole === 'wali_kelas' ? editGuruRombelId : undefined,
       tugasTambahan: editGuruPembinaEkskul ? `Pembina ${editGuruPembinaEkskul}` : undefined,
       pembinaEkskul: editGuruPembinaEkskul || undefined
@@ -248,8 +295,8 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
     setGuruNama('');
     setGuruNip('');
     setGuruPembinaEkskul('');
-    setSuccessMsg(`Data pendidik "${newTeacher.name}" berhasil ditambahkan.`);
-    setTimeout(() => setSuccessMsg(null), 3500);
+    setSuccessMsg(`Data pendidik "${newTeacher.name}" berhasil ditambahkan. Guru ini sekarang dapat langsung login dengan Username nama beliau dan Password: guru123456`);
+    setTimeout(() => setSuccessMsg(null), 5000);
   };
 
   return (
@@ -668,7 +715,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
 
           {/* Rombel Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rombels.map((r, idx) => (
+            {rombels.map((r) => (
               <div 
                 key={r.id} 
                 className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:shadow-xs transition-all space-y-3 relative group"
@@ -684,20 +731,27 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                     </div>
                   </div>
 
-                  {rombels.length > 1 && (
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (confirm(`Hapus rombel "${r.nama}"?`)) {
-                          onDeleteRombel(r.id);
-                        }
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition-opacity p-1"
-                      title="Hapus Rombel"
+                      onClick={() => handleOpenEditRombel(r)}
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 rounded transition-colors cursor-pointer"
+                      title="Ubah Wali Kelas & Rombel"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Edit3 className="w-4 h-4" />
                     </button>
-                  )}
+
+                    {rombels.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setRombelToDelete(r)}
+                        className="text-slate-400 hover:text-rose-600 p-1.5 rounded transition-colors cursor-pointer"
+                        title="Hapus Rombel"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200/80 text-xs space-y-1.5">
@@ -713,6 +767,15 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                     <span className="text-slate-500">Kapasitas:</span>
                     <span className="font-mono font-bold text-blue-700">{r.jumlahSiswa} Siswa</span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditRombel(r)}
+                    className="w-full mt-2.5 py-1.5 px-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-blue-700 font-semibold rounded-lg text-[11.5px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Ubah Wali Kelas & Data Rombel</span>
+                  </button>
                 </div>
               </div>
             ))}
@@ -822,14 +885,10 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
 
-                          {users.length > 1 && u.role !== 'admin' && (
+                          {users.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => {
-                                if (confirm(`Hapus guru "${u.name}" dari sistem e-Rapor?`)) {
-                                  onDeleteUser(u.id);
-                                }
-                              }}
+                              onClick={() => setGuruToDelete(u)}
                               className="p-1.5 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
                               title="Hapus Guru"
                             >
@@ -1043,6 +1102,131 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                 className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs"
               >
                 Simpan Rombel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: EDIT ROMBEL & WALI KELAS */}
+      {/* ========================================================= */}
+      {editingRombel && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <form onSubmit={handleSubmitEditRombel} className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-blue-600" />
+                <span>Ubah Rombel & Penetapan Wali Kelas</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingRombel(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-2">
+              Perbarui nama kelas, tingkat jenjang, dan tentukan guru pendidik sebagai Wali Kelas resmi
+            </p>
+
+            <div className="mt-4 space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nama Rombel / Kelas
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editRombelNama}
+                  onChange={(e) => setEditRombelNama(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Tingkat Kelas
+                  </label>
+                  <select
+                    value={editRombelTingkat}
+                    onChange={(e) => setEditRombelTingkat(parseInt(e.target.value, 10))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value={7}>Kelas 7 (Fase D)</option>
+                    <option value={8}>Kelas 8 (Fase D)</option>
+                    <option value={9}>Kelas 9 (Fase D)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Kapasitas Siswa
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    required
+                    value={editRombelJumlahSiswa}
+                    onChange={(e) => setEditRombelJumlahSiswa(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Fase Kurikulum
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editRombelFase}
+                  onChange={(e) => setEditRombelFase(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Tetapkan Guru Sebagai Wali Kelas
+                </label>
+                <select
+                  value={editRombelWaliId}
+                  onChange={(e) => setEditRombelWaliId(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/40 font-medium"
+                >
+                  <option value="">- Belum Ditentukan (Kosongkan) -</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} {u.nip && u.nip !== '-' ? `(NIP. ${u.nip})` : '(Non-NIP)'}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Guru yang dipilih akan secara otomatis ditugaskan sebagai Wali Kelas untuk kelas ini pada cover rapor, biodata, dan buku induk.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingRombel(null)}
+                className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Simpan Perubahan Rombel</span>
               </button>
             </div>
           </form>
@@ -1343,6 +1527,117 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Guru (In-App Modal) */}
+      {guruToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-rose-600 mb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Hapus Data Guru?</h3>
+                <p className="text-xs text-slate-500">Tindakan ini akan menghapus akun guru dari sistem</p>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5 my-3">
+              <p>
+                Nama Lengkap: <strong className="text-slate-900">{guruToDelete.name}</strong>
+              </p>
+              <p>
+                NIP: <span className="font-mono">{guruToDelete.nip || '-'}</span>
+              </p>
+              <p>
+                Peran: <span className="font-semibold">{guruToDelete.role === 'wali_kelas' ? 'Wali Kelas' : guruToDelete.role === 'guru_mapel' ? 'Guru Mapel' : 'Admin / Kepsek'}</span>
+              </p>
+              {guruToDelete.role === 'wali_kelas' && (
+                <p className="text-amber-800 bg-amber-50 p-2 rounded border border-amber-200 font-medium text-[11px] mt-1.5">
+                  Perhatian: Guru ini tercatat sebagai Wali Kelas. Status wali kelas pada kelas binaannya akan otomatis dikosongkan.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setGuruToDelete(null)}
+                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const deletedName = guruToDelete.name;
+                  onDeleteUser(guruToDelete.id);
+                  setGuruToDelete(null);
+                  setSuccessMsg(`Guru "${deletedName}" berhasil dihapus.`);
+                  setTimeout(() => setSuccessMsg(null), 3000);
+                }}
+                className="px-4 py-2 font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Guru</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Rombel (In-App Modal) */}
+      {rombelToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 text-rose-600 mb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Hapus Rombongan Belajar?</h3>
+                <p className="text-xs text-slate-500">Tindakan ini tidak dapat dibatalkan</p>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5 my-3">
+              <p>
+                Nama Rombel: <strong className="text-slate-900">{rombelToDelete.nama}</strong> ({rombelToDelete.fase})
+              </p>
+              <p>
+                Wali Kelas: <span className="font-semibold">{rombelToDelete.waliKelasNama}</span>
+              </p>
+              <p>
+                Kapasitas: <span className="font-mono">{rombelToDelete.jumlahSiswa} Siswa</span>
+              </p>
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setRombelToDelete(null)}
+                className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const deletedName = rombelToDelete.nama;
+                  onDeleteRombel(rombelToDelete.id);
+                  setRombelToDelete(null);
+                  setSuccessMsg(`Rombel "${deletedName}" berhasil dihapus.`);
+                  setTimeout(() => setSuccessMsg(null), 3000);
+                }}
+                className="px-4 py-2 font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Rombel</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
