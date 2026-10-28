@@ -15,7 +15,8 @@ import {
   Edit3,
   X,
   Save,
-  LogOut
+  LogOut,
+  Menu
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -31,6 +32,8 @@ interface HeaderProps {
   onResetData: () => void;
   onExportData: () => void;
   onLogout?: () => void;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -45,7 +48,9 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleLock,
   onResetData,
   onExportData,
-  onLogout
+  onLogout,
+  onToggleSidebar,
+  isSidebarOpen = false
 }) => {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
 
@@ -110,13 +115,26 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Modern Radiant Gradient Top Accent Bar */}
       <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-600 via-sky-500 to-emerald-500" />
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand & School Logo */}
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between h-16 gap-2">
+          {/* Brand & School Logo & Mobile Hamburger */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Mobile / Responsive Sidebar Toggle Button */}
+            {onToggleSidebar && (
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition-colors cursor-pointer border border-slate-200/90 shadow-2xs shrink-0"
+                aria-label={isSidebarOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+                title="Buka / Tutup Menu Navigasi"
+              >
+                <Menu className="w-5 h-5 text-slate-700" />
+              </button>
+            )}
+
             <div className="flex items-center gap-1.5 shrink-0">
               {/* Logo Pemda */}
               {school.logoPemda && (
-                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5" title="Pemerintah Kabupaten Tulang Bawang Barat">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5" title="Pemerintah Kabupaten Tulang Bawang Barat">
                   <img 
                     src={school.logoPemda} 
                     alt="Logo Pemda" 
@@ -126,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
 
               {/* Logo Sekolah */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-900 flex items-center justify-center overflow-hidden shrink-0 shadow-xs p-0.5" title={school.namaSekolah}>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-900 flex items-center justify-center overflow-hidden shrink-0 shadow-xs p-0.5" title={school.namaSekolah}>
                 <img 
                   src={school.logoSekolah || "/src/assets/images/school_logo_emblem_1790936910635.jpg"} 
                   alt="Logo Sekolah" 
@@ -138,27 +156,27 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight flex items-center gap-1.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-tight flex items-center gap-1">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700">e-Rapor SP</span>
-                  <span className="text-slate-800 font-bold">Kurikulum Merdeka</span>
+                  <span className="hidden sm:inline text-slate-800 font-bold">Kurikulum Merdeka</span>
                 </h1>
-                <span className="hidden sm:inline-block text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/80">
+                <span className="hidden md:inline-block text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/80">
                   Kemendikbudristek
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium truncate max-w-xs sm:max-w-md">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[130px] xs:max-w-xs sm:max-w-md">
                 {school.namaSekolah} · NPSN: {school.npsn}
               </p>
             </div>
           </div>
 
           {/* Academic Info & Quick Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Real-time Cloud Sync Badge */}
             <div 
-              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+              className={`flex items-center gap-1 sm:gap-1.5 text-xs font-semibold px-2 sm:px-2.5 py-1.5 rounded-lg border transition-all ${
                 cloudStatus === 'connected' 
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
                   : cloudStatus === 'syncing'
@@ -215,38 +233,38 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* User Profile Badge (Hanya Nama Guru yang Sedang Login) */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl shadow-2xs">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-xl shadow-2xs max-w-[140px] xs:max-w-[200px] sm:max-w-none">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                   {currentUser.name.charAt(0)}
                 </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-bold text-slate-900 leading-tight">
+                <div className="text-left min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="text-xs font-bold text-slate-900 leading-tight truncate">
                       {currentUser.name}
                     </p>
                     {onUpdateUser && (
                       <button
                         type="button"
                         onClick={handleOpenEditSelf}
-                        className="p-1 text-slate-400 hover:text-blue-600 rounded transition-colors cursor-pointer"
+                        className="p-0.5 text-slate-400 hover:text-blue-600 rounded transition-colors cursor-pointer shrink-0"
                         title="Edit Profil Saya"
                       >
                         <Edit3 className="w-3 h-3" />
                       </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${getRoleBadgeStyle(currentUser.role)}`}>
+                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                    <span className={`text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.2 rounded border ${getRoleBadgeStyle(currentUser.role)}`}>
                       {getRoleLabel(currentUser.role)}
                     </span>
                     {currentUser.nip && currentUser.nip !== '-' && (
-                      <span className="hidden sm:inline text-[10px] text-slate-500 font-mono">
+                      <span className="hidden md:inline text-[10px] text-slate-500 font-mono">
                         NIP. {currentUser.nip}
                       </span>
                     )}
                     {currentUser.pembinaEkskul && (
-                      <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1 rounded border border-amber-200">
+                      <span className="hidden sm:inline text-[9px] font-semibold text-amber-700 bg-amber-50 px-1 rounded border border-amber-200 truncate">
                         {currentUser.pembinaEkskul}
                       </span>
                     )}
@@ -259,10 +277,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-rose-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-rose-200 rounded-xl transition-colors cursor-pointer shadow-2xs shrink-0"
                   title="Keluar dari sesi e-Rapor dan kembali ke halaman Login"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                  <LogOut className="w-4 h-4 text-rose-500" />
                   <span className="hidden sm:inline">Keluar</span>
                 </button>
               )}

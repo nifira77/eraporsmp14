@@ -69,10 +69,26 @@ export default function App() {
       return false;
     }
   });
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isDesktopNavCollapsed, setIsDesktopNavCollapsed] = useState(false);
   const isRemoteUpdateRef = useRef(false);
+
+  const handleToggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsMobileNavOpen(prev => !prev);
+    } else {
+      setIsDesktopNavCollapsed(prev => !prev);
+    }
+  };
+
+  const handleTabChange = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setIsMobileNavOpen(false);
+  };
 
   const handleLogin = (user: UserProfile) => {
     setIsAuthenticated(true);
+    setIsMobileNavOpen(false);
     try {
       localStorage.setItem('erapor_smpn14tubaba_auth', 'true');
     } catch (e) {
@@ -87,6 +103,7 @@ export default function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setIsMobileNavOpen(false);
     try {
       localStorage.removeItem('erapor_smpn14tubaba_auth');
     } catch (e) {
@@ -766,19 +783,24 @@ export default function App() {
         onResetData={handleResetData}
         onExportData={handleExportData}
         onLogout={handleLogout}
+        onToggleSidebar={handleToggleSidebar}
+        isSidebarOpen={isMobileNavOpen}
       />
 
       {/* Main Workspace: Sidebar + Viewport */}
-      <div className="flex-1 flex w-full max-w-[1600px] mx-auto">
+      <div className="flex-1 flex w-full max-w-[1600px] mx-auto min-w-0 relative">
         <Sidebar
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           currentUser={state.currentUser}
           isLocked={state.isLocked}
           onLogout={handleLogout}
+          isMobileOpen={isMobileNavOpen}
+          onCloseMobile={() => setIsMobileNavOpen(false)}
+          isDesktopCollapsed={isDesktopNavCollapsed}
         />
 
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 min-w-0 p-3 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden">
           {activeTab === 'dashboard' && (
             <DashboardView state={state} onNavigate={setActiveTab} />
           )}

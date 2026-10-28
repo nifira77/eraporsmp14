@@ -81,11 +81,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
   const overallClassProgress = Math.round((completedSubjectsCount / totalSubjects) * 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Official Kemdikbud e-Rapor SP Banner */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 border-l-4 border-l-blue-600 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-900 flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 border-l-4 border-l-blue-600 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-900 to-indigo-950 border border-blue-900 flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
             {school.logoSekolah ? (
               <img 
                 src={school.logoSekolah} 
@@ -93,18 +93,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
                 className="w-full h-full object-contain"
               />
             ) : (
-              <School className="w-7 h-7 text-white" />
+              <School className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             )}
           </div>
-          <div>
-            <p className="text-[11px] font-bold text-blue-700 tracking-wider uppercase">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-[11px] font-bold text-blue-700 tracking-wider uppercase truncate">
               Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi
             </p>
-            <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-sm sm:text-lg font-extrabold text-slate-900 tracking-tight leading-snug">
               Aplikasi e-Rapor SP Kurikulum Merdeka
             </h2>
-            <p className="text-xs text-slate-600 mt-0.5">
-              {school.namaSekolah} · Jenjang SMP (Fase D) · Tahun Pelajaran {school.tahunAjaran} Semester {school.semester}
+            <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5 leading-normal">
+              {school.namaSekolah} · Jenjang SMP (Fase D) · T.A. {school.tahunAjaran} Sem. {school.semester}
             </p>
           </div>
         </div>
