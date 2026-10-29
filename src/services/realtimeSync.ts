@@ -96,10 +96,20 @@ export async function syncStateToCloud(
         }
       }
       
+      // Sanitize students photo sizes to prevent exceeding Firestore 1MB limit
+      const sanitizedStudents = studentsToSave.map(s => {
+        if (s.foto && s.foto.length > 80000) {
+          // If a base64 photo is suspiciously large (>80KB), omit or trim to protect document size
+          console.warn(`Foto siswa ${s.nama} (${s.foto.length} bytes) dipangkas untuk mencegah batas 1MB Firestore.`);
+          return { ...s, foto: undefined };
+        }
+        return s;
+      });
+
       // Clean state to ensure only valid JSON-serializable properties are saved
       const cleanPayload = {
         school: state.school,
-        students: studentsToSave,
+        students: sanitizedStudents,
         grades: gradesToSave,
         rombels: rombelsToSave,
         subjects: state.subjects,
@@ -116,18 +126,18 @@ export async function syncStateToCloud(
           lastUpdatedBy: updatedBy,
           deviceOrigin: CURRENT_DEVICE_ID,
           isExplicitClearAll: Boolean(options?.isExplicitClearAll),
-          studentsCount: studentsToSave.length
+          studentsCount: sanitizedStudents.length
         }
       };
 
       await setDoc(docRef, cleanPayload, { merge: true });
 
       // If students exist, also preserve a backup registry in Firestore
-      if (studentsToSave.length > 0) {
+      if (sanitizedStudents.length > 0) {
         const registryRef = doc(db, COLLECTION_NAME, 'students_registry');
-        await setDoc(registryRef, {
-          students: studentsToSave,
-          count: studentsToSave.length,
+        setDoc(registryRef, {
+          students: sanitizedStudents,
+          count: sanitizedStudents.length,
           lastUpdatedBy: updatedBy,
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(() => {});
@@ -136,7 +146,7 @@ export async function syncStateToCloud(
       // Preserve teachers / users registry in Firestore
       if (state.users && state.users.length > 0) {
         const usersRegistryRef = doc(db, COLLECTION_NAME, 'users_registry');
-        await setDoc(usersRegistryRef, {
+        setDoc(usersRegistryRef, {
           users: state.users,
           count: state.users.length,
           lastUpdatedBy: updatedBy,
@@ -172,7 +182,7 @@ export async function syncStateToCloud(
     syncTimeout = setTimeout(async () => {
       const res = await executeSync();
       resolve(res);
-    }, 400); // 400ms debounce
+    }, 150); // 150ms rapid debounce
   });
 }
 

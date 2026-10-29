@@ -34,6 +34,7 @@ interface HeaderProps {
   onLogout?: () => void;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
+  onRefreshCloud?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -50,7 +51,8 @@ export const Header: React.FC<HeaderProps> = ({
   onExportData,
   onLogout,
   onToggleSidebar,
-  isSidebarOpen = false
+  isSidebarOpen = false,
+  onRefreshCloud
 }) => {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
 
@@ -175,15 +177,17 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Academic Info & Quick Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Real-time Cloud Sync Badge */}
-            <div 
-              className={`flex items-center gap-1 sm:gap-1.5 text-xs font-semibold px-2 sm:px-2.5 py-1.5 rounded-lg border transition-all ${
+            <button 
+              type="button"
+              onClick={onRefreshCloud}
+              className={`flex items-center gap-1 sm:gap-1.5 text-xs font-semibold px-2 sm:px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
                 cloudStatus === 'connected' 
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/70' 
                   : cloudStatus === 'syncing'
                     ? 'bg-blue-50 text-blue-800 border-blue-200'
-                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                    : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100/70'
               }`}
-              title="Koneksi Cloud Real-time: Data otomatis tersinkronisasi antar seluruh perangkat secara langsung."
+              title="Koneksi Cloud Real-time: Data otomatis tersinkronisasi antar perangkat. Klik untuk menyinkronkan ulang data dari cloud."
             >
               <Cloud className={`w-3.5 h-3.5 shrink-0 ${cloudStatus === 'syncing' ? 'animate-pulse text-blue-600' : cloudStatus === 'connected' ? 'text-emerald-600' : 'text-amber-600'}`} />
               <span className="hidden sm:inline">
@@ -194,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
                   · {lastSyncedTime}
                 </span>
               )}
-            </div>
+            </button>
 
             {/* Semester & Year Info */}
             <div className="hidden lg:flex items-center gap-2 text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">

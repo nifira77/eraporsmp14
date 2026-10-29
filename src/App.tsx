@@ -35,6 +35,7 @@ import {
 import { 
   subscribeToCloudSync, 
   syncStateToCloud, 
+  fetchCloudStateOnce,
   CURRENT_DEVICE_ID 
 } from './services/realtimeSync';
 import { testConnection } from './services/firebase';
@@ -71,6 +72,8 @@ export default function App() {
   });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isDesktopNavCollapsed, setIsDesktopNavCollapsed] = useState(false);
+  const isInitialMountRef = useRef(true);
+  const hasLoadedFromCloudRef = useRef(false);
   const isRemoteUpdateRef = useRef(false);
 
   const handleToggleSidebar = () => {
@@ -116,6 +119,8 @@ export default function App() {
     testConnection();
 
     const unsubscribe = subscribeToCloudSync((cloudData, metadata) => {
+      hasLoadedFromCloudRef.current = true;
+
       // If update was dispatched by this exact device, skip to avoid state oscillation
       if (metadata.deviceOrigin === CURRENT_DEVICE_ID) {
         setCloudStatus('connected');
@@ -128,32 +133,10 @@ export default function App() {
       if (cloudData && Object.keys(cloudData).length > 0) {
         isRemoteUpdateRef.current = true;
         setState(prev => {
-          const remoteStudents = (cloudData.students || prev.students).filter((s: any) => !s.id?.startsWith('std-'));
+          const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
           const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
-          const remoteGrades = (() => {
-            const gradeMap = new Map<string, any>();
-            (prev.grades || []).forEach((g: any) => {
-              if (g && g.studentId && g.subjectId) {
-                gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
-              }
-            });
-            ((cloudData.grades as any[]) || []).forEach((g: any) => {
-              if (g && g.studentId && g.subjectId) {
-                const existing = gradeMap.get(`${g.studentId}-${g.subjectId}`);
-                if (!existing) {
-                  gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
-                } else {
-                  const cloudTime = new Date(g.updatedAt || 0).getTime();
-                  const localTime = new Date(existing.updatedAt || 0).getTime();
-                  if (cloudTime >= localTime || !existing.updatedAt) {
-                    gradeMap.set(`${g.studentId}-${g.subjectId}`, g);
-                  }
-                }
-              }
-            });
-            return Array.from(gradeMap.values()).filter((g: any) => remoteValidStudentIds.has(g.studentId));
-          })();
-          const remoteRombels = (cloudData.rombels || prev.rombels).map((r: any) => ({
+
+          const remoteRombels = (cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels).map((r: any) => ({
             ...r,
             jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
           }));
@@ -163,60 +146,40 @@ export default function App() {
             : prev.users;
           const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
 
-          const isLegacyRemoteSchool = !cloudData.school ||
-            cloudData.school.kepalaSekolah !== 'PEBRIANSYAH., M.Pd' ||
-            cloudData.school.npsn !== '10809848' ||
-            cloudData.school.nss !== '20.1.1812.05.044 / 200441';
+          const remoteGrades = cloudData.grades !== undefined 
+            ? (cloudData.grades as any[]).filter((g: any) => remoteValidStudentIds.has(g.studentId))
+            : prev.grades;
 
-          const remoteSchool = cloudData.school ? {
-            ...prev.school,
-            ...cloudData.school,
-            ...(isLegacyRemoteSchool ? {
-              kepalaSekolah: prev.school.kepalaSekolah,
-              nipKepalaSekolah: prev.school.nipKepalaSekolah,
-              npsn: prev.school.npsn,
-              nss: prev.school.nss,
-              alamat: prev.school.alamat,
-              desaKelurahan: prev.school.desaKelurahan,
-              kecamatan: prev.school.kecamatan,
-              kabupaten: prev.school.kabupaten,
-              kodePos: prev.school.kodePos
-            } : {})
-          } : prev.school;
-
-          return {
+          const nextState: ERaporState = {
             ...prev,
-            school: remoteSchool,
+            school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
             students: remoteStudents,
             grades: remoteGrades,
             rombels: remoteRombels,
-            subjects: (() => {
-              const base = cloudData.subjects || prev.subjects;
-              const ids = new Set(base.map((s: any) => s.id));
-              const merged = [...base];
-              prev.subjects.forEach(s => {
-                if (!ids.has(s.id)) merged.push(s);
-              });
-              return merged;
-            })(),
-            learningObjectives: (() => {
-              const base = cloudData.learningObjectives || prev.learningObjectives;
-              const ids = new Set(base.map((tp: any) => tp.id));
-              const merged = [...base];
-              prev.learningObjectives.forEach(tp => {
-                if (!ids.has(tp.id)) merged.push(tp);
-              });
-              return merged;
-            })(),
-            attendances: (cloudData.attendances || prev.attendances).filter((a: any) => remoteValidStudentIds.has(a.studentId)),
-            extracurriculars: cloudData.extracurriculars || prev.extracurriculars,
-            studentExtracurriculars: (cloudData.studentExtracurriculars || prev.studentExtracurriculars).filter((se: any) => remoteValidStudentIds.has(se.studentId)),
-            notes: (cloudData.notes || prev.notes).filter((n: any) => remoteValidStudentIds.has(n.studentId)),
-            achievements: (cloudData.achievements || prev.achievements).filter((ach: any) => remoteValidStudentIds.has(ach.studentId)),
+            subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
+            learningObjectives: cloudData.learningObjectives !== undefined ? cloudData.learningObjectives : prev.learningObjectives,
+            attendances: cloudData.attendances !== undefined 
+              ? (cloudData.attendances as any[]).filter((a: any) => remoteValidStudentIds.has(a.studentId))
+              : prev.attendances,
+            extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
+            studentExtracurriculars: cloudData.studentExtracurriculars !== undefined 
+              ? (cloudData.studentExtracurriculars as any[]).filter((se: any) => remoteValidStudentIds.has(se.studentId))
+              : prev.studentExtracurriculars,
+            notes: cloudData.notes !== undefined 
+              ? (cloudData.notes as any[]).filter((n: any) => remoteValidStudentIds.has(n.studentId))
+              : prev.notes,
+            achievements: cloudData.achievements !== undefined 
+              ? (cloudData.achievements as any[]).filter((ach: any) => remoteValidStudentIds.has(ach.studentId))
+              : prev.achievements,
             users: remoteUsers,
             currentUser: remoteCurrentUser,
             isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
           };
+
+          // Mirror directly to localStorage
+          saveStateToLocalStorage(nextState);
+
+          return nextState;
         });
 
         if (metadata.updatedAt) {
@@ -228,21 +191,45 @@ export default function App() {
       setCloudStatus(status === 'error' ? 'offline' : status);
     });
 
-    return () => unsubscribe();
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        testConnection();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+    };
   }, []);
 
   // Autosave to localStorage and push to Firestore Cloud for multi-device sync
   useEffect(() => {
-    saveStateToLocalStorage(state);
+    // 1. Initial mount: do not overwrite cloud with initial client cache
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
 
-    // If change was received remotely from another device, skip re-pushing
+    // 2. If state update arrived from remote onSnapshot, do not echo back
     if (isRemoteUpdateRef.current) {
       isRemoteUpdateRef.current = false;
       return;
     }
 
+    // 3. If initial cloud state hasn't been retrieved yet, only mirror locally
+    if (!hasLoadedFromCloudRef.current) {
+      saveStateToLocalStorage(state);
+      return;
+    }
+
+    // 4. This is an authentic user-initiated modification: persist locally and sync to cloud
+    saveStateToLocalStorage(state);
     setCloudStatus('syncing');
-    syncStateToCloud(state, state.currentUser.name).then((success) => {
+    syncStateToCloud(state, state.currentUser?.name || 'Pengguna e-Rapor').then((success) => {
       if (success) {
         setCloudStatus('connected');
         setLastSyncedTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
@@ -251,6 +238,46 @@ export default function App() {
       }
     });
   }, [state]);
+
+  // Manual refresh from Firestore cloud
+  const handleManualRefreshCloud = async () => {
+    setCloudStatus('syncing');
+    try {
+      const cloudData = await fetchCloudStateOnce();
+      if (cloudData && Object.keys(cloudData).length > 0) {
+        isRemoteUpdateRef.current = true;
+        setState(prev => {
+          const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
+          const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
+          const nextState: ERaporState = {
+            ...prev,
+            school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
+            students: remoteStudents,
+            grades: cloudData.grades !== undefined ? (cloudData.grades as any[]).filter(g => remoteValidStudentIds.has(g.studentId)) : prev.grades,
+            rombels: cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels,
+            subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
+            learningObjectives: cloudData.learningObjectives !== undefined ? cloudData.learningObjectives : prev.learningObjectives,
+            attendances: cloudData.attendances !== undefined ? (cloudData.attendances as any[]).filter(a => remoteValidStudentIds.has(a.studentId)) : prev.attendances,
+            extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
+            studentExtracurriculars: cloudData.studentExtracurriculars !== undefined ? (cloudData.studentExtracurriculars as any[]).filter(se => remoteValidStudentIds.has(se.studentId)) : prev.studentExtracurriculars,
+            notes: cloudData.notes !== undefined ? (cloudData.notes as any[]).filter(n => remoteValidStudentIds.has(n.studentId)) : prev.notes,
+            achievements: cloudData.achievements !== undefined ? (cloudData.achievements as any[]).filter(ach => remoteValidStudentIds.has(ach.studentId)) : prev.achievements,
+            users: (cloudData.users && Array.isArray(cloudData.users) && cloudData.users.length > 0) ? cloudData.users : prev.users,
+            isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
+          };
+          saveStateToLocalStorage(nextState);
+          return nextState;
+        });
+        setCloudStatus('connected');
+        setLastSyncedTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } else {
+        setCloudStatus('connected');
+      }
+    } catch (e) {
+      console.warn('Manual refresh error:', e);
+      setCloudStatus('connected');
+    }
+  };
 
   // Role switch handler
   const handleSelectUser = (user: UserProfile) => {
@@ -379,29 +406,18 @@ export default function App() {
 
   // School info updates
   const handleUpdateSchool = (school: SchoolInfo) => {
-    setState(prev => {
-      const newState: ERaporState = {
-        ...prev,
-        school
-      };
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
-    });
+    setState(prev => ({
+      ...prev,
+      school
+    }));
   };
 
   // Rombel handlers
   const handleAddRombel = (newRombel: any) => {
-    setState(prev => {
-      const updatedRombels = [...prev.rombels, newRombel];
-      const newState: ERaporState = {
-        ...prev,
-        rombels: updatedRombels
-      };
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
-    });
+    setState(prev => ({
+      ...prev,
+      rombels: [...prev.rombels, newRombel]
+    }));
   };
 
   const handleUpdateRombel = (updatedRombel: any) => {
@@ -433,14 +449,11 @@ export default function App() {
         });
       }
 
-      const newState: ERaporState = {
+      return {
         ...prev,
         rombels: updatedRombels,
         users: updatedUsers
       };
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
     });
   };
 
@@ -448,14 +461,11 @@ export default function App() {
     setState(prev => {
       const updatedRombels = prev.rombels.filter(r => r.id !== rombelId);
       const updatedUsers = prev.users.map(u => u.rombelId === rombelId ? { ...u, rombelId: undefined } : u);
-      const newState: ERaporState = {
+      return {
         ...prev,
         rombels: updatedRombels,
         users: updatedUsers
       };
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
     });
   };
 
@@ -505,17 +515,13 @@ export default function App() {
         ? { ...prev.school, kepalaSekolah: newUser.name, nipKepalaSekolah: newUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
 
-      const newState: ERaporState = {
+      return {
         ...prev,
         school: updatedSchool,
         users: updatedUsers,
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
-
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
     });
   };
 
@@ -592,7 +598,7 @@ export default function App() {
         ? { ...prev.school, kepalaSekolah: updatedUser.name, nipKepalaSekolah: updatedUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
 
-      const newState: ERaporState = {
+      return {
         ...prev,
         school: updatedSchool,
         users: updatedUsers,
@@ -600,10 +606,6 @@ export default function App() {
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
-
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
     });
   };
 
@@ -630,17 +632,13 @@ export default function App() {
         return s;
       });
 
-      const newState: ERaporState = {
+      return {
         ...prev,
         users: updatedUsers,
         currentUser: updatedCurrentUser,
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
-
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, prev.currentUser.name, { immediate: true });
-      return newState;
     });
   };
 
@@ -691,7 +689,7 @@ export default function App() {
         ? { ...prev.school, kepalaSekolah: adminUser.name, nipKepalaSekolah: adminUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
 
-      const newState: ERaporState = {
+      return {
         ...prev,
         school: updatedSchool,
         users: newUsers,
@@ -699,10 +697,6 @@ export default function App() {
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
-
-      saveStateToLocalStorage(newState);
-      syncStateToCloud(newState, adminUser.name, { immediate: true });
-      return newState;
     });
   };
 
@@ -785,6 +779,7 @@ export default function App() {
         onLogout={handleLogout}
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isMobileNavOpen}
+        onRefreshCloud={handleManualRefreshCloud}
       />
 
       {/* Main Workspace: Sidebar + Viewport */}
