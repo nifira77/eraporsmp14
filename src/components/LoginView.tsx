@@ -7,9 +7,12 @@ import {
   EyeOff, 
   LogIn, 
   AlertCircle, 
-  Sparkles, 
   ShieldCheck, 
-  ClipboardList
+  ClipboardList,
+  Calendar,
+  AlertTriangle,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 
 interface LoginViewProps {
@@ -32,7 +35,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
     setTimeout(() => {
       setIsLoading(false);
       onLogin(userToLogin);
-    }, 250);
+    }, 200);
   };
 
   // Helper to normalize teacher names and strip academic titles
@@ -61,7 +64,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
       return;
     }
 
-    // Password must be guru123456 (case-insensitive, with 123456 as backwards-compatible fallback)
+    // Password validation: guru123456 (with 123456 and admin123 as valid fallbacks)
     const cleanPass = passTrim.toLowerCase();
     if (cleanPass !== 'guru123456' && passTrim !== '123456' && cleanPass !== 'admin123') {
       setErrorMessage('Kata sandi salah! Password yang berlaku adalah: guru123456');
@@ -128,92 +131,138 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 font-sans text-slate-800 selection:bg-blue-600 selection:text-white">
       {/* ============================================================== */}
-      {/* BAGIAN KIRI: HERO & BRANDING (DESKTOP TAMPIL PENUH, MOBILE ELEGAN) */}
+      {/* BAGIAN KIRI: BRANDING HERO & PENGUMUMAN RESMI PEMBAGIAN RAPOR  */}
       {/* ============================================================== */}
-      <div className="relative w-full lg:w-[56%] xl:w-[58%] flex flex-col justify-between p-5 sm:p-8 lg:p-12 overflow-hidden text-white shrink-0">
-        {/* Background Wallpaper Image */}
-        <div className="absolute inset-0 z-0">
+      <div className="relative w-full lg:w-[54%] xl:w-[56%] flex flex-col justify-between p-6 sm:p-8 lg:p-12 overflow-hidden text-white shrink-0">
+        {/* Modern Atmospheric Background Layer */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <img 
             src="/src/assets/images/erapor_login_wallpaper_1791292811927.jpg" 
             alt="Suasana Pendidikan SMPN 14 Tulang Bawang Barat" 
-            className="w-full h-full object-cover object-center transform scale-105"
+            className="w-full h-full object-cover object-center scale-105 opacity-40 mix-blend-luminosity filter brightness-75 contrast-125"
           />
-          {/* Gradients for readability & rich contrast */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-900/70" />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/90 via-slate-950/80 to-slate-950/60 lg:to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-15" />
+          {/* Deep Navy/Slate Linear & Radial Gradients */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/80 to-blue-950/90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent" />
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:24px_24px]" />
         </div>
 
-        {/* Top Header: HANYA LOGO SEKOLAH */}
+        {/* 1. TOP HEADER: HANYA LOGO SEKOLAH (Strict Rule) */}
         <div className="relative z-10 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* HANYA LOGO SEKOLAH */}
-            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1 flex items-center justify-center shadow-lg shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1.5 flex items-center justify-center shadow-lg shrink-0">
               <img 
                 src={schoolLogoSrc} 
                 alt={`Lambang ${school.namaSekolah}`} 
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain filter drop-shadow-md"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/src/assets/images/school_logo_emblem_1790936910635.jpg";
                 }}
               />
             </div>
             <div>
-              <p className="text-[10px] sm:text-[11px] font-bold tracking-widest text-sky-300 uppercase">
+              <p className="text-[10px] sm:text-[11px] font-bold tracking-widest text-sky-400 uppercase">
                 DINAS PENDIDIKAN & KEBUDAYAAN
               </p>
-              <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white leading-tight">
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-white leading-tight">
                 {school.namaSekolah}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] sm:text-xs font-semibold backdrop-blur-md shrink-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Fase D</span>
+          <div className="hidden xs:flex items-center gap-2 text-xs text-slate-300 font-medium">
+            <span className="font-mono tabular-nums text-sky-300">NPSN: {school.npsn}</span>
+            <span>·</span>
+            <span className="text-emerald-400 font-semibold">Kurikulum Merdeka</span>
           </div>
         </div>
 
-        {/* Center Hero Content (Tampil proporsional di Desktop dan ringkas di Mobile) */}
-        <div className="relative z-10 my-4 sm:my-8 lg:my-auto py-2 lg:py-8 max-w-xl space-y-3 sm:space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold backdrop-blur-md">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span>Kurikulum Merdeka · T.A. {school.tahunAjaran}</span>
-          </div>
-
+        {/* 2. CENTER CONTENT: JUDUL -> CATATAN PENGUMUMAN RAPOR STS -> MOTTO */}
+        <div className="relative z-10 my-6 sm:my-8 lg:my-auto py-2 max-w-xl space-y-5">
+          
+          {/* JUDUL: Aplikasi e-Rapor SP */}
           <div className="space-y-2">
-            <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              Aplikasi e-Rapor SP <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-sky-200 to-emerald-300">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/10 border border-white/15 text-slate-200 text-xs font-semibold backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5 text-sky-300" />
+              <span>Sistem Penilaian Resmi · Jenjang SMP (Fase D)</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight text-white leading-tight">
+              Aplikasi e-Rapor SP <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-blue-200 to-emerald-300">
                 {school.namaSekolah}
               </span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
-              Sistem manajemen pengolahan nilai sumatif dan pencetakan buku laporan hasil belajar resmi peserta didik.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+              Portal pengolahan nilai sumatif, penilaian kokurikuler, dan penerbitan laporan hasil belajar peserta didik secara mandiri dan akurat.
             </p>
           </div>
+
+          {/* ============================================================== */}
+          {/* CATATAN PENGUMUMAN RESMI (LETAK DIANTARA JUDUL & ING NGARSO SUNG TULADA) */}
+          {/* ============================================================== */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-orange-500/20 border border-amber-400/40 p-4 sm:p-5 backdrop-blur-md shadow-xl text-amber-50">
+            <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-28 h-28 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-300 flex items-center justify-center shrink-0 shadow-inner">
+                <Calendar className="w-5 h-5 text-amber-300" />
+              </div>
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                    Pemberitahuan Akademik Penting
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                </div>
+                {/* EXACT REQUIRED TEXT */}
+                <p className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-snug">
+                  Pembagian Rapor STS dilaksanakan pada hari Selasa tanggal 3 Novermber 2026.
+                </p>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Segerap Persiapkan.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* MOTTO PENDIDIKAN KI HAJAR DEWANTARA */}
+          <div className="pt-2 border-t border-white/10 space-y-1">
+            <p className="text-xs sm:text-sm font-serif italic text-slate-200 tracking-wide leading-relaxed">
+              &ldquo;Ing ngarsa sung tuladha, ing madya mangun karsa, tut wuri handayani.&rdquo;
+            </p>
+            <p className="text-[11px] text-sky-300/80 font-medium">
+              Ki Hajar Dewantara — Semboyan Sistem Pendidikan Nasional
+            </p>
+          </div>
+
         </div>
 
-        {/* Bottom Bar: Inspirational Quote */}
-        <div className="relative z-10 pt-4 border-t border-white/10 hidden sm:flex items-center justify-between text-xs text-slate-300">
-          <p className="italic text-[11px] text-slate-300">
-            &ldquo;Ing ngarsa sung tuladha, ing madya mangun karsa, tut wuri handayani.&rdquo;
-          </p>
-          <span className="text-[11px] text-sky-300 font-medium">
-            Semester {school.semester}
+        {/* 3. BOTTOM FOOTER BAR */}
+        <div className="relative z-10 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+          <div className="flex items-center gap-3">
+            <span>Tahun Pelajaran: <strong className="text-slate-200">{school.tahunAjaran}</strong></span>
+            <span>·</span>
+            <span>Semester: <strong className="text-slate-200">{school.semester}</strong></span>
+          </div>
+          <span className="text-[11px] text-slate-400">
+            {school.kecamatan}, {school.kabupaten}
           </span>
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* BAGIAN KANAN: FORM LOGIN & CATATAN PERSIAPAN SEBELUM MASUK */}
+      {/* BAGIAN KANAN: FORM LOGIN & CATATAN PERSIAPAN SEBELUM MASUK     */}
       {/* ============================================================== */}
-      <div className="w-full lg:w-[44%] xl:w-[42%] bg-white flex flex-col justify-between p-5 sm:p-8 lg:p-10 shadow-2xl relative z-20 min-h-screen overflow-y-auto">
+      <div className="w-full lg:w-[46%] xl:w-[44%] bg-white flex flex-col justify-between p-6 sm:p-8 lg:p-10 shadow-2xl relative z-20 min-h-screen overflow-y-auto">
         <div>
           {/* Top Header inside Login Form: HANYA LOGO SEKOLAH */}
-          <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-slate-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-2xs shrink-0 overflow-hidden">
+          <div className="flex items-center justify-between pb-4 sm:pb-5 border-b border-slate-200/90">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
                 <img 
                   src={schoolLogoSrc} 
                   alt="Logo Sekolah" 
@@ -224,15 +273,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
                   e-Rapor SP Kurikulum Merdeka
                 </h3>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[200px] xs:max-w-xs">
+                <p className="text-[11px] text-slate-500 font-medium truncate max-w-[210px] xs:max-w-xs">
                   {school.namaSekolah}
                 </p>
               </div>
             </div>
 
-            <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
-              TP {school.tahunAjaran}
-            </span>
+            <div className="text-right shrink-0">
+              <span className="text-[10px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-1 rounded-md">
+                TP {school.tahunAjaran}
+              </span>
+            </div>
           </div>
 
           <div className="mt-5 sm:mt-6 space-y-1">
@@ -240,7 +291,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
               Selamat Datang
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Silakan masukkan username dan password untuk masuk.
+              Silakan masukkan username dan password untuk masuk ke akun Anda.
             </p>
           </div>
 
@@ -255,10 +306,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
           )}
 
           {/* FORM LOGIN */}
-          <form onSubmit={handleSubmit} className="mt-4 sm:mt-5 space-y-3.5 sm:space-y-4">
+          <form onSubmit={handleSubmit} className="mt-5 space-y-3.5 sm:space-y-4">
             {/* Field 1: Username */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-800">
                   Username
                 </label>
@@ -297,7 +348,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
 
             {/* Field 2: Password */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-800">
                   Password
                 </label>
@@ -338,7 +389,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
                 />
                 <span className="text-[11px] font-medium">Ingat saya di peramban ini</span>
               </label>
@@ -352,7 +403,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-1.5 py-3 px-4 bg-blue-700 hover:bg-blue-800 active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+              className="w-full mt-2 py-3 px-4 bg-blue-700 hover:bg-blue-800 active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -368,8 +419,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             </button>
           </form>
 
-          {/* CATATAN PENTING PERSIAPAN SEBELUM MASUK / LOGIN */}
-          <div className="mt-5 p-3.5 sm:p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/90 rounded-2xl text-xs space-y-2 shadow-2xs">
+          {/* CATATAN PENTING PERSIAPAN SEBELUM MASUK / LOGIN (7 POIN LENGKAP) */}
+          <div className="mt-5 p-4 bg-amber-50/70 border border-amber-200/90 rounded-2xl text-xs space-y-2.5 shadow-2xs">
             <div className="flex items-center gap-2 text-amber-900 font-bold">
               <ClipboardList className="w-4 h-4 text-amber-700 shrink-0" />
               <span className="text-[11px] sm:text-xs tracking-tight">
@@ -429,3 +480,4 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
     </div>
   );
 };
+
