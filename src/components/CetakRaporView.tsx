@@ -685,20 +685,22 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                     {/* Teks Kop Surat Resmi */}
                     <div className="text-center flex-1 space-y-0.5">
-                      <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wide">
+                      <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-black">
                         PEMERINTAH KABUPATEN {school.kabupaten}
                       </p>
-                      <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wide">
+                      <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-black">
                         DINAS PENDIDIKAN DAN KEBUDAYAAN
                       </p>
-                      <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-tight">
+                      <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-tight text-black">
                         {school.namaSekolah}
                       </h2>
-                      <p className="text-[9.5px] leading-tight text-slate-800">
-                        {school.alamat}, {school.kecamatan}, Kab. {school.kabupaten}, Provinsi {school.provinsi}
+                      <p className="text-[12px] font-bold text-black font-mono">
+                        NPSN: {school.npsn} · NSS NIS: {school.nss}
                       </p>
-                      <p className="text-[9px] font-mono text-slate-700">
-                        NPSN: {school.npsn} · NSS NIS: {school.nss} · Telp: {school.telepon} · Email: {school.email}
+                      <p className="text-[10px] sm:text-[10.5px] leading-tight text-slate-800">
+                        {school.alamat.includes(school.kecamatan)
+                          ? school.alamat
+                          : `${school.alamat}, Kec. ${school.kecamatan}, Kab. ${school.kabupaten}, Provinsi ${school.provinsi}`}
                       </p>
                     </div>
 

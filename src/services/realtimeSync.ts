@@ -1,5 +1,13 @@
-import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from './firebase';
+import { doc, onSnapshot, setDoc, getDoc, disableNetwork, enableNetwork } from 'firebase/firestore';
+import { 
+  db, 
+  handleFirestoreError, 
+  isFirestoreQuotaError, 
+  OperationType,
+  isQuotaExhaustedToday,
+  markQuotaExhaustedToday,
+  clearQuotaExhaustedToday
+} from './firebase';
 import { ERaporState } from '../types/erapor';
 
 const COLLECTION_NAME = 'erapor_data';
@@ -14,6 +22,50 @@ export interface CloudSyncMetadata {
 // Generate a unique session identifier for this device/tab
 export const CURRENT_DEVICE_ID = `dev-${Math.random().toString(36).substring(2, 9)}`;
 
+// Circuit breaker for Firestore daily write quota limit
+let isNetworkDisabledDueToQuota = false;
+let quotaExhaustedUntil = 0;
+let lastSyncedHash = '';
+
+export function isQuotaExhausted(): boolean {
+  if (isQuotaExhaustedToday()) return true;
+  if (isNetworkDisabledDueToQuota) return true;
+  if (quotaExhaustedUntil > Date.now()) return true;
+  return false;
+}
+
+export async function pauseNetworkDueToQuota() {
+  markQuotaExhaustedToday();
+  if (isNetworkDisabledDueToQuota) return;
+  isNetworkDisabledDueToQuota = true;
+  quotaExhaustedUntil = Date.now() + 60 * 60 * 1000; // 1 hour pause
+  try {
+    await disableNetwork(db);
+  } catch (e) {
+    // Handled
+  }
+}
+
+export async function resumeNetworkFromQuota(): Promise<boolean> {
+  try {
+    clearQuotaExhaustedToday();
+    isNetworkDisabledDueToQuota = false;
+    quotaExhaustedUntil = 0;
+    await enableNetwork(db);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function calculateStateFingerprint(state: ERaporState): string {
+  try {
+    return `${state.students?.length || 0}_${state.grades?.length || 0}_${state.users?.length || 0}_${state.rombels?.length || 0}_${state.learningObjectives?.length || 0}_${state.attendances?.length || 0}_${state.notes?.length || 0}_${state.school?.semester || ''}_${state.isLocked}`;
+  } catch {
+    return String(Date.now());
+  }
+}
+
 /**
  * Subscribes to real-time updates from Firestore.
  * Whenever any device modifies the state in the cloud, all other devices receive the changes instantly.
@@ -22,6 +74,11 @@ export function subscribeToCloudSync(
   onCloudUpdate: (cloudState: Partial<ERaporState>, metadata: CloudSyncMetadata) => void,
   onStatusChange?: (status: 'connected' | 'syncing' | 'offline' | 'error') => void
 ): () => void {
+  if (isQuotaExhausted()) {
+    onStatusChange?.('offline');
+    return () => {};
+  }
+
   const docRef = doc(db, COLLECTION_NAME, DOC_ID);
 
   const unsubscribe = onSnapshot(
@@ -38,15 +95,14 @@ export function subscribeToCloudSync(
         onStatusChange?.('connected');
       }
     },
-    (error) => {
-      console.warn('Realtime sync snapshot warning:', error);
-      onStatusChange?.('offline');
-      // Wrap with handleFirestoreError if critical
-      try {
-        handleFirestoreError(error, OperationType.GET, `${COLLECTION_NAME}/${DOC_ID}`);
-      } catch (e) {
-        // Logged error
+    async (error) => {
+      if (isFirestoreQuotaError(error)) {
+        await pauseNetworkDueToQuota();
+        onStatusChange?.('offline');
+        return;
       }
+      console.warn('Realtime sync snapshot status:', error);
+      onStatusChange?.('offline');
     }
   );
 
@@ -58,49 +114,43 @@ let syncTimeout: any = null;
 export interface SyncOptions {
   immediate?: boolean;
   isExplicitClearAll?: boolean;
+  force?: boolean;
 }
 
 /**
  * Saves state to Firestore cloud database so all devices stay in sync.
- * Includes debouncing for rapid changes and protection against accidental wipeouts.
+ * Includes debouncing for rapid changes and protection against accidental wipeouts and quota exhaustion.
  */
 export async function syncStateToCloud(
   state: ERaporState,
   updatedBy: string = 'Pengguna e-Rapor',
   options?: SyncOptions
 ): Promise<boolean> {
+  // If Firestore quota is exhausted, seamlessly operate in localStorage mode
+  if (isQuotaExhausted()) {
+    return false;
+  }
+
+  const currentFingerprint = calculateStateFingerprint(state);
+  if (!options?.force && !options?.immediate && currentFingerprint === lastSyncedHash) {
+    return true; // No material change in state
+  }
+
   const executeSync = async (): Promise<boolean> => {
+    if (isQuotaExhausted()) {
+      return false;
+    }
+
     try {
       const docRef = doc(db, COLLECTION_NAME, DOC_ID);
 
-      let studentsToSave = state.students || [];
-      let gradesToSave = state.grades || [];
-      let rombelsToSave = state.rombels || [];
+      const studentsToSave = state.students || [];
+      const gradesToSave = state.grades || [];
+      const rombelsToSave = state.rombels || [];
 
-      // SAFETY PROTECTION: If incoming state has 0 students and this is NOT an explicit clear-all action,
-      // verify if Firestore already holds student records, and preserve them.
-      if (studentsToSave.length === 0 && !options?.isExplicitClearAll) {
-        try {
-          const currentSnap = await getDoc(docRef);
-          if (currentSnap.exists()) {
-            const currentData = currentSnap.data();
-            const existingStudents = currentData?.students || [];
-            if (existingStudents.length > 0) {
-              studentsToSave = existingStudents;
-              gradesToSave = currentData?.grades || gradesToSave;
-              rombelsToSave = currentData?.rombels || rombelsToSave;
-            }
-          }
-        } catch (checkErr) {
-          console.warn('Safety check before sync failed, proceeding cautiously:', checkErr);
-        }
-      }
-      
-      // Sanitize students photo sizes to prevent exceeding Firestore 1MB limit
+      // Sanitize students photo sizes to prevent exceeding Firestore document limit
       const sanitizedStudents = studentsToSave.map(s => {
-        if (s.foto && s.foto.length > 80000) {
-          // If a base64 photo is suspiciously large (>80KB), omit or trim to protect document size
-          console.warn(`Foto siswa ${s.nama} (${s.foto.length} bytes) dipangkas untuk mencegah batas 1MB Firestore.`);
+        if (s.foto && s.foto.length > 60000) {
           return { ...s, foto: undefined };
         }
         return s;
@@ -131,37 +181,15 @@ export async function syncStateToCloud(
       };
 
       await setDoc(docRef, cleanPayload, { merge: true });
-
-      // If students exist, also preserve a backup registry in Firestore
-      if (sanitizedStudents.length > 0) {
-        const registryRef = doc(db, COLLECTION_NAME, 'students_registry');
-        setDoc(registryRef, {
-          students: sanitizedStudents,
-          count: sanitizedStudents.length,
-          lastUpdatedBy: updatedBy,
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(() => {});
-      }
-
-      // Preserve teachers / users registry in Firestore
-      if (state.users && state.users.length > 0) {
-        const usersRegistryRef = doc(db, COLLECTION_NAME, 'users_registry');
-        setDoc(usersRegistryRef, {
-          users: state.users,
-          count: state.users.length,
-          lastUpdatedBy: updatedBy,
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(() => {});
-      }
-
+      lastSyncedHash = currentFingerprint;
       return true;
     } catch (error) {
-      console.error('Failed to sync state to cloud:', error);
-      try {
-        handleFirestoreError(error, OperationType.WRITE, `${COLLECTION_NAME}/${DOC_ID}`);
-      } catch (e) {
-        // Handled
+      if (isFirestoreQuotaError(error)) {
+        console.warn('[RealtimeSync] Kuota harian Firestore gratis tercapai. Beralih ke mode offline lokal.');
+        await pauseNetworkDueToQuota();
+        return false;
       }
+      console.warn('Failed to sync state to cloud, stored locally:', error);
       return false;
     }
   };
@@ -182,7 +210,7 @@ export async function syncStateToCloud(
     syncTimeout = setTimeout(async () => {
       const res = await executeSync();
       resolve(res);
-    }, 150); // 150ms rapid debounce
+    }, 1500); // 1.5s debounce to conserve quota
   });
 }
 
@@ -190,35 +218,23 @@ export async function syncStateToCloud(
  * Fetch the latest cloud state once at application boot
  */
 export async function fetchCloudStateOnce(): Promise<Partial<ERaporState> | null> {
+  if (isQuotaExhausted()) {
+    return null;
+  }
   try {
     const docRef = doc(db, COLLECTION_NAME, DOC_ID);
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       const data = snap.data();
       const { _metadata, ...stateData } = data;
-      // If main_state students is empty, check backup registry
-      if (!stateData.students || stateData.students.length === 0) {
-        try {
-          const registrySnap = await getDoc(doc(db, COLLECTION_NAME, 'students_registry'));
-          if (registrySnap.exists() && registrySnap.data()?.students?.length > 0) {
-            stateData.students = registrySnap.data().students;
-          }
-        } catch (e) {}
-      }
-
-      // If main_state users is empty, check users backup registry
-      if (!stateData.users || stateData.users.length === 0) {
-        try {
-          const uSnap = await getDoc(doc(db, COLLECTION_NAME, 'users_registry'));
-          if (uSnap.exists() && uSnap.data()?.users?.length > 0) {
-            stateData.users = uSnap.data().users;
-          }
-        } catch (e) {}
-      }
       return stateData as Partial<ERaporState>;
     }
     return null;
   } catch (error) {
+    if (isFirestoreQuotaError(error)) {
+      pauseNetworkDueToQuota();
+      return null;
+    }
     console.warn('Initial cloud fetch failed, falling back to local storage:', error);
     return null;
   }

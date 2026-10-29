@@ -348,76 +348,34 @@ export const initialSubjects: Subject[] = [
   { id: 'mulok_tubaba', kode: 'PKT', nama: 'Pendidikan Karakter Tubaba', kategori: 'Muatan Lokal', kktp: 75, guruPengampuId: 'g-pkt', guruPengampuNama: 'PEBRIANSYAH., M.Pd' }
 ];
 
-export const initialLearningObjectives: TujuanPembelajaran[] = [
-  // Matematika (mtk)
-  { id: 'tp-mtk-1', subjectId: 'mtk', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Bilangan Bulat dan Rasional', deskripsi: 'memahami operasi hitung bilangan bulat dan pecahan serta penerapannya dalam kehidupan nyata', semester: 'Ganjil' },
-  { id: 'tp-mtk-2', subjectId: 'mtk', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Bentuk Aljabar', deskripsi: 'menyederhanakan bentuk aljabar dan menggunakannya untuk memodelkan situasi matematika', semester: 'Ganjil' },
-  { id: 'tp-mtk-3', subjectId: 'mtk', rombelId: 'all', kodeTP: 'TP 3', lingkupMateri: 'Persamaan & Pertidaksamaan Linier', deskripsi: 'menyelesaikan persamaan dan pertidaksamaan linier satu variabel dengan metode yang tepat', semester: 'Ganjil' },
-  { id: 'tp-mtk-4', subjectId: 'mtk', rombelId: 'all', kodeTP: 'TP 4', lingkupMateri: 'Perbandingan', deskripsi: 'menganalisis masalah perbandingan senilai dan berbalik nilai dalam konteks kontekstual', semester: 'Ganjil' },
+// Sample TP IDs for filtering out any legacy dummy data
+export const SAMPLE_TP_IDS = new Set([
+  'tp-mtk-1', 'tp-mtk-2', 'tp-mtk-3', 'tp-mtk-4',
+  'tp-bindo-1', 'tp-bindo-2', 'tp-bindo-3', 'tp-bindo-4',
+  'tp-ipa-1', 'tp-ipa-2', 'tp-ipa-3',
+  'tp-pai-1', 'tp-pai-2',
+  'tp-pak-1', 'tp-pak-2',
+  'tp-pkat-1', 'tp-pkat-2',
+  'tp-pah-1', 'tp-pah-2',
+  'tp-pab-1', 'tp-pab-2',
+  'tp-pkn-1', 'tp-pkn-2',
+  'tp-ips-1', 'tp-ips-2',
+  'tp-bing-1', 'tp-bing-2',
+  'tp-pjok-1', 'tp-pjok-2',
+  'tp-prk-1', 'tp-prk-2',
+  'tp-inf-1', 'tp-inf-2',
+  'tp-mulok-1', 'tp-mulok-2',
+  'tp-pkt-1', 'tp-pkt-2'
+]);
 
-  // Bahasa Indonesia (bindo)
-  { id: 'tp-bindo-1', subjectId: 'bindo', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Teks Deskripsi', deskripsi: 'mengidentifikasi ide pokok dan menyusun teks deskripsi keindahan alam sekitar dengan santun', semester: 'Ganjil' },
-  { id: 'tp-bindo-2', subjectId: 'bindo', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Puisi Rakyat & Cerita Fantasi', deskripsi: 'mengapresiasi nilai moral dalam puisi rakyat dan mengeksplorasi imajinasi dalam cerita fantasi', semester: 'Ganjil' },
-  { id: 'tp-bindo-3', subjectId: 'bindo', rombelId: 'all', kodeTP: 'TP 3', lingkupMateri: 'Teks Prosedur', deskripsi: 'mengevaluasi struktur dan menyusun langkah-langkah dalam teks prosedur secara sistematis', semester: 'Ganjil' },
-  { id: 'tp-bindo-4', subjectId: 'bindo', rombelId: 'all', kodeTP: 'TP 4', lingkupMateri: 'Teks Berita', deskripsi: 'menganalisis unsur adiksimba dalam teks berita dan membedakan fakta dengan opini', semester: 'Ganjil' },
+export const isSampleTP = (tp: { id?: string }): boolean => {
+  if (!tp || !tp.id) return false;
+  if (SAMPLE_TP_IDS.has(tp.id)) return true;
+  return /^tp-[a-z_]+-[0-9]{1,2}$/.test(tp.id);
+};
 
-  // IPA
-  { id: 'tp-ipa-1', subjectId: 'ipa', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Hakikat Sains dan Pengukuran', deskripsi: 'merancang penyelidikan ilmiah sederhana dan mengukur besaran fisika dengan alat ukur standar', semester: 'Ganjil' },
-  { id: 'tp-ipa-2', subjectId: 'ipa', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Zat dan Perubahannya', deskripsi: 'mengidentifikasi wujud zat, kerapatan massa jenis, dan perubahan wujud fisika kimia', semester: 'Ganjil' },
-  { id: 'tp-ipa-3', subjectId: 'ipa', rombelId: 'all', kodeTP: 'TP 3', lingkupMateri: 'Suhu, Kalor, dan Pemuaian', deskripsi: 'menjelaskan perpindahan kalor dan dampaknya terhadap perubahan suhu serta pemuaian benda', semester: 'Ganjil' },
-
-  // PAI (Pendidikan Agama Islam)
-  { id: 'tp-pai-1', subjectId: 'pai', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Al-Qur\'an dan Hadis', deskripsi: 'membaca dan memahami pesan mulia Q.S. an-Nisa/4: 59 dan an-Nahl/16: 64 tentang ketaatan', semester: 'Ganjil' },
-  { id: 'tp-pai-2', subjectId: 'pai', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Akidah Islam', deskripsi: 'meneladani asmaul husna al-Alim, al-Khabir, as-Sami, dan al-Bashir dalam pergaulan sehari-hari', semester: 'Ganjil' },
-
-  // Pendidikan Agama Kristen Protestan dan Budi Pekerti
-  { id: 'tp-pak-1', subjectId: 'pak_kristen', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Keteladanan Yesus Kristus & Kasih', deskripsi: 'meneladani karya penyelamatan dan kasih Allah melalui Yesus Kristus dalam kehidupan sehari-hari dengan sesama', semester: 'Ganjil' },
-  { id: 'tp-pak-2', subjectId: 'pak_kristen', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Nilai-Nilai Kristiani dalam Masyarakat', deskripsi: 'menerapkan nilai kejujuran, keadilan, dan perdamaian di lingkungan keluarga, sekolah, dan masyarakat', semester: 'Ganjil' },
-
-  // Pendidikan Agama Katolik dan Budi Pekerti
-  { id: 'tp-pkat-1', subjectId: 'pak_katolik', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Pribadi Yesus Kristus & Gereja', deskripsi: 'memahami pribadi Yesus Kristus sebagai teladan hidup beriman dan peran Roh Kudus dalam kehidupan Gereja', semester: 'Ganjil' },
-  { id: 'tp-pkat-2', subjectId: 'pak_katolik', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Moral Hidup Menggereja', deskripsi: 'mewujudkan nilai-nilai Kerajaan Allah melalui kepedulian sosial, keadilan, dan kelestarian ciptaan', semester: 'Ganjil' },
-
-  // Pendidikan Agama Hindu dan Budi Pekerti
-  { id: 'tp-pah-1', subjectId: 'pah_hindu', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Tri Hita Karana & Kitab Suci Weda', deskripsi: 'memahami ajaran Tri Hita Karana untuk keharmonisan hidup serta nilai ketuhanan dalam Kitab Suci Weda', semester: 'Ganjil' },
-  { id: 'tp-pah-2', subjectId: 'pah_hindu', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Panca Sradha & Susila Hindu', deskripsi: 'menerapkan ajaran Panca Sradha dan perilaku susila dalam interaksi sosial dan keagamaan sehari-hari', semester: 'Ganjil' },
-
-  // Pendidikan Agama Buddha dan Budi Pekerti
-  { id: 'tp-pab-1', subjectId: 'pab_buddha', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Riwayat Buddha Gotama & Tri Ratna', deskripsi: 'meneladani perjuangan dan welas asih Buddha Gotama serta berlindung kepada Tri Ratna (Tiratana)', semester: 'Ganjil' },
-  { id: 'tp-pab-2', subjectId: 'pab_buddha', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Empat Kebenaran Mulia & Moralitas Sila', deskripsi: 'menerapkan Pancasila Buddhis dan Jalan Mulia Berunsur Delapan untuk mengembangkan kebajikan batin', semester: 'Ganjil' },
-
-  // PPKn
-  { id: 'tp-pkn-1', subjectId: 'pkn', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Perumusan Pancasila', deskripsi: 'menganalisis kronologi dan komitmen para pendiri bangsa dalam merumuskan dasar negara Pancasila', semester: 'Ganjil' },
-  { id: 'tp-pkn-2', subjectId: 'pkn', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Norma dan UUD NRI 1945', deskripsi: 'menerapkan perilaku patuh terhadap norma hukum dan sosial di lingkungan sekolah dan masyarakat', semester: 'Ganjil' },
-
-  // IPS
-  { id: 'tp-ips-1', subjectId: 'ips', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Keluarga Awal Kehidupan', deskripsi: 'memahami keberadaan diri dan silsilah keluarga serta interaksi sosial di lingkungan terdekat', semester: 'Ganjil' },
-  { id: 'tp-ips-2', subjectId: 'ips', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Keragaman Hayati & Letak Geografis', deskripsi: 'menganalisis pengaruh letak geografis dan iklim terhadap keanekaragaman flora dan fauna Indonesia', semester: 'Ganjil' },
-
-  // Bahasa Inggris
-  { id: 'tp-bing-1', subjectId: 'bing', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'About Me & Greetings', deskripsi: 'introduce oneself and others with correct pronunciation and courteous interpersonal expressions', semester: 'Ganjil' },
-  { id: 'tp-bing-2', subjectId: 'bing', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Culinary & Daily Activities', deskripsi: 'describe favorite food and daily routines using simple present tense and sensory vocabulary', semester: 'Ganjil' },
-
-  // PJOK
-  { id: 'tp-pjok-1', subjectId: 'pjok', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Permainan Bola Besar', deskripsi: 'mempraktikkan gerak spesifik passing dan dribbling dalam permainan bola voli dan sepak bola', semester: 'Ganjil' },
-  { id: 'tp-pjok-2', subjectId: 'pjok', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Kebugaran Jasmani', deskripsi: 'menjelaskan dan mempraktikkan latihan daya tahan jantung dan kekuatan otot dengan bugar', semester: 'Ganjil' },
-
-  // Prakarya (menggantikan Seni dan Budaya)
-  { id: 'tp-prk-1', subjectId: 'prakarya', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Pengolahan Pangan Khas Daerah', deskripsi: 'merancang dan mengolah bahan pangan nabati dan hewani khas daerah Lampung menjadi produk bernilai ekonomis', semester: 'Ganjil' },
-  { id: 'tp-prk-2', subjectId: 'prakarya', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Kerajinan Bahan Alam Nusantara', deskripsi: 'membuat produk kerajinan fungsional berbasis bahan alam lokal dengan prinsip estetika dan ergonomis', semester: 'Ganjil' },
-
-  // Informatika
-  { id: 'tp-inf-1', subjectId: 'inf', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Berpikir Komputasional', deskripsi: 'menerapkan konsep dekomposisi dan pengenalan pola untuk menyelesaikan persoalan logis', semester: 'Ganjil' },
-  { id: 'tp-inf-2', subjectId: 'inf', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Teknologi Informasi & Komunikasi', deskripsi: 'mengoperasikan aplikasi pengolah kata dan lembar kerja untuk membuat laporan sederhana', semester: 'Ganjil' },
-
-  // Mulok (Bahasa Lampung)
-  { id: 'tp-mulok-1', subjectId: 'mulok', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Aksara & Sastra Lampung', deskripsi: 'menulis dan membaca Aksara Lampung Had Lampung serta melafalkan sastra lisan Segata/Padih', semester: 'Ganjil' },
-  { id: 'tp-mulok-2', subjectId: 'mulok', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Unggah-ungguh Bahasa Lampung', deskripsi: 'menerapkan tata krama berbahasa Lampung dialek Menggala/Tulang Bawang dalam percakapan sopan', semester: 'Ganjil' },
-
-  // Mulok (Pendidikan Karakter Tubaba)
-  { id: 'tp-pkt-1', subjectId: 'mulok_tubaba', rombelId: 'all', kodeTP: 'TP 1', lingkupMateri: 'Falsafah Nenemo (Nemen, Nedes, Nerimo)', deskripsi: 'memahami dan menerapkan nilai falsafah Nenemo (kerja keras, pantang menyerah, dan ikhlas) dalam perilaku belajar serta pergaulan di sekolah', semester: 'Ganjil' },
-  { id: 'tp-pkt-2', subjectId: 'mulok_tubaba', rombelId: 'all', kodeTP: 'TP 2', lingkupMateri: 'Prinsip Sederhana, Setara, dan Lestari', deskripsi: 'menginternalisasi sikap hidup sederhana, menghargai kesetaraan sosial, dan menjaga kelestarian lingkungan hidup khas kearifan lokal Tubaba', semester: 'Ganjil' }
-];
+// Seluruh sample Tujuan Pembelajaran dikosongkan agar diinput manual oleh sekolah
+export const initialLearningObjectives: TujuanPembelajaran[] = [];
 
 export const initialStudents: Student[] = [];
 
@@ -490,20 +448,18 @@ export const getInitialState = (): ERaporState => {
           }
         });
 
-        // Sync learning objectives: rename seni -> prakarya, add missing
-        let currentObjectives: TujuanPembelajaran[] = (parsed.learningObjectives || initialLearningObjectives).map((tp: any) => {
-          if (tp.subjectId === 'seni') {
-            return { ...tp, subjectId: 'prakarya', kodeTP: tp.kodeTP || 'TP 1' };
-          }
-          return tp;
-        });
-
-        const existingTpIds = new Set(currentObjectives.map(tp => tp.id));
-        initialLearningObjectives.forEach(itp => {
-          if (!existingTpIds.has(itp.id)) {
-            currentObjectives.push(itp);
-          }
-        });
+        // Bersihkan seluruh sample TP dummy, pastikan TP benar-benar kosong kecuali yang diinput manual
+        let currentObjectives: TujuanPembelajaran[] = [];
+        if (Array.isArray(parsed.learningObjectives)) {
+          currentObjectives = parsed.learningObjectives
+            .filter((tp: any) => !isSampleTP(tp))
+            .map((tp: any) => {
+              if (tp.subjectId === 'seni') {
+                return { ...tp, subjectId: 'prakarya', kodeTP: tp.kodeTP || 'TP 1' };
+              }
+              return tp;
+            });
+        }
 
         // Sync student grades: rename 'seni' -> 'prakarya'
         let currentGrades: StudentGrade[] = (parsed.grades || initialGrades).map((g: any) => {

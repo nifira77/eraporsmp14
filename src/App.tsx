@@ -30,12 +30,15 @@ import {
   initialExtracurriculars,
   initialStudentExtracurriculars,
   initialNotes,
-  initialAchievements
+  initialAchievements,
+  isSampleTP
 } from './data/initialData';
 import { 
   subscribeToCloudSync, 
   syncStateToCloud, 
   fetchCloudStateOnce,
+  resumeNetworkFromQuota,
+  isQuotaExhausted,
   CURRENT_DEVICE_ID 
 } from './services/realtimeSync';
 import { testConnection } from './services/firebase';
@@ -116,7 +119,11 @@ export default function App() {
 
   // Subscribe to real-time cloud updates across multiple devices
   useEffect(() => {
-    testConnection();
+    if (!isQuotaExhausted()) {
+      testConnection();
+    } else {
+      setCloudStatus('offline');
+    }
 
     const unsubscribe = subscribeToCloudSync((cloudData, metadata) => {
       hasLoadedFromCloudRef.current = true;
@@ -157,7 +164,10 @@ export default function App() {
             grades: remoteGrades,
             rombels: remoteRombels,
             subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
-            learningObjectives: cloudData.learningObjectives !== undefined ? cloudData.learningObjectives : prev.learningObjectives,
+            learningObjectives: (cloudData.learningObjectives !== undefined 
+              ? (cloudData.learningObjectives as any[]) 
+              : prev.learningObjectives
+            ).filter(tp => !isSampleTP(tp)),
             attendances: cloudData.attendances !== undefined 
               ? (cloudData.attendances as any[]).filter((a: any) => remoteValidStudentIds.has(a.studentId))
               : prev.attendances,
@@ -192,7 +202,7 @@ export default function App() {
     });
 
     const handleVisibilityOrFocus = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && !isQuotaExhausted()) {
         testConnection();
       }
     };
@@ -243,6 +253,7 @@ export default function App() {
   const handleManualRefreshCloud = async () => {
     setCloudStatus('syncing');
     try {
+      await resumeNetworkFromQuota();
       const cloudData = await fetchCloudStateOnce();
       if (cloudData && Object.keys(cloudData).length > 0) {
         isRemoteUpdateRef.current = true;
@@ -256,7 +267,10 @@ export default function App() {
             grades: cloudData.grades !== undefined ? (cloudData.grades as any[]).filter(g => remoteValidStudentIds.has(g.studentId)) : prev.grades,
             rombels: cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels,
             subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
-            learningObjectives: cloudData.learningObjectives !== undefined ? cloudData.learningObjectives : prev.learningObjectives,
+            learningObjectives: (cloudData.learningObjectives !== undefined 
+              ? (cloudData.learningObjectives as any[]) 
+              : prev.learningObjectives
+            ).filter(tp => !isSampleTP(tp)),
             attendances: cloudData.attendances !== undefined ? (cloudData.attendances as any[]).filter(a => remoteValidStudentIds.has(a.studentId)) : prev.attendances,
             extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
             studentExtracurriculars: cloudData.studentExtracurriculars !== undefined ? (cloudData.studentExtracurriculars as any[]).filter(se => remoteValidStudentIds.has(se.studentId)) : prev.studentExtracurriculars,

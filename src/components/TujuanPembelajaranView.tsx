@@ -258,8 +258,26 @@ export const TujuanPembelajaranView: React.FC<TujuanPembelajaranViewProps> = ({
             <tbody className="divide-y divide-slate-100">
               {filteredTPs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    Belum ada Tujuan Pembelajaran yang diinput untuk kriteria filter ini.
+                  <td colSpan={6} className="py-12 px-4 text-center">
+                    <div className="max-w-md mx-auto flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 mb-3 shadow-xs">
+                        <Target className="w-6 h-6" />
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-800">
+                        Belum Ada Tujuan Pembelajaran (TP)
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1 mb-4 leading-relaxed">
+                        Data sample TP telah dikosongkan. Silakan input rumusan Tujuan Pembelajaran secara mandiri sesuai dengan dokumen kurikulum yang digunakan di SMPN 14 Tulang Bawang Barat untuk mata pelajaran <strong className="text-slate-700">{selectedSubject?.nama}</strong>.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleOpenAdd}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Input TP Baru Sekarang</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ) : (
