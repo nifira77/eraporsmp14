@@ -60,7 +60,17 @@ export async function resumeNetworkFromQuota(): Promise<boolean> {
 
 function calculateStateFingerprint(state: ERaporState): string {
   try {
-    return `${state.students?.length || 0}_${state.grades?.length || 0}_${state.users?.length || 0}_${state.rombels?.length || 0}_${state.learningObjectives?.length || 0}_${state.attendances?.length || 0}_${state.notes?.length || 0}_${state.school?.semester || ''}_${state.isLocked}`;
+    const studentCount = state.students?.length || 0;
+    const gradeCount = state.grades?.length || 0;
+    const gradeSum = state.grades?.reduce((acc, g) => acc + (g.nilaiAkhirRapor || 0) + (g.nilaiAkhirSTS || 0) + (g.nilaiAkhirLM || 0), 0) || 0;
+    const attendanceSum = state.attendances?.reduce((acc, a) => acc + (a.sakit || 0) + (a.izin || 0) + (a.alpa || 0), 0) || 0;
+    const noteCount = state.notes?.length || 0;
+    const noteTextLength = state.notes?.reduce((acc, n) => acc + (n.catatan?.length || 0), 0) || 0;
+    const tpCount = state.learningObjectives?.length || 0;
+    const userNames = state.users?.map(u => `${u.id}:${u.name}:${u.role}:${u.rombelId || ''}`).join(';') || '';
+    const schoolStamp = `${state.school?.namaSekolah || ''}_${state.school?.semester || ''}_${state.school?.tahunAjaran || ''}_${state.school?.tanggalRapor || ''}`;
+
+    return `${studentCount}_${gradeCount}_${gradeSum}_${attendanceSum}_${noteCount}_${noteTextLength}_${tpCount}_${state.isLocked}_${schoolStamp}_${userNames}`;
   } catch {
     return String(Date.now());
   }
@@ -72,7 +82,8 @@ function calculateStateFingerprint(state: ERaporState): string {
  */
 export function subscribeToCloudSync(
   onCloudUpdate: (cloudState: Partial<ERaporState>, metadata: CloudSyncMetadata) => void,
-  onStatusChange?: (status: 'connected' | 'syncing' | 'offline' | 'error') => void
+  onStatusChange?: (status: 'connected' | 'syncing' | 'offline' | 'error') => void,
+  onCloudEmpty?: () => void
 ): () => void {
   if (isQuotaExhausted()) {
     onStatusChange?.('offline');
@@ -92,6 +103,8 @@ export function subscribeToCloudSync(
         onCloudUpdate(stateData as Partial<ERaporState>, (_metadata || {}) as CloudSyncMetadata);
         onStatusChange?.('connected');
       } else {
+        // Cloud document does not exist yet (first-time deployment)
+        onCloudEmpty?.();
         onStatusChange?.('connected');
       }
     },

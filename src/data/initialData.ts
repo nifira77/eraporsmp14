@@ -485,36 +485,21 @@ export const getInitialState = (): ERaporState => {
         const savedLogoSekolah = parsed.school?.logoSekolah || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_sekolah') : null) || defaultLogoSekolah;
         const savedLogoPemda = parsed.school?.logoPemda || (typeof window !== 'undefined' ? localStorage.getItem('custom_logo_pemda') : null) || defaultLogoPemda;
 
-        const isLegacySchoolData = !parsed.school?.npsn || 
-          parsed.school.npsn !== '10809848' || 
-          parsed.school.kepalaSekolah !== 'PEBRIANSYAH., M.Pd' ||
-          parsed.school.nipKepalaSekolah !== '197602182014071002' ||
-          parsed.school.nss !== '20.1.1812.05.044 / 200441' ||
-          !parsed.school.alamat ||
-          !parsed.school.alamat.includes('Marga Jaya');
+        // Retrieve dedicated custom school profile if saved directly
+        const customSchoolStr = typeof window !== 'undefined' ? localStorage.getItem('custom_school_profile') : null;
+        let customSchoolData: Partial<SchoolInfo> | null = null;
+        if (customSchoolStr) {
+          try {
+            customSchoolData = JSON.parse(customSchoolStr);
+          } catch (_) {}
+        }
 
         const currentSchool: SchoolInfo = {
           ...initialSchoolInfo,
-          ...parsed.school,
-          ...(isLegacySchoolData ? {
-            npsn: initialSchoolInfo.npsn,
-            nss: initialSchoolInfo.nss,
-            alamat: initialSchoolInfo.alamat,
-            desaKelurahan: initialSchoolInfo.desaKelurahan,
-            kecamatan: initialSchoolInfo.kecamatan,
-            kabupaten: initialSchoolInfo.kabupaten,
-            kodePos: initialSchoolInfo.kodePos,
-            kepalaSekolah: initialSchoolInfo.kepalaSekolah,
-            nipKepalaSekolah: initialSchoolInfo.nipKepalaSekolah
-          } : {}),
-          tahunAjaran: (!parsed.school?.tahunAjaran || parsed.school.tahunAjaran === '2024/2025' || parsed.school.tahunAjaran === '2025/2026') 
-            ? '2026/2027' 
-            : parsed.school.tahunAjaran,
-          tanggalRapor: (!parsed.school?.tanggalRapor || parsed.school.tanggalRapor.includes('2024') || parsed.school.tanggalRapor.includes('2025'))
-            ? '19 Desember 2026'
-            : parsed.school.tanggalRapor,
-          logoSekolah: savedLogoSekolah,
-          logoPemda: savedLogoPemda
+          ...(parsed.school || {}),
+          ...(customSchoolData || {}),
+          logoSekolah: (customSchoolData?.logoSekolah) || savedLogoSekolah,
+          logoPemda: (customSchoolData?.logoPemda) || savedLogoPemda
         };
 
         const savedRombels: Rombel[] = parsed.rombels || [];

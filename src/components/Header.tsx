@@ -185,13 +185,19 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/70' 
                   : cloudStatus === 'syncing'
                     ? 'bg-blue-50 text-blue-800 border-blue-200'
-                    : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100/70'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/70'
               }`}
-              title="Koneksi Cloud Real-time: Data otomatis tersinkronisasi antar perangkat. Klik untuk menyinkronkan ulang data dari cloud."
+              title={
+                cloudStatus === 'connected'
+                  ? `Cloud Real-time Aktif: Data tersinkronisasi antar-perangkat.${lastSyncedTime ? ` Terakhir sinkron: ${lastSyncedTime}` : ''}. Klik untuk sinkron ulang.`
+                  : cloudStatus === 'syncing'
+                    ? 'Sedang menyinkronkan data dengan Cloud...'
+                    : 'Data Anda tersimpan AMAN di memori peramban (Lokal) dan tidak akan hilang saat reload. Klik untuk mencoba menghubungkan kembali ke Cloud.'
+              }
             >
-              <Cloud className={`w-3.5 h-3.5 shrink-0 ${cloudStatus === 'syncing' ? 'animate-pulse text-blue-600' : cloudStatus === 'connected' ? 'text-emerald-600' : 'text-amber-600'}`} />
+              <Cloud className={`w-3.5 h-3.5 shrink-0 ${cloudStatus === 'syncing' ? 'animate-pulse text-blue-600' : 'text-emerald-600'}`} />
               <span className="hidden sm:inline">
-                {cloudStatus === 'connected' ? 'Cloud Aktif' : cloudStatus === 'syncing' ? 'Menyinkronkan...' : 'Mode Offline'}
+                {cloudStatus === 'connected' ? 'Cloud Aktif' : cloudStatus === 'syncing' ? 'Menyinkronkan...' : 'Tersimpan Aman (Lokal)'}
               </span>
               {lastSyncedTime && cloudStatus === 'connected' && (
                 <span className="text-[10px] text-emerald-600 hidden md:inline font-mono">

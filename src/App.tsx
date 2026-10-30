@@ -60,6 +60,121 @@ import { DataSiswaView } from './components/DataSiswaView';
 import { BukuIndukView } from './components/BukuIndukView';
 import { LoginView } from './components/LoginView';
 
+function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporState>): ERaporState {
+  const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
+  const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
+
+  const remoteRombels = (cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels).map((r: any) => ({
+    ...r,
+    jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
+  }));
+
+  const remoteUsers = (cloudData.users && Array.isArray(cloudData.users) && cloudData.users.length > 0)
+    ? cloudData.users 
+    : prev.users;
+  const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
+
+  // SMART MERGE FOR GRADES:
+  // Prevents old cloud snapshot from overwriting newer local grades entered by the user
+  const mergedGradesMap = new Map<string, StudentGrade>();
+
+  // 1. Populate with remote grades from cloud
+  if (cloudData.grades && Array.isArray(cloudData.grades)) {
+    cloudData.grades.forEach((rg: any) => {
+      if (rg && rg.studentId && rg.subjectId && remoteValidStudentIds.has(rg.studentId)) {
+        mergedGradesMap.set(`${rg.studentId}-${rg.subjectId}`, rg);
+      }
+    });
+  }
+
+  // 2. Protect and merge local grades:
+  // If local grade has higher timestamp or has scores while remote doesn't, local WINS
+  (prev.grades || []).forEach((lg: StudentGrade) => {
+    if (lg && lg.studentId && lg.subjectId && remoteValidStudentIds.has(lg.studentId)) {
+      const key = `${lg.studentId}-${lg.subjectId}`;
+      const remote = mergedGradesMap.get(key);
+      if (!remote) {
+        mergedGradesMap.set(key, lg);
+      } else {
+        const localTime = new Date(lg.updatedAt || 0).getTime();
+        const remoteTime = new Date(remote.updatedAt || 0).getTime();
+        const localHasScore = Boolean((lg.nilaiAkhirSTS && lg.nilaiAkhirSTS > 0) || (lg.nilaiAkhirRapor && lg.nilaiAkhirRapor > 0) || (lg.nilaiAkhirLM && lg.nilaiAkhirLM > 0));
+        const remoteHasScore = Boolean((remote.nilaiAkhirSTS && remote.nilaiAkhirSTS > 0) || (remote.nilaiAkhirRapor && remote.nilaiAkhirRapor > 0) || (remote.nilaiAkhirLM && remote.nilaiAkhirLM > 0));
+
+        if ((localHasScore && !remoteHasScore) || (localTime >= remoteTime)) {
+          mergedGradesMap.set(key, lg);
+        }
+      }
+    }
+  });
+
+  // Smart merge for attendance
+  const mergedAttendancesMap = new Map<string, StudentAttendance>();
+  if (cloudData.attendances && Array.isArray(cloudData.attendances)) {
+    cloudData.attendances.forEach((ra: any) => {
+      if (ra && ra.studentId && remoteValidStudentIds.has(ra.studentId)) {
+        mergedAttendancesMap.set(ra.studentId, ra);
+      }
+    });
+  }
+  (prev.attendances || []).forEach((la: StudentAttendance) => {
+    if (la && la.studentId && remoteValidStudentIds.has(la.studentId)) {
+      const existing = mergedAttendancesMap.get(la.studentId);
+      if (!existing || ((la.sakit > 0 || la.izin > 0 || la.alpa > 0) && (existing.sakit === 0 && existing.izin === 0 && existing.alpa === 0))) {
+        mergedAttendancesMap.set(la.studentId, la);
+      }
+    }
+  });
+
+  // Smart merge for notes
+  const mergedNotesMap = new Map<string, StudentNote>();
+  if (cloudData.notes && Array.isArray(cloudData.notes)) {
+    cloudData.notes.forEach((rn: any) => {
+      if (rn && rn.studentId && remoteValidStudentIds.has(rn.studentId)) {
+        mergedNotesMap.set(rn.studentId, rn);
+      }
+    });
+  }
+  (prev.notes || []).forEach((ln: StudentNote) => {
+    if (ln && ln.studentId && remoteValidStudentIds.has(ln.studentId)) {
+      const existing = mergedNotesMap.get(ln.studentId);
+      if (!existing || (ln.catatan && ln.catatan.trim() && (!existing.catatan || !existing.catatan.trim()))) {
+        mergedNotesMap.set(ln.studentId, ln);
+      }
+    }
+  });
+
+  const nextState: ERaporState = {
+    ...prev,
+    school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
+    students: remoteStudents,
+    grades: Array.from(mergedGradesMap.values()),
+    rombels: remoteRombels,
+    subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
+    learningObjectives: (cloudData.learningObjectives !== undefined 
+      ? (cloudData.learningObjectives as any[]) 
+      : prev.learningObjectives
+    ).filter(tp => !isSampleTP(tp)),
+    attendances: Array.from(mergedAttendancesMap.values()),
+    extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
+    studentExtracurriculars: cloudData.studentExtracurriculars !== undefined 
+      ? (cloudData.studentExtracurriculars as any[]).filter((se: any) => remoteValidStudentIds.has(se.studentId))
+      : prev.studentExtracurriculars,
+    notes: Array.from(mergedNotesMap.values()),
+    achievements: cloudData.achievements !== undefined 
+      ? (cloudData.achievements as any[]).filter((ach: any) => remoteValidStudentIds.has(ach.studentId))
+      : prev.achievements,
+    users: remoteUsers,
+    currentUser: remoteCurrentUser,
+    isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
+  };
+
+  // Mirror directly to localStorage so it is never lost on refresh
+  saveStateToLocalStorage(nextState);
+
+  return nextState;
+}
+
 export default function App() {
   const [state, setState] = useState<ERaporState>(() => getInitialState());
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
@@ -125,81 +240,44 @@ export default function App() {
       setCloudStatus('offline');
     }
 
-    const unsubscribe = subscribeToCloudSync((cloudData, metadata) => {
-      hasLoadedFromCloudRef.current = true;
+    const unsubscribe = subscribeToCloudSync(
+      (cloudData, metadata) => {
+        hasLoadedFromCloudRef.current = true;
 
-      // If update was dispatched by this exact device, skip to avoid state oscillation
-      if (metadata.deviceOrigin === CURRENT_DEVICE_ID) {
-        setCloudStatus('connected');
-        if (metadata.updatedAt) {
-          setLastSyncedTime(new Date(metadata.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        // If update was dispatched by this exact device, skip to avoid state oscillation
+        if (metadata.deviceOrigin === CURRENT_DEVICE_ID) {
+          setCloudStatus('connected');
+          if (metadata.updatedAt) {
+            setLastSyncedTime(new Date(metadata.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          }
+          return;
         }
-        return;
-      }
 
-      if (cloudData && Object.keys(cloudData).length > 0) {
-        isRemoteUpdateRef.current = true;
-        setState(prev => {
-          const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
-          const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
+        if (cloudData && Object.keys(cloudData).length > 0) {
+          isRemoteUpdateRef.current = true;
+          setState(prev => mergeCloudWithLocalState(prev, cloudData));
 
-          const remoteRombels = (cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels).map((r: any) => ({
-            ...r,
-            jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
-          }));
-
-          const remoteUsers = (cloudData.users && Array.isArray(cloudData.users) && cloudData.users.length > 0)
-            ? cloudData.users 
-            : prev.users;
-          const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
-
-          const remoteGrades = cloudData.grades !== undefined 
-            ? (cloudData.grades as any[]).filter((g: any) => remoteValidStudentIds.has(g.studentId))
-            : prev.grades;
-
-          const nextState: ERaporState = {
-            ...prev,
-            school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
-            students: remoteStudents,
-            grades: remoteGrades,
-            rombels: remoteRombels,
-            subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
-            learningObjectives: (cloudData.learningObjectives !== undefined 
-              ? (cloudData.learningObjectives as any[]) 
-              : prev.learningObjectives
-            ).filter(tp => !isSampleTP(tp)),
-            attendances: cloudData.attendances !== undefined 
-              ? (cloudData.attendances as any[]).filter((a: any) => remoteValidStudentIds.has(a.studentId))
-              : prev.attendances,
-            extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
-            studentExtracurriculars: cloudData.studentExtracurriculars !== undefined 
-              ? (cloudData.studentExtracurriculars as any[]).filter((se: any) => remoteValidStudentIds.has(se.studentId))
-              : prev.studentExtracurriculars,
-            notes: cloudData.notes !== undefined 
-              ? (cloudData.notes as any[]).filter((n: any) => remoteValidStudentIds.has(n.studentId))
-              : prev.notes,
-            achievements: cloudData.achievements !== undefined 
-              ? (cloudData.achievements as any[]).filter((ach: any) => remoteValidStudentIds.has(ach.studentId))
-              : prev.achievements,
-            users: remoteUsers,
-            currentUser: remoteCurrentUser,
-            isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
-          };
-
-          // Mirror directly to localStorage
-          saveStateToLocalStorage(nextState);
-
-          return nextState;
+          if (metadata.updatedAt) {
+            setLastSyncedTime(new Date(metadata.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          }
+          setCloudStatus('connected');
+        }
+      },
+      (status) => {
+        setCloudStatus(status === 'error' ? 'offline' : status);
+      },
+      () => {
+        // Cloud document does not exist yet; mark loaded and immediately seed cloud with local data
+        hasLoadedFromCloudRef.current = true;
+        setCloudStatus('syncing');
+        syncStateToCloud(state, 'Inisialisasi Data Sekolah', { immediate: true, force: true }).then((success) => {
+          if (success) {
+            setCloudStatus('connected');
+            setLastSyncedTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          }
         });
-
-        if (metadata.updatedAt) {
-          setLastSyncedTime(new Date(metadata.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-        }
-        setCloudStatus('connected');
       }
-    }, (status) => {
-      setCloudStatus(status === 'error' ? 'offline' : status);
-    });
+    );
 
     const handleVisibilityOrFocus = () => {
       if (document.visibilityState === 'visible' && !isQuotaExhausted()) {
@@ -257,31 +335,7 @@ export default function App() {
       const cloudData = await fetchCloudStateOnce();
       if (cloudData && Object.keys(cloudData).length > 0) {
         isRemoteUpdateRef.current = true;
-        setState(prev => {
-          const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
-          const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
-          const nextState: ERaporState = {
-            ...prev,
-            school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
-            students: remoteStudents,
-            grades: cloudData.grades !== undefined ? (cloudData.grades as any[]).filter(g => remoteValidStudentIds.has(g.studentId)) : prev.grades,
-            rombels: cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels,
-            subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
-            learningObjectives: (cloudData.learningObjectives !== undefined 
-              ? (cloudData.learningObjectives as any[]) 
-              : prev.learningObjectives
-            ).filter(tp => !isSampleTP(tp)),
-            attendances: cloudData.attendances !== undefined ? (cloudData.attendances as any[]).filter(a => remoteValidStudentIds.has(a.studentId)) : prev.attendances,
-            extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
-            studentExtracurriculars: cloudData.studentExtracurriculars !== undefined ? (cloudData.studentExtracurriculars as any[]).filter(se => remoteValidStudentIds.has(se.studentId)) : prev.studentExtracurriculars,
-            notes: cloudData.notes !== undefined ? (cloudData.notes as any[]).filter(n => remoteValidStudentIds.has(n.studentId)) : prev.notes,
-            achievements: cloudData.achievements !== undefined ? (cloudData.achievements as any[]).filter(ach => remoteValidStudentIds.has(ach.studentId)) : prev.achievements,
-            users: (cloudData.users && Array.isArray(cloudData.users) && cloudData.users.length > 0) ? cloudData.users : prev.users,
-            isLocked: cloudData.isLocked !== undefined ? cloudData.isLocked : prev.isLocked
-          };
-          saveStateToLocalStorage(nextState);
-          return nextState;
-        });
+        setState(prev => mergeCloudWithLocalState(prev, cloudData));
         setCloudStatus('connected');
         setLastSyncedTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       } else {
@@ -308,10 +362,14 @@ export default function App() {
 
   // Lock status toggle handler
   const handleToggleLock = () => {
-    setState(prev => ({
-      ...prev,
-      isLocked: !prev.isLocked
-    }));
+    setState(prev => {
+      const nextState: ERaporState = {
+        ...prev,
+        isLocked: !prev.isLocked
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // Reset to default seed data
@@ -333,7 +391,7 @@ export default function App() {
       isLocked: false
     };
     setState(defaultState);
-    localStorage.removeItem('erapor_smpn14tubaba_state');
+    saveStateToLocalStorage(defaultState);
     setActiveTab('dashboard');
   };
 
@@ -351,7 +409,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Grade updates
+  // Grade updates with immediate synchronous local persistence
   const handleUpdateGrades = (updatedList: StudentGrade[]) => {
     setState(prev => {
       const gradeMap = new Map<string, StudentGrade>();
@@ -371,51 +429,75 @@ export default function App() {
           });
         }
       });
-      return {
+      const nextGrades = Array.from(gradeMap.values());
+      const nextState: ERaporState = {
         ...prev,
-        grades: Array.from(gradeMap.values())
+        grades: nextGrades
       };
+      // Synchronously write to localStorage right here for zero-latency durability
+      saveStateToLocalStorage(nextState);
+      return nextState;
     });
   };
 
   // TP updates
   const handleUpdateObjectives = (tps: TujuanPembelajaran[]) => {
-    setState(prev => ({
-      ...prev,
-      learningObjectives: tps
-    }));
+    setState(prev => {
+      const nextState: ERaporState = {
+        ...prev,
+        learningObjectives: tps
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // Attendance updates
   const handleUpdateAttendances = (attendances: StudentAttendance[]) => {
-    setState(prev => ({
-      ...prev,
-      attendances
-    }));
+    setState(prev => {
+      const nextState: ERaporState = {
+        ...prev,
+        attendances
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // Extracurricular updates
   const handleUpdateStudentExtracurriculars = (list: StudentExtracurricular[]) => {
-    setState(prev => ({
-      ...prev,
-      studentExtracurriculars: list
-    }));
+    setState(prev => {
+      const nextState: ERaporState = {
+        ...prev,
+        studentExtracurriculars: list
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // Notes updates
   const handleUpdateNotes = (notes: StudentNote[]) => {
-    setState(prev => ({
-      ...prev,
-      notes
-    }));
+    setState(prev => {
+      const nextState: ERaporState = {
+        ...prev,
+        notes
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // Achievement updates
   const handleUpdateAchievements = (achievements: StudentAchievement[]) => {
-    setState(prev => ({
-      ...prev,
-      achievements
-    }));
+    setState(prev => {
+      const nextState: ERaporState = {
+        ...prev,
+        achievements
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // School info updates
