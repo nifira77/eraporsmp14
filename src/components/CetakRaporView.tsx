@@ -43,8 +43,27 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
     extracurriculars, 
     notes, 
     achievements,
-    rombels 
+    rombels,
+    users = [] 
   } = state;
+
+  // Helpers to resolve teacher and principal data directly from Data Guru (state.users)
+  // Ensures 100% exact match including upper/lower case letters, dots, and academic degrees
+  const getKepsekInfo = () => {
+    const matched = users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah');
+    return {
+      nama: matched?.name || school.kepalaSekolah,
+      nip: matched?.nip || school.nipKepalaSekolah
+    };
+  };
+
+  const getWaliInfo = (rombelId?: string, fallbackName?: string, fallbackNip?: string) => {
+    const matched = users.find(u => u.role === 'wali_kelas' && u.rombelId === rombelId);
+    return {
+      nama: matched?.name || fallbackName || '-',
+      nip: matched?.nip || fallbackNip || '-'
+    };
+  };
 
   // Selected filters and print configurations
   // Selected class / rombel for printing
@@ -196,6 +215,9 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
     });
 
     // 3. Metadata Sheet
+    const currentWali = getWaliInfo(selectedRombel.id, selectedRombel.waliKelasNama, selectedRombel.waliKelasNip);
+    const currentKepsek = getKepsekInfo();
+
     const metaRows = [
       { 'Parameter': 'Satuan Pendidikan', 'Keterangan': school.namaSekolah },
       { 'Parameter': 'NPSN', 'Keterangan': school.npsn },
@@ -204,8 +226,8 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
       { 'Parameter': 'Tahun Pelajaran', 'Keterangan': school.tahunAjaran },
       { 'Parameter': 'Semester', 'Keterangan': school.semester },
       { 'Parameter': 'Periode Penilaian', 'Keterangan': raporPeriod === 'tengah_semester' ? 'Sumatif Tengah Semester (STS)' : 'Sumatif Akhir Semester (SAS)' },
-      { 'Parameter': 'Wali Kelas', 'Keterangan': `${selectedRombel.waliKelasNama} (NIP: ${selectedRombel.waliKelasNip})` },
-      { 'Parameter': 'Kepala Sekolah', 'Keterangan': `${school.kepalaSekolah} (NIP: ${school.nipKepalaSekolah})` },
+      { 'Parameter': 'Wali Kelas', 'Keterangan': `${currentWali.nama} (NIP: ${currentWali.nip})` },
+      { 'Parameter': 'Kepala Sekolah', 'Keterangan': `${currentKepsek.nama} (NIP: ${currentKepsek.nip})` },
       { 'Parameter': 'Tanggal Dokumen', 'Keterangan': raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor }
     ];
 
@@ -660,6 +682,8 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
               targetStudents.map((student, studentIndex) => {
                 const studentData = getStudentData(student);
                 const rombel = rombels.find(r => r.id === student.rombelId) || selectedRombel;
+                const rombelWali = getWaliInfo(rombel.id, rombel.waliKelasNama, rombel.waliKelasNip);
+                const kepsekInfo = getKepsekInfo();
 
                 return (
                 <div 
@@ -1039,8 +1063,8 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                           <p className="font-medium">Kepala SMPN 14 Tulang Bawang Barat,</p>
                         </div>
                         <div>
-                          <p className="font-bold underline uppercase">{school.kepalaSekolah}</p>
-                          <p className="font-mono text-[9.5px]">NIP. {school.nipKepalaSekolah}</p>
+                          <p className="font-bold underline">{kepsekInfo.nama}</p>
+                          <p className="font-mono text-[9.5px]">NIP. {kepsekInfo.nip}</p>
                         </div>
                       </div>
 
@@ -1054,8 +1078,8 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                           <p className="font-medium">Wali Kelas {rombel.nama},</p>
                         </div>
                         <div>
-                          <p className="font-bold underline uppercase">{rombel.waliKelasNama}</p>
-                          <p className="font-mono text-[9.5px]">NIP. {rombel.waliKelasNip}</p>
+                          <p className="font-bold underline">{rombelWali.nama}</p>
+                          <p className="font-mono text-[9.5px]">NIP. {rombelWali.nip}</p>
                         </div>
                       </div>
                     </div>
@@ -1325,16 +1349,21 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         )}
                       </div>
 
-                      <div className="text-center space-y-16">
-                        <div>
-                          <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '15 Juli 2024'}</p>
-                          <p className="font-semibold">Kepala {school.namaSekolah},</p>
-                        </div>
-                        <div>
-                          <p className="font-bold underline uppercase text-[12px]">{school.kepalaSekolah}</p>
-                          <p className="font-mono text-[10.5px]">NIP. {school.nipKepalaSekolah}</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const kepsekInfo = getKepsekInfo();
+                        return (
+                          <div className="text-center space-y-16">
+                            <div>
+                              <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '15 Juli 2024'}</p>
+                              <p className="font-semibold">Kepala {school.namaSekolah},</p>
+                            </div>
+                            <div>
+                              <p className="font-bold underline text-[12px]">{kepsekInfo.nama}</p>
+                              <p className="font-mono text-[10.5px]">NIP. {kepsekInfo.nip}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -1543,32 +1572,38 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
             </div>
 
             {/* Leger Signatures */}
-            <div className="pt-6 grid grid-cols-2 text-center text-xs">
-              <div className="space-y-14">
-                <div>
-                  <p>Mengetahui,</p>
-                  <p className="font-semibold">Kepala SMPN 14 Tulang Bawang Barat,</p>
-                </div>
-                <div>
-                  <p className="font-bold underline uppercase">{school.kepalaSekolah}</p>
-                  <p className="font-mono text-[10px]">NIP. {school.nipKepalaSekolah}</p>
-                </div>
-              </div>
+            {(() => {
+              const selectedWali = getWaliInfo(selectedRombel.id, selectedRombel.waliKelasNama, selectedRombel.waliKelasNip);
+              const kepsekInfo = getKepsekInfo();
+              return (
+                <div className="pt-6 grid grid-cols-2 text-center text-xs">
+                  <div className="space-y-14">
+                    <div>
+                      <p>Mengetahui,</p>
+                      <p className="font-semibold">Kepala SMPN 14 Tulang Bawang Barat,</p>
+                    </div>
+                    <div>
+                      <p className="font-bold underline">{kepsekInfo.nama}</p>
+                      <p className="font-mono text-[10px]">NIP. {kepsekInfo.nip}</p>
+                    </div>
+                  </div>
 
-              <div className="space-y-14">
-                <div>
-                  <p>
-                    {school.tempatRapor},{' '}
-                    {raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor}
-                  </p>
-                  <p className="font-semibold">Wali Kelas {selectedRombel.nama},</p>
+                  <div className="space-y-14">
+                    <div>
+                      <p>
+                        {school.tempatRapor},{' '}
+                        {raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor}
+                      </p>
+                      <p className="font-semibold">Wali Kelas {selectedRombel.nama},</p>
+                    </div>
+                    <div>
+                      <p className="font-bold underline">{selectedWali.nama}</p>
+                      <p className="font-mono text-[10px]">NIP. {selectedWali.nip}</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold underline uppercase">{selectedRombel.waliKelasNama}</p>
-                  <p className="font-mono text-[10px]">NIP. {selectedRombel.waliKelasNip}</p>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
       )}

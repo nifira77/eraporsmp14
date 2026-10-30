@@ -500,20 +500,41 @@ export default function App() {
     });
   };
 
-  // School info updates
+  // School info updates with bidirectional sync to headmaster user
   const handleUpdateSchool = (school: SchoolInfo) => {
-    setState(prev => ({
-      ...prev,
-      school
-    }));
+    setState(prev => {
+      // Synchronize admin / kepala_sekolah user exact name and NIP with school.kepalaSekolah
+      const updatedUsers = prev.users.map(u => {
+        if (u.role === 'admin' || u.role === 'kepala_sekolah') {
+          return {
+            ...u,
+            name: school.kepalaSekolah || u.name,
+            nip: school.nipKepalaSekolah || u.nip
+          };
+        }
+        return u;
+      });
+
+      const nextState = {
+        ...prev,
+        school,
+        users: updatedUsers
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   // Rombel handlers
   const handleAddRombel = (newRombel: any) => {
-    setState(prev => ({
-      ...prev,
-      rombels: [...prev.rombels, newRombel]
-    }));
+    setState(prev => {
+      const nextState = {
+        ...prev,
+        rombels: [...prev.rombels, newRombel]
+      };
+      saveStateToLocalStorage(nextState);
+      return nextState;
+    });
   };
 
   const handleUpdateRombel = (updatedRombel: any) => {
@@ -545,11 +566,13 @@ export default function App() {
         });
       }
 
-      return {
+      const nextState = {
         ...prev,
         rombels: updatedRombels,
         users: updatedUsers
       };
+      saveStateToLocalStorage(nextState);
+      return nextState;
     });
   };
 
@@ -611,13 +634,15 @@ export default function App() {
         ? { ...prev.school, kepalaSekolah: newUser.name, nipKepalaSekolah: newUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
 
-      return {
+      const nextState = {
         ...prev,
         school: updatedSchool,
         users: updatedUsers,
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
+      saveStateToLocalStorage(nextState);
+      return nextState;
     });
   };
 
@@ -694,7 +719,7 @@ export default function App() {
         ? { ...prev.school, kepalaSekolah: updatedUser.name, nipKepalaSekolah: updatedUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
 
-      return {
+      const nextState = {
         ...prev,
         school: updatedSchool,
         users: updatedUsers,
@@ -702,6 +727,8 @@ export default function App() {
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
+      saveStateToLocalStorage(nextState);
+      return nextState;
     });
   };
 
@@ -728,13 +755,15 @@ export default function App() {
         return s;
       });
 
-      return {
+      const nextState = {
         ...prev,
         users: updatedUsers,
         currentUser: updatedCurrentUser,
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
+      saveStateToLocalStorage(nextState);
+      return nextState;
     });
   };
 
@@ -785,7 +814,7 @@ export default function App() {
         ? { ...prev.school, kepalaSekolah: adminUser.name, nipKepalaSekolah: adminUser.nip || prev.school.nipKepalaSekolah }
         : prev.school;
 
-      return {
+      const nextState = {
         ...prev,
         school: updatedSchool,
         users: newUsers,
@@ -793,6 +822,8 @@ export default function App() {
         rombels: updatedRombels,
         subjects: updatedSubjects
       };
+      saveStateToLocalStorage(nextState);
+      return nextState;
     });
   };
 

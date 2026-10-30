@@ -754,29 +754,36 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-200/80 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Wali Kelas:</span>
-                    <strong className="text-slate-800 font-semibold">{r.waliKelasNama}</strong>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">NIP Wali:</span>
-                    <span className="font-mono text-slate-600 text-[11px]">{r.waliKelasNip}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Kapasitas:</span>
-                    <span className="font-mono font-bold text-blue-700">{r.jumlahSiswa} Siswa</span>
-                  </div>
+                {(() => {
+                  const assignedWali = users.find(u => u.role === 'wali_kelas' && u.rombelId === r.id);
+                  const waliNama = assignedWali?.name || r.waliKelasNama;
+                  const waliNip = assignedWali?.nip || r.waliKelasNip;
+                  return (
+                    <div className="pt-2 border-t border-slate-200/80 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Wali Kelas:</span>
+                        <strong className="text-slate-800 font-semibold">{waliNama}</strong>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">NIP Wali:</span>
+                        <span className="font-mono text-slate-600 text-[11px]">{waliNip}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Kapasitas:</span>
+                        <span className="font-mono font-bold text-blue-700">{r.jumlahSiswa} Siswa</span>
+                      </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditRombel(r)}
-                    className="w-full mt-2.5 py-1.5 px-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-blue-700 font-semibold rounded-lg text-[11.5px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Ubah Wali Kelas & Data Rombel</span>
-                  </button>
-                </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditRombel(r)}
+                        className="w-full mt-2.5 py-1.5 px-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-blue-700 font-semibold rounded-lg text-[11.5px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ubah Wali Kelas & Data Rombel</span>
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>

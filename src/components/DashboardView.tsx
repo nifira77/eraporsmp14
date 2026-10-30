@@ -26,7 +26,7 @@ interface DashboardViewProps {
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate }) => {
-  const { school, currentUser, students, subjects, grades, rombels = [], isLocked } = state;
+  const { school, currentUser, students, subjects, grades, rombels = [], isLocked, users = [] } = state;
 
   // Selected filter rombel for overview (defaults to user's class or 7.1)
   const defaultRombelId = currentUser.rombelId || (rombels[0]?.id ?? '7.1');
@@ -469,11 +469,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ state, onNavigate 
               </p>
               <p>
                 <span className="text-slate-500">Kepala Sekolah:</span>{' '}
-                <strong className="text-slate-800">{school.kepalaSekolah}</strong>
+                <strong className="text-slate-800">
+                  {users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah')?.name || school.kepalaSekolah}
+                </strong>
               </p>
               <p>
                 <span className="text-slate-500">NIP:</span>{' '}
-                <span className="font-mono font-semibold text-slate-800">{school.nipKepalaSekolah}</span>
+                <span className="font-mono font-semibold text-slate-800">
+                  {users.find(u => u.role === 'admin' || u.role === 'kepala_sekolah')?.nip || school.nipKepalaSekolah}
+                </span>
               </p>
             </div>
           </div>

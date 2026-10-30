@@ -809,16 +809,23 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
                       </div>
 
                       {/* Tanda Tangan Resmi Kepala SMPN 14 Tulang Bawang Barat */}
-                      <div className="text-center space-y-16">
-                        <div>
-                          <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '15 Juli 2024'}</p>
-                          <p className="font-semibold">Kepala {school.namaSekolah},</p>
-                        </div>
-                        <div>
-                          <p className="font-bold underline uppercase text-[12px]">{school.kepalaSekolah}</p>
-                          <p className="font-mono text-[10.5px]">NIP. {school.nipKepalaSekolah}</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const matchedKepsek = (state.users || []).find(u => u.role === 'admin' || u.role === 'kepala_sekolah');
+                        const kepsekNama = matchedKepsek?.name || school.kepalaSekolah;
+                        const kepsekNip = matchedKepsek?.nip || school.nipKepalaSekolah;
+                        return (
+                          <div className="text-center space-y-16">
+                            <div>
+                              <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '15 Juli 2024'}</p>
+                              <p className="font-semibold">Kepala {school.namaSekolah},</p>
+                            </div>
+                            <div>
+                              <p className="font-bold underline text-[12px]">{kepsekNama}</p>
+                              <p className="font-mono text-[10.5px]">NIP. {kepsekNip}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
