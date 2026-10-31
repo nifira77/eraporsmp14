@@ -960,47 +960,43 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       </div>
                     )}
 
-                    {/* KETIDAKHADIRAN & PRESTASI */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Presensi */}
-                      <div className="space-y-1">
-                        <h3 className="font-bold text-[11px] uppercase tracking-wide">
-                          {raporPeriod === 'tengah_semester' ? 'B. Ketidakhadiran (Presensi Tengah Semester)' : 'C. Ketidakhadiran (Presensi)'}
-                        </h3>
-                        <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
-                          <tbody>
-                            <tr className="border-b border-black">
-                              <td className="border border-black py-1 px-3 font-medium">1. Sakit</td>
-                              <td className="border border-black py-1 px-3 text-center font-mono w-24">
-                                {studentData.studentAttendance.sakit} hari
-                              </td>
-                            </tr>
-                            <tr className="border-b border-black">
-                              <td className="border border-black py-1 px-3 font-medium">2. Izin</td>
-                              <td className="border border-black py-1 px-3 text-center font-mono w-24">
-                                {studentData.studentAttendance.izin} hari
-                              </td>
-                            </tr>
-                            <tr className="border-b border-black">
-                              <td className="border border-black py-1 px-3 font-medium">3. Tanpa Keterangan</td>
-                              <td className="border border-black py-1 px-3 text-center font-mono w-24">
-                                {studentData.studentAttendance.alpa} hari
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
+                    {/* KETIDAKHADIRAN & PRESTASI / PRESENSI STS */}
+                    {raporPeriod === 'akhir_semester' ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Presensi SAS */}
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-[11px] uppercase tracking-wide">
+                            C. Ketidakhadiran (Presensi)
+                          </h3>
+                          <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
+                            <tbody>
+                              <tr className="border-b border-black">
+                                <td className="border border-black py-1 px-3 font-medium">1. Sakit</td>
+                                <td className="border border-black py-1 px-3 text-center font-mono w-24">
+                                  {studentData.studentAttendance.sakit} hari
+                                </td>
+                              </tr>
+                              <tr className="border-b border-black">
+                                <td className="border border-black py-1 px-3 font-medium">2. Izin</td>
+                                <td className="border border-black py-1 px-3 text-center font-mono w-24">
+                                  {studentData.studentAttendance.izin} hari
+                                </td>
+                              </tr>
+                              <tr className="border-b border-black">
+                                <td className="border border-black py-1 px-3 font-medium">3. Tanpa Keterangan</td>
+                                <td className="border border-black py-1 px-3 text-center font-mono w-24">
+                                  {studentData.studentAttendance.alpa} hari
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
 
-                      {/* Prestasi atau Catatan Singkat */}
-                      <div className="space-y-1">
-                        <h3 className="font-bold text-[11px] uppercase tracking-wide">
-                          {raporPeriod === 'tengah_semester' ? 'C. Catatan Perkembangan' : 'D. Prestasi Yang Diraih'}
-                        </h3>
-                        {raporPeriod === 'tengah_semester' ? (
-                          <div className="border border-black p-2 min-h-[62px] text-[10px] leading-relaxed italic bg-slate-50/20">
-                            "Menunjukkan keaktifan dan semangat belajar yang konsisten pada paruh semester ganjil. Tingkatkan terus kesiapan menghadapi ujian semester."
-                          </div>
-                        ) : (
+                        {/* Prestasi Yang Diraih SAS */}
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-[11px] uppercase tracking-wide">
+                            D. Prestasi Yang Diraih
+                          </h3>
                           <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                             <thead>
                               <tr className="bg-slate-100 border-b border-black font-bold">
@@ -1027,19 +1023,63 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               )}
                             </tbody>
                           </table>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* Presensi STS (Tengah Semester) & Catatan Wali Kelas Berdampingan */
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Kolom Kiri: Presensi STS */}
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-[11px] uppercase tracking-wide">
+                            B. Ketidakhadiran (Presensi Tengah Semester)
+                          </h3>
+                          <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
+                            <tbody>
+                              <tr className="border-b border-black">
+                                <td className="border border-black py-1 px-3 font-medium">1. Sakit</td>
+                                <td className="border border-black py-1 px-3 text-center font-mono w-24">
+                                  {studentData.studentAttendance.sakit} hari
+                                </td>
+                              </tr>
+                              <tr className="border-b border-black">
+                                <td className="border border-black py-1 px-3 font-medium">2. Izin</td>
+                                <td className="border border-black py-1 px-3 text-center font-mono w-24">
+                                  {studentData.studentAttendance.izin} hari
+                                </td>
+                              </tr>
+                              <tr className="border-b border-black">
+                                <td className="border border-black py-1 px-3 font-medium">3. Tanpa Keterangan</td>
+                                <td className="border border-black py-1 px-3 text-center font-mono w-24">
+                                  {studentData.studentAttendance.alpa} hari
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
 
-                    {/* CATATAN WALI KELAS */}
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-[11px] uppercase tracking-wide">
-                        {raporPeriod === 'tengah_semester' ? 'D. Catatan Wali Kelas' : 'E. Catatan Wali Kelas'}
-                      </h3>
-                      <div className="border border-black p-2.5 min-h-[44px] text-[10.5px] leading-relaxed italic bg-slate-50/30">
-                        "{studentData.studentNote}"
+                        {/* Kolom Kanan: Catatan Wali Kelas STS */}
+                        <div className="space-y-1 flex flex-col">
+                          <h3 className="font-bold text-[11px] uppercase tracking-wide">
+                            C. Catatan Wali Kelas
+                          </h3>
+                          <div className="border border-black p-2.5 flex-1 min-h-[76px] text-[10.5px] leading-relaxed italic bg-slate-50/30 flex items-start">
+                            "{studentData.studentNote}"
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* CATATAN WALI KELAS UNTUK SAS (Akhir Semester) */}
+                    {raporPeriod === 'akhir_semester' && (
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wide">
+                          E. Catatan Wali Kelas
+                        </h3>
+                        <div className="border border-black p-2.5 min-h-[44px] text-[10.5px] leading-relaxed italic bg-slate-50/30">
+                          "{studentData.studentNote}"
+                        </div>
+                      </div>
+                    )}
 
                     {/* TANDA TANGAN RESMI */}
                     <div className="pt-4 grid grid-cols-3 gap-2 text-center text-[10.5px] print-avoid-break">

@@ -158,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           id: 'catatan_wali' as ActiveTab,
-          label: 'Catatan Perkembangan & Prestasi',
+          label: 'Catatan Wali Kelas dan Prestasi',
           icon: MessageSquare,
           roles: ['wali_kelas', 'admin'],
           badge: isWaliKelas ? 'Wali' : null

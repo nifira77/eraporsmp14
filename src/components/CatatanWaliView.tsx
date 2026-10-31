@@ -124,10 +124,10 @@ export const CatatanWaliView: React.FC<CatatanWaliViewProps> = ({
       <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-            Catatan Wali Kelas & Prestasi Siswa
+            Catatan Wali Kelas dan Prestasi
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Pemberian motivasi, catatan perkembangan kepribadian, dan riwayat prestasi kejuaraan
+            Pemberian motivasi belajar dan riwayat prestasi kejuaraan peserta didik
           </p>
         </div>
 
