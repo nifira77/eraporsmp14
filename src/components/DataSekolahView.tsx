@@ -40,6 +40,8 @@ interface DataSekolahViewProps {
   onUpdateSchool: (school: SchoolInfo) => void;
   onToggleLock: () => void;
   onResetData: () => void;
+  onExportData?: () => void;
+  onRestoreData?: () => void;
   onAddRombel: (rombel: Rombel) => void;
   onUpdateRombel?: (rombel: Rombel) => void;
   onDeleteRombel: (rombelId: string) => void;
@@ -53,6 +55,8 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
   onUpdateSchool,
   onToggleLock,
   onResetData,
+  onExportData,
+  onRestoreData,
   onAddRombel,
   onUpdateRombel,
   onDeleteRombel,
@@ -312,19 +316,46 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
           </p>
         </div>
 
-        {/* Lock Switch Button */}
-        <button
-          type="button"
-          onClick={onToggleLock}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-xs ${
-            isLocked 
-              ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' 
-              : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
-          }`}
-        >
-          {isLocked ? <Lock className="w-4 h-4 text-amber-700" /> : <Unlock className="w-4 h-4 text-emerald-600" />}
-          <span>{isLocked ? 'Penginputan Terkunci (Buka Kunci)' : 'Penginputan Dibuka (Kunci Nilai)'}</span>
-        </button>
+        {/* Action Buttons: Backup, Restore & Lock Switch */}
+        <div className="flex flex-wrap items-center gap-2">
+          {onExportData && (
+            <button
+              type="button"
+              onClick={onExportData}
+              title="Unduh Cadangan Seluruh Data e-Rapor (.json)"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Backup Data</span>
+            </button>
+          )}
+
+          {onRestoreData && (
+            <button
+              type="button"
+              onClick={onRestoreData}
+              title="Pulihkan data e-Rapor dari file backup (.json)"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Upload className="w-3.5 h-3.5 text-blue-600" />
+              <span>Restore Backup</span>
+            </button>
+          )}
+
+          {/* Lock Switch Button */}
+          <button
+            type="button"
+            onClick={onToggleLock}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer ${
+              isLocked 
+                ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' 
+                : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+            }`}
+          >
+            {isLocked ? <Lock className="w-4 h-4 text-amber-700" /> : <Unlock className="w-4 h-4 text-emerald-600" />}
+            <span>{isLocked ? 'Penginputan Terkunci (Buka Kunci)' : 'Penginputan Dibuka (Kunci Nilai)'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Success Notification */}
@@ -394,7 +425,8 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
       {/* TAB 1: PROFIL IDENTITAS SEKOLAH & TAHUN AJARAN */}
       {/* ========================================================= */}
       {activeTab === 'sekolah' && (
-        <form onSubmit={handleSaveSchool} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
+        <div className="space-y-6">
+          <form onSubmit={handleSaveSchool} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <School className="w-4 h-4 text-blue-600" />
             <h3 className="text-sm font-bold text-slate-900">
@@ -685,6 +717,45 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
             </button>
           </div>
         </form>
+
+        {/* Card Backup & Restore Data */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-blue-600" />
+                <span>Pusat Cadangan & Pemulihan Data (Backup & Restore)</span>
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                Unduh file cadangan untuk menyimpan seluruh data e-Rapor (Profil Sekolah, Guru, Rombel, Siswa, Nilai, TP, dan Ekskul) atau pulihkan data dari file backup yang pernah Anda unduh.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              {onExportData && (
+                <button
+                  type="button"
+                  onClick={onExportData}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Backup Data (.json)</span>
+                </button>
+              )}
+              {onRestoreData && (
+                <button
+                  type="button"
+                  onClick={onRestoreData}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Restore / Upload Backup</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        </div>
       )}
 
       {/* ========================================================= */}

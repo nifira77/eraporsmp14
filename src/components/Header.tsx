@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Cloud,
   Edit3,
+  UploadCloud,
   X,
   Save,
   LogOut,
@@ -31,6 +32,7 @@ interface HeaderProps {
   onToggleLock: () => void;
   onResetData: () => void;
   onExportData: () => void;
+  onRestoreData?: () => void;
   onLogout?: () => void;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
@@ -49,6 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleLock,
   onResetData,
   onExportData,
+  onRestoreData,
   onLogout,
   onToggleSidebar,
   isSidebarOpen = false,
@@ -236,11 +239,24 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               onClick={onExportData}
               title="Unduh Cadangan Data Rapor (JSON)"
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-2xs"
             >
               <Download className="w-3.5 h-3.5 text-slate-500" />
               <span>Backup</span>
             </button>
+
+            {/* Restore / Upload Backup Button */}
+            {onRestoreData && (
+              <button
+                type="button"
+                onClick={onRestoreData}
+                title="Pulihkan Data e-Rapor dari File Backup (.json)"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50/90 border border-blue-200 rounded-lg hover:bg-blue-100 hover:text-blue-800 transition-all shadow-2xs cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
+                <span>Restore</span>
+              </button>
+            )}
 
             {/* User Profile Badge (Hanya Nama Guru yang Sedang Login) */}
             <div className="flex items-center gap-1.5 sm:gap-2">

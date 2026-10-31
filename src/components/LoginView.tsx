@@ -12,15 +12,17 @@ import {
   Calendar,
   AlertTriangle,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  RotateCcw
 } from 'lucide-react';
 
 interface LoginViewProps {
   state: ERaporState;
   onLogin: (user: UserProfile) => void;
+  onRestoreData?: () => void;
 }
 
-export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
+export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin, onRestoreData }) => {
   const { school, users } = state;
 
   const [usernameInput, setUsernameInput] = useState<string>('');
@@ -434,6 +436,22 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
               )}
             </button>
           </form>
+
+          {/* Tombol Restore / Upload Cadangan Data */}
+          {onRestoreData && (
+            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-slate-500 font-medium">Punya file cadangan e-Rapor?</span>
+              <button
+                type="button"
+                onClick={onRestoreData}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all shadow-2xs cursor-pointer"
+                title="Pulihkan data e-Rapor dari file backup (.json)"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-blue-600" />
+                <span>Restore / Upload Backup</span>
+              </button>
+            </div>
+          )}
 
           {/* CATATAN PENTING PERSIAPAN SEBELUM MASUK / LOGIN (7 POIN LENGKAP) */}
           <div className="mt-5 p-4 bg-amber-50/70 border border-amber-200/90 rounded-2xl text-xs space-y-2.5 shadow-2xs">

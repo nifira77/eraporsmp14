@@ -59,6 +59,7 @@ import { DataPendidikView } from './components/DataPendidikView';
 import { DataSiswaView } from './components/DataSiswaView';
 import { BukuIndukView } from './components/BukuIndukView';
 import { LoginView } from './components/LoginView';
+import { RestoreBackupModal } from './components/RestoreBackupModal';
 
 function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporState>): ERaporState {
   const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
@@ -198,6 +199,7 @@ export default function App() {
   });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isDesktopNavCollapsed, setIsDesktopNavCollapsed] = useState(false);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const isInitialMountRef = useRef(true);
   const hasLoadedFromCloudRef = useRef(false);
   const isRemoteUpdateRef = useRef(false);
@@ -415,6 +417,23 @@ export default function App() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  // Restore full e-Rapor backup state from uploaded JSON
+  const handleRestoreData = (restoredState: ERaporState) => {
+    setState(restoredState);
+    saveStateToLocalStorage(restoredState);
+
+    // Synchronize to Firestore cloud immediately with high priority
+    setCloudStatus('syncing');
+    syncStateToCloud(restoredState, `${restoredState.currentUser?.name || 'Admin'} (Restore Backup)`, { immediate: true, force: true }).then((success) => {
+      if (success) {
+        setCloudStatus('connected');
+        setLastSyncedTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } else {
+        setCloudStatus('offline');
+      }
+    });
   };
 
   // Grade updates with immediate synchronous local persistence
@@ -893,7 +912,22 @@ export default function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginView state={state} onLogin={handleLogin} />;
+    return (
+      <>
+        <LoginView 
+          state={state} 
+          onLogin={handleLogin} 
+          onRestoreData={() => setIsRestoreModalOpen(true)}
+        />
+        <RestoreBackupModal
+          isOpen={isRestoreModalOpen}
+          onClose={() => setIsRestoreModalOpen(false)}
+          onRestore={handleRestoreData}
+          currentState={state}
+          onExportCurrent={handleExportData}
+        />
+      </>
+    );
   }
 
   return (
@@ -911,6 +945,7 @@ export default function App() {
         onToggleLock={handleToggleLock}
         onResetData={handleResetData}
         onExportData={handleExportData}
+        onRestoreData={() => setIsRestoreModalOpen(true)}
         onLogout={handleLogout}
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={isMobileNavOpen}
@@ -1004,6 +1039,8 @@ export default function App() {
               onUpdateSchool={handleUpdateSchool}
               onToggleLock={handleToggleLock}
               onResetData={handleResetData}
+              onExportData={handleExportData}
+              onRestoreData={() => setIsRestoreModalOpen(true)}
               onAddRombel={handleAddRombel}
               onUpdateRombel={handleUpdateRombel}
               onDeleteRombel={handleDeleteRombel}
@@ -1041,6 +1078,15 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Global Restore Backup Modal */}
+      <RestoreBackupModal
+        isOpen={isRestoreModalOpen}
+        onClose={() => setIsRestoreModalOpen(false)}
+        onRestore={handleRestoreData}
+        currentState={state}
+        onExportCurrent={handleExportData}
+      />
     </div>
   );
 }
