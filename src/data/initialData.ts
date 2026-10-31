@@ -22,10 +22,10 @@ export const initialSchoolInfo: SchoolInfo = {
   namaSekolah: 'SMP Negeri 14 Tulang Bawang Barat',
   npsn: '10809848',
   nss: '20.1.1812.05.044 / 200441',
-  alamat: 'Jl. Poros Tiyuh Marga Jaya, Kec. Gunung Agung, Kab. Tulag Bawang Barat, Kode Pos 34783',
+  alamat: 'Jl. Poros Tiyuh Marga Jaya, Kec, Gunung Agung, Kab. Tulang Bawang Barat Kode Pos 34783',
   desaKelurahan: 'Marga Jaya',
   kecamatan: 'Gunung Agung',
-  kabupaten: 'Tulag Bawang Barat',
+  kabupaten: 'Tulang Bawang Barat',
   provinsi: 'Lampung',
   kodePos: '34783',
   telepon: '(0726) 782104',
@@ -36,7 +36,7 @@ export const initialSchoolInfo: SchoolInfo = {
   tahunAjaran: '2026/2027',
   semester: 'Ganjil',
   tempatRapor: 'Tulang Bawang Barat',
-  tanggalRapor: '19 Desember 2026',
+  tanggalRapor: '3 November 2026',
   logoSekolah: defaultLogoSekolah,
   logoPemda: defaultLogoPemda
 };
@@ -501,6 +501,20 @@ export const getInitialState = (): ERaporState => {
           logoSekolah: (customSchoolData?.logoSekolah) || savedLogoSekolah,
           logoPemda: (customSchoolData?.logoPemda) || savedLogoPemda
         };
+
+        if (currentSchool.kabupaten === 'Tulag Bawang Barat' || !currentSchool.kabupaten) {
+          currentSchool.kabupaten = 'Tulang Bawang Barat';
+        }
+        if (currentSchool.tanggalRapor === '19 Desember 2026' || currentSchool.tanggalRapor === '17 Oktober 2026' || !currentSchool.tanggalRapor) {
+          currentSchool.tanggalRapor = '3 November 2026';
+        }
+        if (
+          !currentSchool.alamat ||
+          currentSchool.alamat.includes('Tulag Bawang Barat') ||
+          currentSchool.alamat === 'Jl. Poros Tiyuh Marga Jaya, Kec. Gunung Agung, Kab. Tulag Bawang Barat, Kode Pos 34783'
+        ) {
+          currentSchool.alamat = 'Jl. Poros Tiyuh Marga Jaya, Kec, Gunung Agung, Kab. Tulang Bawang Barat Kode Pos 34783';
+        }
 
         const savedRombels: Rombel[] = parsed.rombels || [];
         const requiredClassIds = ['7.1', '7.2', '7.3', '7.4', '8.1', '8.2', '8.3', '8.4', '9.1', '9.2', '9.3', '9.4'];

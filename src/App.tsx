@@ -144,9 +144,17 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
     }
   });
 
+  const remoteSchool = cloudData.school ? {
+    ...prev.school,
+    ...cloudData.school,
+    kabupaten: (cloudData.school.kabupaten === 'Tulag Bawang Barat' || !cloudData.school.kabupaten) ? 'Tulang Bawang Barat' : cloudData.school.kabupaten,
+    tanggalRapor: (cloudData.school.tanggalRapor === '19 Desember 2026' || cloudData.school.tanggalRapor === '17 Oktober 2026' || !cloudData.school.tanggalRapor) ? '3 November 2026' : cloudData.school.tanggalRapor,
+    alamat: (!cloudData.school.alamat || cloudData.school.alamat.includes('Tulag Bawang Barat') || cloudData.school.alamat === 'Jl. Poros Tiyuh Marga Jaya, Kec. Gunung Agung, Kab. Tulag Bawang Barat, Kode Pos 34783') ? 'Jl. Poros Tiyuh Marga Jaya, Kec, Gunung Agung, Kab. Tulang Bawang Barat Kode Pos 34783' : cloudData.school.alamat
+  } : prev.school;
+
   const nextState: ERaporState = {
     ...prev,
-    school: cloudData.school ? { ...prev.school, ...cloudData.school } : prev.school,
+    school: remoteSchool,
     students: remoteStudents,
     grades: Array.from(mergedGradesMap.values()),
     rombels: remoteRombels,

@@ -347,7 +347,7 @@ export const DataSekolahView: React.FC<DataSekolahViewProps> = ({
           }`}
         >
           <School className="w-4 h-4" />
-          <span>Profil Sekolah</span>
+          <span>Profil Satuan Pendidikan</span>
         </button>
 
         <button

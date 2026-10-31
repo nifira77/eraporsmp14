@@ -228,7 +228,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
       { 'Parameter': 'Periode Penilaian', 'Keterangan': raporPeriod === 'tengah_semester' ? 'Sumatif Tengah Semester (STS)' : 'Sumatif Akhir Semester (SAS)' },
       { 'Parameter': 'Wali Kelas', 'Keterangan': `${currentWali.nama} (NIP: ${currentWali.nip})` },
       { 'Parameter': 'Kepala Sekolah', 'Keterangan': `${currentKepsek.nama} (NIP: ${currentKepsek.nip})` },
-      { 'Parameter': 'Tanggal Dokumen', 'Keterangan': raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor }
+      { 'Parameter': 'Tanggal Dokumen', 'Keterangan': school.tanggalRapor || '3 November 2026' }
     ];
 
     const wb = XLSX.utils.book_new();
@@ -1113,7 +1113,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         <div>
                           <p>
                             {school.tempatRapor},{' '}
-                            {raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor}
+                            {school.tanggalRapor || '3 November 2026'}
                           </p>
                           <p className="font-medium">Wali Kelas {rombel.nama},</p>
                         </div>
@@ -1632,7 +1632,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                     <div>
                       <p>
                         {school.tempatRapor},{' '}
-                        {raporPeriod === 'tengah_semester' ? '17 Oktober 2026' : school.tanggalRapor}
+                        {school.tanggalRapor || '3 November 2026'}
                       </p>
                       <p className="font-semibold">Wali Kelas {selectedRombel.nama},</p>
                     </div>
