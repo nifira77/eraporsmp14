@@ -207,23 +207,39 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin }) => {
             <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-28 h-28 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
             
             <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-300 flex items-center justify-center shrink-0 shadow-inner">
-                <Calendar className="w-5 h-5 text-amber-300" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-300 flex items-center justify-center shrink-0 shadow-inner mt-0.5">
+                <AlertTriangle className="w-5 h-5 text-amber-300" />
               </div>
-              <div className="space-y-1.5 flex-1 min-w-0">
+              <div className="space-y-2.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-300">
-                    Pemberitahuan Akademik Penting
+                    Pemberitahuan Penting Penggunaan Aplikasi
                   </span>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 </div>
-                {/* EXACT REQUIRED TEXT */}
-                <p className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-snug">
-                  Pembagian Rapor STS dilaksanakan pada hari Selasa tanggal 3 Novermber 2026.
+
+                <p className="text-xs sm:text-sm font-bold text-white tracking-tight leading-relaxed">
+                  Aplikasi ini online, tapi masih memiliki banyak kekurangan dalam hal penyimpanan hasil perubahan.
                 </p>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                  <span>Segerap Persiapkan.</span>
+
+                <div className="bg-black/25 rounded-xl p-3 sm:p-3.5 border border-amber-300/25 space-y-2">
+                  <p className="text-xs font-bold text-amber-300 tracking-wide uppercase">
+                    Langkah penting yang harus dilakukan:
+                  </p>
+                  <ol className="space-y-1.5 text-[11px] sm:text-xs text-amber-100 font-medium">
+                    <li className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full bg-amber-400/30 text-amber-200 font-bold flex items-center justify-center shrink-0 text-[10px] mt-0.5">1</span>
+                      <span>Input semua nilai semua mapel dalam sekali pengerjaan.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full bg-amber-400/30 text-amber-200 font-bold flex items-center justify-center shrink-0 text-[10px] mt-0.5">2</span>
+                      <span>Jika belum selesai semua dan siap cetak, disarankan untuk tidak menutup jendela layar / reload aplikasi.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full bg-amber-400/30 text-amber-200 font-bold flex items-center justify-center shrink-0 text-[10px] mt-0.5">3</span>
+                      <span>Jika sudah bener-bener dirasa siap dicetak segera unduh / simpan sebagai PDF rapor dan legernya.</span>
+                    </li>
+                  </ol>
                 </div>
               </div>
             </div>
