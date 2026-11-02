@@ -44,7 +44,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 1cm 1cm 1cm 1cm !important;
+    margin: 8mm 10mm 8mm 10mm !important;
   }
   
   body {
@@ -53,6 +53,8 @@
     font-size: 11pt;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   .no-print {
@@ -76,7 +78,27 @@
   .print-border-table th,
   .print-border-table td {
     border: 1px solid #000 !important;
-    padding: 4px 6px !important;
+    padding: 3px 5px !important;
+  }
+
+  /* Container lembar rapor presisi A4 tanpa tumpah/spillover */
+  .rapor-sheet {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 275mm !important;
+    min-height: 275mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
   }
 }
 
