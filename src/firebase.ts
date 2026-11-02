@@ -46,14 +46,18 @@ export function markQuotaExhaustedToday(): void {
 export function clearQuotaExhaustedToday(): void {
   try {
     localStorage.removeItem(QUOTA_KEY);
+    enableNetwork(db).catch(() => {});
   } catch {}
 }
 
-// Automatically disconnect network if marked exhausted for today
-if (isQuotaExhaustedToday()) {
+export async function reconnectFirebase(): Promise<boolean> {
+  clearQuotaExhaustedToday();
   try {
-    disableNetwork(db).catch(() => {});
-  } catch {}
+    await enableNetwork(db);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export enum OperationType {
@@ -126,20 +130,24 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Connection test on boot as required by Firebase skill
 export async function testConnection(): Promise<boolean> {
-  if (isQuotaExhaustedToday()) {
-    return false;
-  }
-
   try {
+    await enableNetwork(db).catch(() => {});
     await getDocFromServer(doc(db, 'erapor_data', 'test_connection'));
+    clearQuotaExhaustedToday();
     return true;
   } catch (error) {
     if (isFirestoreQuotaError(error)) {
       markQuotaExhaustedToday();
       try {
-        disableNetwork(db).catch(() => {});
+        await disableNetwork(db).catch(() => {});
       } catch {}
       return false;
+    }
+    // If error is just doc doesn't exist or client is online, connection works
+    const msg = error instanceof Error ? error.message : String(error);
+    if (!msg.includes('offline') && !msg.includes('network-request-failed')) {
+      clearQuotaExhaustedToday();
+      return true;
     }
     return false;
   }

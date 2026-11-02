@@ -44,13 +44,15 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 15mm 15mm 15mm;
+    margin: 1cm 1cm 1cm 1cm !important;
   }
   
   body {
     background: #ffffff !important;
     color: #000000 !important;
     font-size: 11pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   
   .no-print {

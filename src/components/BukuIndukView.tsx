@@ -816,7 +816,7 @@ export const BukuIndukView: React.FC<BukuIndukViewProps> = ({
                         return (
                           <div className="text-center space-y-16">
                             <div>
-                              <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '15 Juli 2024'}</p>
+                              <p>{school.tempatRapor || 'Tulang Bawang Barat'}, {school.tanggalRapor || '3 November 2026'}</p>
                               <p className="font-semibold">Kepala {school.namaSekolah},</p>
                             </div>
                             <div>

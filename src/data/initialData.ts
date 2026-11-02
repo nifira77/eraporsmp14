@@ -189,7 +189,7 @@ export const initialRombels: Rombel[] = [
     waliKelasNip: '19850422 201001 2 021',
     tahunAjaran: '2026/2027',
     semester: 'Ganjil',
-    jumlahSiswa: 0
+    jumlahSiswa: 5
   },
   {
     id: '7.2',
@@ -377,7 +377,113 @@ export const isSampleTP = (tp: { id?: string }): boolean => {
 // Seluruh sample Tujuan Pembelajaran dikosongkan agar diinput manual oleh sekolah
 export const initialLearningObjectives: TujuanPembelajaran[] = [];
 
-export const initialStudents: Student[] = [];
+export const initialStudents: Student[] = [
+  {
+    id: 's-71-01',
+    nis: '260101',
+    nisn: '0124589201',
+    nama: 'ADITIA PRATAMA',
+    jenisKelamin: 'L',
+    rombelId: '7.1',
+    tempatLahir: 'Tulang Bawang Barat',
+    tanggalLahir: '12 Mei 2013',
+    agama: 'Islam',
+    namaAyah: 'Sutrisno',
+    namaIbu: 'Waginah',
+    pekerjaanOrangTua: 'Petani / Pekebun',
+    alamat: 'Tiyuh Marga Jaya RT 02 RW 01, Kec. Gunung Agung, Kab. Tulang Bawang Barat',
+    sekolahAsal: 'SD Negeri 1 Marga Jaya',
+    tahunMasuk: '2026',
+    terdaftarSebagai: 'Peserta Didik Baru',
+    statusKeluarga: 'Anak Kandung',
+    anakKe: 1,
+    telepon: '081379201122'
+  },
+  {
+    id: 's-71-02',
+    nis: '260102',
+    nisn: '0124589202',
+    nama: 'BELLA SEPTIANA',
+    jenisKelamin: 'P',
+    rombelId: '7.1',
+    tempatLahir: 'Gunung Agung',
+    tanggalLahir: '24 September 2013',
+    agama: 'Islam',
+    namaAyah: 'Bambang Irawan',
+    namaIbu: 'Siti Aminah',
+    pekerjaanOrangTua: 'Wiraswasta',
+    alamat: 'Tiyuh Marga Jaya RT 03 RW 01, Kec. Gunung Agung, Kab. Tulang Bawang Barat',
+    sekolahAsal: 'SD Negeri 2 Marga Jaya',
+    tahunMasuk: '2026',
+    terdaftarSebagai: 'Peserta Didik Baru',
+    statusKeluarga: 'Anak Kandung',
+    anakKe: 2,
+    telepon: '082188443311'
+  },
+  {
+    id: 's-71-03',
+    nis: '260103',
+    nisn: '0124589203',
+    nama: 'DIMAS WAHYUDI',
+    jenisKelamin: 'L',
+    rombelId: '7.1',
+    tempatLahir: 'Panaragan',
+    tanggalLahir: '05 Januari 2013',
+    agama: 'Islam',
+    namaAyah: 'Wahyudi Pratama',
+    namaIbu: 'Sumarni',
+    pekerjaanOrangTua: 'Pedagang',
+    alamat: 'Tiyuh Marga Jaya RT 01 RW 02, Kec. Gunung Agung, Kab. Tulang Bawang Barat',
+    sekolahAsal: 'SD Negeri 1 Marga Jaya',
+    tahunMasuk: '2026',
+    terdaftarSebagai: 'Peserta Didik Baru',
+    statusKeluarga: 'Anak Kandung',
+    anakKe: 1,
+    telepon: '085299441133'
+  },
+  {
+    id: 's-71-04',
+    nis: '260104',
+    nisn: '0124589204',
+    nama: 'FANI RAHMAWATI',
+    jenisKelamin: 'P',
+    rombelId: '7.1',
+    tempatLahir: 'Tulang Bawang Barat',
+    tanggalLahir: '18 Maret 2013',
+    agama: 'Islam',
+    namaAyah: 'Rahmad Hidayat',
+    namaIbu: 'Nurhayati',
+    pekerjaanOrangTua: 'Petani Karet',
+    alamat: 'Tiyuh Marga Jaya RT 04 RW 02, Kec. Gunung Agung, Kab. Tulang Bawang Barat',
+    sekolahAsal: 'SD Negeri 3 Gunung Agung',
+    tahunMasuk: '2026',
+    terdaftarSebagai: 'Peserta Didik Baru',
+    statusKeluarga: 'Anak Kandung',
+    anakKe: 3,
+    telepon: '081266554422'
+  },
+  {
+    id: 's-71-05',
+    nis: '260105',
+    nisn: '0124589205',
+    nama: 'GILANG RAMADHAN',
+    jenisKelamin: 'L',
+    rombelId: '7.1',
+    tempatLahir: 'Gunung Agung',
+    tanggalLahir: '11 Juli 2013',
+    agama: 'Islam',
+    namaAyah: 'Gunawan',
+    namaIbu: 'Tri Lestari',
+    pekerjaanOrangTua: 'Wiraswasta',
+    alamat: 'Tiyuh Marga Jaya RT 02 RW 01, Kec. Gunung Agung, Kab. Tulang Bawang Barat',
+    sekolahAsal: 'SD Negeri 1 Marga Jaya',
+    tahunMasuk: '2026',
+    terdaftarSebagai: 'Peserta Didik Baru',
+    statusKeluarga: 'Anak Kandung',
+    anakKe: 2,
+    telepon: '085388229911'
+  }
+];
 
 export const initialExtracurriculars: Extracurricular[] = [
   { id: 'ek-osis', nama: 'OSIS', pembina: 'Siti Rahmawati, S.Pd.' },
@@ -388,11 +494,68 @@ export const initialExtracurriculars: Extracurricular[] = [
   { id: 'ek-olahraga', nama: 'Olah Raga', pembina: 'Budi Santoso, M.Pd.' }
 ];
 
-export const initialStudentExtracurriculars: StudentExtracurricular[] = [];
-export const initialAttendances: StudentAttendance[] = [];
-export const initialNotes: StudentNote[] = [];
-export const initialAchievements: StudentAchievement[] = [];
-export const initialGrades: StudentGrade[] = [];
+export const initialStudentExtracurriculars: StudentExtracurricular[] = [
+  { id: 'se-01', studentId: 's-71-01', rombelId: '7.1', ekskulId: 'ek-pramuka', predikat: 'Sangat Baik', keterangan: 'Aktif dan disiplin dalam baris berbaris serta kepanduan' },
+  { id: 'se-02', studentId: 's-71-02', rombelId: '7.1', ekskulId: 'ek-osis', predikat: 'Sangat Baik', keterangan: 'Bertanggung jawab dalam kepengurusan dan organisasi kesiswaan' },
+  { id: 'se-03', studentId: 's-71-03', rombelId: '7.1', ekskulId: 'ek-olahraga', predikat: 'Baik', keterangan: 'Menguasai teknik dasar bola voli dan atletik' },
+  { id: 'se-04', studentId: 's-71-04', rombelId: '7.1', ekskulId: 'ek-tari', predikat: 'Sangat Baik', keterangan: 'Memiliki keluwesan gerak tari kreasi dan tradisional Lampung' },
+  { id: 'se-05', studentId: 's-71-05', rombelId: '7.1', ekskulId: 'ek-rohis', predikat: 'Baik', keterangan: 'Rajin mengaji dan aktif dalam kegiatan keagamaan' }
+];
+
+export const initialAttendances: StudentAttendance[] = [
+  { studentId: 's-71-01', rombelId: '7.1', sakit: 1, izin: 0, alpa: 0 },
+  { studentId: 's-71-02', rombelId: '7.1', sakit: 0, izin: 1, alpa: 0 },
+  { studentId: 's-71-03', rombelId: '7.1', sakit: 0, izin: 0, alpa: 0 },
+  { studentId: 's-71-04', rombelId: '7.1', sakit: 2, izin: 0, alpa: 0 },
+  { studentId: 's-71-05', rombelId: '7.1', sakit: 0, izin: 0, alpa: 0 }
+];
+
+export const initialNotes: StudentNote[] = [
+  { studentId: 's-71-01', rombelId: '7.1', catatan: 'Ananda menunjukkan keaktifan belajar yang sangat baik dan tekun dalam mengikuti pembelajaran di kelas. Pertahankan prestasimu.' },
+  { studentId: 's-71-02', rombelId: '7.1', catatan: 'Prestasi belajar sangat memuaskan, rajin, disiplin, dan memiliki kepribadian santun terhadap bapak/ibu guru serta teman.' },
+  { studentId: 's-71-03', rombelId: '7.1', catatan: 'Memiliki potensi besar dalam penalaran matematika dan IPA. Tingkatkan terus fokus belajar dan konsentrasi.' },
+  { studentId: 's-71-04', rombelId: '7.1', catatan: 'Ananda memiliki bakat seni dan kebahasaan yang baik. Terus kembangkan rasa percaya diri dalam berkomunikasi.' },
+  { studentId: 's-71-05', rombelId: '7.1', catatan: 'Menunjukkan semangat belajar yang konsisten, berdisiplin tinggi, dan aktif dalam kegiatan keagamaan serta kepramukaan.' }
+];
+
+export const initialAchievements: StudentAchievement[] = [
+  { id: 'ach-01', studentId: 's-71-02', rombelId: '7.1', bidang: 'Akademik', prestasi: 'Juara II Olimpiade Sains Matematika', tingkat: 'Kabupaten', keterangan: 'Tingkat SMP se-Kabupaten Tulang Bawang Barat' }
+];
+
+export const initialGrades: StudentGrade[] = [
+  ...[
+    { studentId: 's-71-01', base: 85 },
+    { studentId: 's-71-02', base: 90 },
+    { studentId: 's-71-03', base: 82 },
+    { studentId: 's-71-04', base: 86 },
+    { studentId: 's-71-05', base: 84 }
+  ].flatMap(({ studentId, base }) => 
+    initialSubjects.map((s, idx) => {
+      const score = Math.min(98, Math.max(75, base + ((idx % 5) - 2) * 2));
+      return {
+        id: `grade-${studentId}-${s.id}`,
+        studentId,
+        subjectId: s.id,
+        rombelId: '7.1',
+        sumatifLM: {},
+        nilaiAkhirLM: score,
+        nonTesSTS: score,
+        tesSTS: score + 1,
+        nilaiAkhirSTS: score,
+        deskripsiSTS: `Menunjukkan penguasaan kompetensi yang baik pada pembelajaran ${s.nama}.`,
+        nonTesSAS: score,
+        tesSAS: score,
+        nilaiAkhirSAS: score,
+        nilaiAkhirRapor: score,
+        deskripsiTertinggi: `Menunjukkan pemahaman yang sangat baik dalam materi pokok ${s.nama}.`,
+        deskripsiTerendah: `Perlu bimbingan dan peningkatan latihan intensif dalam pendalaman topik terkait.`,
+        statusKetercapaian: 'Tercapai' as const,
+        statusKirim: 'terkirim' as const,
+        updatedAt: '2026-11-03T10:00:00.000Z'
+      };
+    })
+  )
+];
 
 export const getInitialState = (): ERaporState => {
   const savedState = localStorage.getItem('erapor_smpn14tubaba_state');
@@ -521,8 +684,8 @@ export const getInitialState = (): ERaporState => {
         const hasAllRequiredClasses = requiredClassIds.every(id => savedRombels.some((r: any) => r.id === id));
         const isOutdatedRombels = !hasAllRequiredClasses || savedRombels.length < 12 || savedRombels.some((r: any) => r.id === '7A' || r.id === '7B' || r.nama?.includes('VII-A'));
 
-        // Keep all saved students
-        let currentStudents: Student[] = parsed.students || [];
+        // Keep all saved students or fallback to initial sample students
+        let currentStudents: Student[] = (parsed.students && parsed.students.length > 0) ? parsed.students : initialStudents;
 
         // Remap any leftover legacy class references if real students were previously added under 7A/7B
         currentStudents = currentStudents.map((s: any) => {
@@ -543,17 +706,23 @@ export const getInitialState = (): ERaporState => {
           activeUser.rombelId = '7.1';
         }
 
-        // Keep only grades, attendances, notes, extracurriculars, achievements belonging to genuine students
+        // Keep grades belonging to valid students, fallback to initialGrades if none
         currentGrades = currentGrades.filter((g: any) => validStudentIds.has(g.studentId));
+        if (currentGrades.length === 0 && currentStudents === initialStudents) {
+          currentGrades = initialGrades;
+        }
 
-        let currentAttendances: StudentAttendance[] = (parsed.attendances || [])
-          .filter((a: any) => validStudentIds.has(a.studentId));
+        let currentAttendances: StudentAttendance[] = (parsed.attendances && parsed.attendances.length > 0)
+          ? (parsed.attendances || []).filter((a: any) => validStudentIds.has(a.studentId))
+          : (currentStudents === initialStudents ? initialAttendances : []);
 
-        let currentNotes: StudentNote[] = (parsed.notes || [])
-          .filter((n: any) => validStudentIds.has(n.studentId));
+        let currentNotes: StudentNote[] = (parsed.notes && parsed.notes.length > 0)
+          ? (parsed.notes || []).filter((n: any) => validStudentIds.has(n.studentId))
+          : (currentStudents === initialStudents ? initialNotes : []);
 
-        let currentStudentExtracurriculars: StudentExtracurricular[] = (parsed.studentExtracurriculars || [])
-          .filter((se: any) => validStudentIds.has(se.studentId));
+        let currentStudentExtracurriculars: StudentExtracurricular[] = (parsed.studentExtracurriculars && parsed.studentExtracurriculars.length > 0)
+          ? (parsed.studentExtracurriculars || []).filter((se: any) => validStudentIds.has(se.studentId))
+          : (currentStudents === initialStudents ? initialStudentExtracurriculars : []);
 
         let currentAchievements: StudentAchievement[] = (parsed.achievements || [])
           .filter((ach: any) => validStudentIds.has(ach.studentId));

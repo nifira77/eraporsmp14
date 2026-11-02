@@ -266,9 +266,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin, onRestoreD
             <span>·</span>
             <span>Semester: <strong className="text-slate-200">{school.semester}</strong></span>
           </div>
-          <span className="text-[11px] text-slate-400">
-            {school.kecamatan}, {school.kabupaten}
-          </span>
+          <div className="text-[11px] text-slate-400 font-normal">
+            <span>{school.alamat}</span>
+          </div>
         </div>
       </div>
 
@@ -489,14 +489,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin, onRestoreD
               </li>
               <li className="flex items-start gap-2 pt-1 border-t border-amber-200/70 font-bold text-amber-900">
                 <span className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 font-bold flex items-center justify-center shrink-0 text-[10px] mt-0.5">7</span>
-                <span>Selamat Mnegerjakan</span>
+                <span>Selamat Mengerjakan</span>
               </li>
             </ol>
           </div>
         </div>
 
         {/* Form Footer */}
-        <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-500 space-y-1 mt-4">
+        <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-500 space-y-1.5 mt-4">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-slate-600 text-[10.5px]">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -506,9 +506,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ state, onLogin, onRestoreD
               NPSN: {school.npsn}
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 leading-normal">
-            Aplikasi resmi e-Rapor SP {school.namaSekolah}. Dikembangkan untuk implementasi Kurikulum Merdeka.
+          <p className="text-[10.5px] text-slate-400 leading-normal">
+            Aplikasi resmi e-Rapor SP {school.namaSekolah}. Dikembangkan untuk implementasi Kurikulum Merdeka Jenjang SMP (Fase D).
           </p>
+          <div className="text-[10px] text-slate-400 flex items-center justify-between pt-0.5 border-t border-slate-50">
+            <span>&copy; {new Date().getFullYear()} {school.namaSekolah}</span>
+            <span>Pembagian Rapor: <strong className="text-slate-600">{school.tanggalRapor}</strong></span>
+          </div>
         </div>
       </div>
     </div>

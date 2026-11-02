@@ -60,14 +60,24 @@ import { DataSiswaView } from './components/DataSiswaView';
 import { BukuIndukView } from './components/BukuIndukView';
 import { LoginView } from './components/LoginView';
 import { RestoreBackupModal } from './components/RestoreBackupModal';
+import { Footer } from './components/Footer';
 
 function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporState>): ERaporState {
-  const remoteStudents = cloudData.students !== undefined ? cloudData.students : prev.students;
-  const remoteValidStudentIds = new Set(remoteStudents.map((s: any) => s.id));
+  // Combine students safely so local students are never dropped if cloud snapshot is empty or partial
+  const localStudents = prev.students || [];
+  const remoteStudentsList = (cloudData.students && Array.isArray(cloudData.students) && cloudData.students.length > 0)
+    ? cloudData.students
+    : localStudents;
+
+  const studentMap = new Map<string, Student>();
+  localStudents.forEach(s => { if (s && s.id) studentMap.set(s.id, s); });
+  remoteStudentsList.forEach(s => { if (s && s.id) studentMap.set(s.id, s); });
+  const finalStudents = Array.from(studentMap.values());
+  const allStudentIds = new Set(finalStudents.map((s: any) => s.id));
 
   const remoteRombels = (cloudData.rombels !== undefined ? cloudData.rombels : prev.rombels).map((r: any) => ({
     ...r,
-    jumlahSiswa: remoteStudents.filter((s: any) => s.rombelId === r.id).length
+    jumlahSiswa: finalStudents.filter((s: any) => s.rombelId === r.id).length
   }));
 
   const remoteUsers = (cloudData.users && Array.isArray(cloudData.users) && cloudData.users.length > 0)
@@ -76,13 +86,13 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
   const remoteCurrentUser = remoteUsers.find((u: any) => u.id === prev.currentUser?.id) || prev.currentUser;
 
   // SMART MERGE FOR GRADES:
-  // Prevents old cloud snapshot from overwriting newer local grades entered by the user
+  // Never drops grades, preserves whichever has higher timestamp or entered scores
   const mergedGradesMap = new Map<string, StudentGrade>();
 
   // 1. Populate with remote grades from cloud
   if (cloudData.grades && Array.isArray(cloudData.grades)) {
     cloudData.grades.forEach((rg: any) => {
-      if (rg && rg.studentId && rg.subjectId && remoteValidStudentIds.has(rg.studentId)) {
+      if (rg && rg.studentId && rg.subjectId) {
         mergedGradesMap.set(`${rg.studentId}-${rg.subjectId}`, rg);
       }
     });
@@ -91,7 +101,7 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
   // 2. Protect and merge local grades:
   // If local grade has higher timestamp or has scores while remote doesn't, local WINS
   (prev.grades || []).forEach((lg: StudentGrade) => {
-    if (lg && lg.studentId && lg.subjectId && remoteValidStudentIds.has(lg.studentId)) {
+    if (lg && lg.studentId && lg.subjectId) {
       const key = `${lg.studentId}-${lg.subjectId}`;
       const remote = mergedGradesMap.get(key);
       if (!remote) {
@@ -113,13 +123,13 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
   const mergedAttendancesMap = new Map<string, StudentAttendance>();
   if (cloudData.attendances && Array.isArray(cloudData.attendances)) {
     cloudData.attendances.forEach((ra: any) => {
-      if (ra && ra.studentId && remoteValidStudentIds.has(ra.studentId)) {
+      if (ra && ra.studentId) {
         mergedAttendancesMap.set(ra.studentId, ra);
       }
     });
   }
   (prev.attendances || []).forEach((la: StudentAttendance) => {
-    if (la && la.studentId && remoteValidStudentIds.has(la.studentId)) {
+    if (la && la.studentId) {
       const existing = mergedAttendancesMap.get(la.studentId);
       if (!existing || ((la.sakit > 0 || la.izin > 0 || la.alpa > 0) && (existing.sakit === 0 && existing.izin === 0 && existing.alpa === 0))) {
         mergedAttendancesMap.set(la.studentId, la);
@@ -131,13 +141,13 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
   const mergedNotesMap = new Map<string, StudentNote>();
   if (cloudData.notes && Array.isArray(cloudData.notes)) {
     cloudData.notes.forEach((rn: any) => {
-      if (rn && rn.studentId && remoteValidStudentIds.has(rn.studentId)) {
+      if (rn && rn.studentId) {
         mergedNotesMap.set(rn.studentId, rn);
       }
     });
   }
   (prev.notes || []).forEach((ln: StudentNote) => {
-    if (ln && ln.studentId && remoteValidStudentIds.has(ln.studentId)) {
+    if (ln && ln.studentId) {
       const existing = mergedNotesMap.get(ln.studentId);
       if (!existing || (ln.catatan && ln.catatan.trim() && (!existing.catatan || !existing.catatan.trim()))) {
         mergedNotesMap.set(ln.studentId, ln);
@@ -156,7 +166,7 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
   const nextState: ERaporState = {
     ...prev,
     school: remoteSchool,
-    students: remoteStudents,
+    students: finalStudents,
     grades: Array.from(mergedGradesMap.values()),
     rombels: remoteRombels,
     subjects: cloudData.subjects !== undefined ? cloudData.subjects : prev.subjects,
@@ -167,11 +177,11 @@ function mergeCloudWithLocalState(prev: ERaporState, cloudData: Partial<ERaporSt
     attendances: Array.from(mergedAttendancesMap.values()),
     extracurriculars: cloudData.extracurriculars !== undefined ? cloudData.extracurriculars : prev.extracurriculars,
     studentExtracurriculars: cloudData.studentExtracurriculars !== undefined 
-      ? (cloudData.studentExtracurriculars as any[]).filter((se: any) => remoteValidStudentIds.has(se.studentId))
+      ? (cloudData.studentExtracurriculars as any[]).filter((se: any) => allStudentIds.has(se.studentId))
       : prev.studentExtracurriculars,
     notes: Array.from(mergedNotesMap.values()),
     achievements: cloudData.achievements !== undefined 
-      ? (cloudData.achievements as any[]).filter((ach: any) => remoteValidStudentIds.has(ach.studentId))
+      ? (cloudData.achievements as any[]).filter((ach: any) => allStudentIds.has(ach.studentId))
       : prev.achievements,
     users: remoteUsers,
     currentUser: remoteCurrentUser,
@@ -463,6 +473,16 @@ export default function App() {
       };
       // Synchronously write to localStorage right here for zero-latency durability
       saveStateToLocalStorage(nextState);
+
+      // Immediately push to Firebase Firestore in real-time
+      setCloudStatus('syncing');
+      syncStateToCloud(nextState, prev.currentUser?.name || 'Guru Mapel', { immediate: true, force: true }).then((success) => {
+        if (success) {
+          setCloudStatus('connected');
+          setLastSyncedTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        }
+      });
+
       return nextState;
     });
   };
@@ -1078,6 +1098,14 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Modern Institutional School Footer */}
+      <Footer
+        school={state.school}
+        onExportData={handleExportData}
+        onRestoreData={() => setIsRestoreModalOpen(true)}
+        cloudStatus={cloudStatus}
+      />
 
       {/* Global Restore Backup Modal */}
       <RestoreBackupModal
