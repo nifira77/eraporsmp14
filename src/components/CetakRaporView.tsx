@@ -22,7 +22,10 @@ import {
   Layers,
   Calendar,
   FileSpreadsheet,
-  FileDown
+  FileDown,
+  Ruler,
+  Settings2,
+  Maximize2
 } from 'lucide-react';
 
 interface CetakRaporViewProps {
@@ -109,6 +112,82 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
   const [footerFormat, setFooterFormat] = useState<'hal' | 'hal_total' | 'slash_num'>('hal');
   type CoverSection = 'semua' | 'sampul_luar' | 'identitas_sekolah';
   const [coverSection, setCoverSection] = useState<CoverSection>('semua');
+
+  // WYSIWYG Paper Size & Printing Margin Configurations
+  type PaperSize = 'A4' | 'F4';
+  type MarginPreset = 'standar' | 'simetris' | 'kompak' | 'kustom';
+
+  interface Margins {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  }
+
+  const [paperSize, setPaperSize] = useState<PaperSize>('A4');
+  const [marginPreset, setMarginPreset] = useState<MarginPreset>('standar');
+  const [margins, setMargins] = useState<Margins>({
+    top: 10,
+    bottom: 10,
+    left: 12, // Standar jilid: 12mm di sisi kiri untuk ruang klip/penjilidan rapor
+    right: 10
+  });
+  const [showMarginGuides, setShowMarginGuides] = useState<boolean>(true);
+  const [previewZoom, setPreviewZoom] = useState<number>(0); // 0 = Pas Layar (Fit)
+
+  const isLandscape = printMode === 'leger';
+  const sheetWidthMm = isLandscape ? (paperSize === 'F4' ? 330 : 297) : (paperSize === 'F4' ? 215 : 210);
+  const sheetHeightMm = isLandscape ? (paperSize === 'F4' ? 215 : 210) : (paperSize === 'F4' ? 330 : 297);
+  const printAreaWidthMm = sheetWidthMm - margins.left - margins.right;
+  const printAreaHeightMm = sheetHeightMm - margins.top - margins.bottom;
+
+  const handleSelectMarginPreset = (preset: MarginPreset) => {
+    setMarginPreset(preset);
+    if (preset === 'standar') {
+      setMargins({ top: 10, bottom: 10, left: 12, right: 10 });
+    } else if (preset === 'simetris') {
+      setMargins({ top: 10, bottom: 10, left: 10, right: 10 });
+    } else if (preset === 'kompak') {
+      setMargins({ top: 8, bottom: 8, left: 8, right: 8 });
+    }
+  };
+
+  const handleMarginChange = (side: keyof Margins, val: number) => {
+    const safeVal = Math.max(2, Math.min(40, isNaN(val) ? 0 : val));
+    setMargins(prev => ({ ...prev, [side]: safeVal }));
+    setMarginPreset('kustom');
+  };
+
+  const getSheetStyle = () => ({
+    width: previewZoom === 0 ? '100%' : `${sheetWidthMm}mm`,
+    maxWidth: `${sheetWidthMm}mm`,
+    minHeight: `${sheetHeightMm}mm`,
+    paddingTop: `${margins.top}mm`,
+    paddingRight: `${margins.right}mm`,
+    paddingBottom: `${margins.bottom}mm`,
+    paddingLeft: `${margins.left}mm`,
+    boxSizing: 'border-box' as const,
+  });
+
+  const renderMarginGuide = () => {
+    if (!showMarginGuides) return null;
+    return (
+      <div 
+        className="no-print pointer-events-none absolute border border-dashed border-indigo-400/50 rounded-xs"
+        style={{
+          top: `${margins.top}mm`,
+          right: `${margins.right}mm`,
+          bottom: `${margins.bottom}mm`,
+          left: `${margins.left}mm`,
+        }}
+        title="Garis Batas Margin Cetak (Tidak ikut tercetak)"
+      >
+        <span className="absolute -top-3 left-2 bg-indigo-50 text-indigo-700 text-[9px] font-mono px-1 rounded border border-indigo-200">
+          Area Cetak: {printAreaWidthMm} × {printAreaHeightMm} mm
+        </span>
+      </div>
+    );
+  };
 
   const getStudentFooterText = (studentName: string, pageNum: number, totalPages: number) => {
     if (footerFormat === 'hal_total') {
@@ -352,12 +431,25 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
   return (
     <div className="space-y-5">
-      {/* Dynamic print orientation: Landscape for Leger Nilai, Portrait for Rapor/Cover */}
+      {/* Dynamic print orientation & custom margins: synchronized exactly between preview and physical print */}
       <style>{`
         @media print {
           @page {
-            size: ${printMode === 'leger' ? 'A4 landscape' : 'A4 portrait'} !important;
-            margin: ${printMode === 'leger' ? '8mm' : '12mm 15mm 15mm 15mm'} !important;
+            size: ${isLandscape 
+              ? (paperSize === 'F4' ? '330mm 215mm' : 'A4 landscape') 
+              : (paperSize === 'F4' ? '215mm 330mm' : 'A4 portrait')} !important;
+            margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm !important;
+          }
+          .rapor-sheet,
+          .rapor-sheet-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
           }
         }
       `}</style>
@@ -800,8 +892,206 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
         </div>
       </div>
 
+      {/* PENGATURAN KERTAS & BATAS MARGIN WYSIWYG */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-3.5 text-xs no-print">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shadow-2xs">
+              <Ruler className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <span>Pengaturan Kertas &amp; Batas Margin Cetak (WYSIWYG)</span>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
+                  Preview = Cetakan Fisik 100%
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Ukuran kertas, margin tepi, dan batas area cetak disinkronkan persis ke browser print dialog.
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Dimension Specs Badge */}
+          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200">
+            <span>📐 Kertas: <strong>{paperSize} ({sheetWidthMm} × {sheetHeightMm} mm)</strong></span>
+            <span>·</span>
+            <span>Area Cetak: <strong>{printAreaWidthMm} × {printAreaHeightMm} mm</strong></span>
+            <span>·</span>
+            <span>Orientasi: <strong>{isLandscape ? 'Landscape (Mendatar)' : 'Portrait (Tegak)'}</strong></span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Pilihan Ukuran Kertas */}
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-slate-700">Ukuran Kertas:</span>
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setPaperSize('A4')}
+                className={`px-3 py-1 text-xs rounded font-semibold cursor-pointer transition-all ${
+                  paperSize === 'A4' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                A4 (210 × 297 mm)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaperSize('F4')}
+                className={`px-3 py-1 text-xs rounded font-semibold cursor-pointer transition-all ${
+                  paperSize === 'F4' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="F4 / Folio (215 × 330 mm)"
+              >
+                F4 / Folio (215 × 330 mm)
+              </button>
+            </div>
+          </div>
+
+          {/* Preset Margin */}
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-slate-700">Preset Margin:</span>
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+              <button
+                type="button"
+                onClick={() => handleSelectMarginPreset('standar')}
+                className={`px-2.5 py-1 text-xs rounded font-semibold cursor-pointer transition-all ${
+                  marginPreset === 'standar' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Standar Jilid Rapor: Kiri 12mm (ruang klip/staples), Atas/Kanan/Bawah 10mm"
+              >
+                Standar Jilid (Kiri 12mm)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectMarginPreset('simetris')}
+                className={`px-2.5 py-1 text-xs rounded font-semibold cursor-pointer transition-all ${
+                  marginPreset === 'simetris' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Simetris Rata: 10mm semua sisi"
+              >
+                Simetris (10mm)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectMarginPreset('kompak')}
+                className={`px-2.5 py-1 text-xs rounded font-semibold cursor-pointer transition-all ${
+                  marginPreset === 'kompak' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Kompak: 8mm semua sisi (memaksimalkan ruang cetak)"
+              >
+                Kompak (8mm)
+              </button>
+              <button
+                type="button"
+                onClick={() => setMarginPreset('kustom')}
+                className={`px-2.5 py-1 text-xs rounded font-semibold cursor-pointer transition-all ${
+                  marginPreset === 'kustom' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Kustom
+              </button>
+            </div>
+          </div>
+
+          {/* Detail Input Margin (mm) */}
+          <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+            <span className="text-[11px] font-semibold text-slate-500">Margin (mm):</span>
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <label className="flex items-center gap-1">
+                <span className="text-slate-500">Atas:</span>
+                <input
+                  type="number"
+                  min="4"
+                  max="35"
+                  value={margins.top}
+                  onChange={(e) => handleMarginChange('top', Number(e.target.value))}
+                  className="w-11 px-1 py-0.5 border border-slate-300 rounded text-center font-mono font-bold bg-white"
+                />
+              </label>
+              <label className="flex items-center gap-1">
+                <span className="text-slate-500">Bawah:</span>
+                <input
+                  type="number"
+                  min="4"
+                  max="35"
+                  value={margins.bottom}
+                  onChange={(e) => handleMarginChange('bottom', Number(e.target.value))}
+                  className="w-11 px-1 py-0.5 border border-slate-300 rounded text-center font-mono font-bold bg-white"
+                />
+              </label>
+              <label className="flex items-center gap-1">
+                <span className="text-slate-500">Kiri:</span>
+                <input
+                  type="number"
+                  min="4"
+                  max="35"
+                  value={margins.left}
+                  onChange={(e) => handleMarginChange('left', Number(e.target.value))}
+                  className="w-11 px-1 py-0.5 border border-slate-300 rounded text-center font-mono font-bold bg-white"
+                  title="Margin Kiri (berikan 12-15mm untuk penjilidan/klip rapor)"
+                />
+              </label>
+              <label className="flex items-center gap-1">
+                <span className="text-slate-500">Kanan:</span>
+                <input
+                  type="number"
+                  min="4"
+                  max="35"
+                  value={margins.right}
+                  onChange={(e) => handleMarginChange('right', Number(e.target.value))}
+                  className="w-11 px-1 py-0.5 border border-slate-300 rounded text-center font-mono font-bold bg-white"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Toggle Garis Panduan Margin */}
+          <label className="flex items-center gap-2 cursor-pointer select-none ml-auto">
+            <input
+              type="checkbox"
+              checked={showMarginGuides}
+              onChange={(e) => setShowMarginGuides(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer"
+            />
+            <span className="text-xs font-semibold text-slate-700">
+              Garis Panduan Batas Margin
+            </span>
+          </label>
+
+          {/* Zoom / Skala Preview */}
+          <div className="flex items-center gap-1.5 ml-1">
+            <span className="font-semibold text-slate-700">Zoom:</span>
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+              {[
+                { label: 'Pas Layar', val: 0 },
+                { label: '80%', val: 80 },
+                { label: '90%', val: 90 },
+                { label: '100%', val: 100 }
+              ].map(item => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => setPreviewZoom(item.val)}
+                  className={`px-2 py-0.5 text-[11px] rounded font-semibold cursor-pointer transition-all ${
+                    previewZoom === item.val ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* DOCUMENT PREVIEW CONTAINER */}
       <div className="bg-slate-100/50 p-4 sm:p-8 rounded-2xl flex flex-col items-center overflow-x-auto border border-slate-200/60 shadow-xs no-print-bg">
+        <div 
+          className="w-full flex flex-col items-center transition-all duration-150 origin-top"
+          style={previewZoom > 0 && previewZoom !== 100 ? { zoom: `${previewZoom}%` } : undefined}
+        >
         {/* ============================================================== */}
         {/* MODE 1: RAPOR NILAI (TENGAH SEMESTER ATAU AKHIR SEMESTER) */}
         {/* ============================================================== */}
@@ -834,10 +1124,13 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                   return (
                     <React.Fragment key={student.id}>
                       {/* PREVIEW INDICATOR LEMBAR 1 */}
-                      <div className="no-print w-full max-w-[210mm] flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1">
+                      <div 
+                        className="no-print flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1"
+                        style={{ maxWidth: `${sheetWidthMm}mm`, width: '100%' }}
+                      >
                         <span className="flex items-center gap-1.5 font-bold text-slate-800">
                           <FileText className="w-3.5 h-3.5 text-blue-600" />
-                          <span>Lembar 1: Laporan Hasil Belajar (Nilai & Capaian Belajar)</span>
+                          <span>Lembar 1: Laporan Hasil Belajar (Nilai &amp; Capaian Belajar)</span>
                         </span>
                         <span className="text-[11px] bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded font-mono font-bold">
                           {student.nama} · Halaman 1 dari 2
@@ -846,8 +1139,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                       {/* LEMBAR 1: KOP, IDENTITAS, TABEL NILAI */}
                       <div 
-                        className="rapor-sheet bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        style={getSheetStyle()}
                       >
+                        {renderMarginGuide()}
                         <div>
                           {/* KOP SURAT SEKOLAH RESMI */}
                           <div className="pb-2 border-b-2 border-black flex items-center justify-between gap-3">
@@ -1042,7 +1337,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       </div>
 
                       {/* PREVIEW INDICATOR LEMBAR 2 */}
-                      <div className="no-print w-full max-w-[210mm] flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1 mt-6">
+                      <div 
+                        className="no-print flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1 mt-6"
+                        style={{ maxWidth: `${sheetWidthMm}mm`, width: '100%' }}
+                      >
                         <span className="flex items-center gap-1.5 font-bold text-slate-800">
                           <Award className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Lembar 2: {raporPeriod === 'akhir_semester' ? 'Ekstrakurikuler, Presensi, Prestasi & Catatan Wali Kelas' : 'Presensi & Catatan Wali Kelas'}</span>
@@ -1054,8 +1352,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                       {/* LEMBAR 2: HEADER RINGKAS, KONTEN PELENGKAP & TTD */}
                       <div 
-                        className="rapor-sheet bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        style={getSheetStyle()}
                       >
+                        {renderMarginGuide()}
                         <div className="space-y-4">
                           {/* Mini Header Siswa */}
                           <div className="pb-2.5 border-b-2 border-black flex items-center justify-between text-[11px]">
@@ -1279,7 +1579,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       {/* ============================================================== */}
                       {/* 3 LEMBAR - LEMBAR 1: KOP, IDENTITAS, TABEL MAPEL 1-6 */}
                       {/* ============================================================== */}
-                      <div className="no-print w-full max-w-[210mm] flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1">
+                      <div 
+                        className="no-print flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1"
+                        style={{ maxWidth: `${sheetWidthMm}mm`, width: '100%' }}
+                      >
                         <span className="flex items-center gap-1.5 font-bold text-slate-800">
                           <FileText className="w-3.5 h-3.5 text-blue-600" />
                           <span>Lembar 1: Laporan Hasil Belajar (Bagian I: Mapel 1 s.d. 6)</span>
@@ -1289,7 +1592,11 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         </span>
                       </div>
 
-                      <div className="rapor-sheet bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between">
+                      <div 
+                        className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        style={getSheetStyle()}
+                      >
+                        {renderMarginGuide()}
                         <div>
                           {/* KOP SURAT SEKOLAH RESMI */}
                           <div className="pb-2 border-b-2 border-black flex items-center justify-between gap-3">
@@ -1472,7 +1779,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       {/* ============================================================== */}
                       {/* 3 LEMBAR - LEMBAR 2: MINI HEADER & TABEL MAPEL 7 DST + RERATA  */}
                       {/* ============================================================== */}
-                      <div className="no-print w-full max-w-[210mm] flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1 mt-6">
+                      <div 
+                        className="no-print flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1 mt-6"
+                        style={{ maxWidth: `${sheetWidthMm}mm`, width: '100%' }}
+                      >
                         <span className="flex items-center gap-1.5 font-bold text-slate-800">
                           <FileText className="w-3.5 h-3.5 text-blue-600" />
                           <span>Lembar 2: Nilai &amp; Capaian Belajar (Bagian II: Mapel 7 s.d. Selesai)</span>
@@ -1482,7 +1792,11 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         </span>
                       </div>
 
-                      <div className="rapor-sheet bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between">
+                      <div 
+                        className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        style={getSheetStyle()}
+                      >
+                        {renderMarginGuide()}
                         <div>
                           {/* Mini Header Siswa */}
                           <div className="pb-2.5 border-b-2 border-black flex items-center justify-between text-[11px] mb-3">
@@ -1620,7 +1934,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       {/* ============================================================== */}
                       {/* 3 LEMBAR - LEMBAR 3: EKSKUL, PRESENSI, PRESTASI, CATATAN & TTD */}
                       {/* ============================================================== */}
-                      <div className="no-print w-full max-w-[210mm] flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1 mt-6">
+                      <div 
+                        className="no-print flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1 mt-6"
+                        style={{ maxWidth: `${sheetWidthMm}mm`, width: '100%' }}
+                      >
                         <span className="flex items-center gap-1.5 font-bold text-slate-800">
                           <Award className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Lembar 3: {raporPeriod === 'akhir_semester' ? 'Ekstrakurikuler, Presensi, Prestasi & Catatan Wali Kelas' : 'Presensi, Catatan Wali Kelas & Tanda Tangan'}</span>
@@ -1630,7 +1947,11 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         </span>
                       </div>
 
-                      <div className="rapor-sheet bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between">
+                      <div 
+                        className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                        style={getSheetStyle()}
+                      >
+                        {renderMarginGuide()}
                         <div className="space-y-4">
                           {/* Mini Header Siswa */}
                           <div className="pb-2.5 border-b-2 border-black flex items-center justify-between text-[11px]">
@@ -1850,7 +2171,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                 return (
                   <React.Fragment key={student.id}>
                     {/* PREVIEW INDICATOR 1 LEMBAR */}
-                    <div className="no-print w-full max-w-[210mm] flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1">
+                    <div 
+                      className="no-print flex items-center justify-between px-2 text-xs font-semibold text-slate-600 mb-1"
+                      style={{ maxWidth: `${sheetWidthMm}mm`, width: '100%' }}
+                    >
                       <span className="flex items-center gap-1.5 font-bold text-slate-800">
                         <FileText className="w-3.5 h-3.5 text-blue-600" />
                         <span>Lembar Rapor (1 Lembar Kompak): {raporPeriod === 'tengah_semester' ? 'Nilai Tengah Semester (STS)' : 'Nilai Akhir Semester (SAS)'}</span>
@@ -1861,8 +2185,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                     </div>
 
                     <div 
-                      className="rapor-sheet bg-white text-black p-8 sm:p-12 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                      className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:w-full print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                      style={getSheetStyle()}
                     >
+                      {renderMarginGuide()}
                   <div>
                     {/* KOP SURAT SEKOLAH RESMI DENGAN LOGO PEMDA & LOGO SEKOLAH */}
                     <div className="pb-2 border-b-2 border-black flex items-center justify-between gap-3">
@@ -2346,7 +2672,11 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                 <React.Fragment key={student.id}>
                   {/* 1. HALAMAN SAMPUL 1: COVER LUAR */}
                   {(coverSection === 'semua' || coverSection === 'sampul_luar') && (
-                    <div className="bg-white text-black p-4 sm:p-6 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-serif print:m-0 print:p-0 print:border-none print:shadow-none print-page-break flex flex-col">
+                    <div 
+                      className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-serif print:m-0 print:p-0 print:border-none print:shadow-none print-page-break flex flex-col"
+                      style={getSheetStyle()}
+                    >
+                      {renderMarginGuide()}
                       {/* Double Border Frame Khas Sampul Rapor Resmi Kemdikbud */}
                       <div className="border-[3px] border-black p-2 h-full flex-1 flex flex-col justify-between">
                         <div className="border border-black p-6 sm:p-8 h-full flex-1 flex flex-col justify-between items-center text-center">
@@ -2434,7 +2764,11 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                   {/* 2. HALAMAN SAMPUL 2: IDENTITAS SATUAN PENDIDIKAN RESMI */}
                   {(coverSection === 'semua' || coverSection === 'identitas_sekolah') && (
-                    <div className="bg-white text-black p-4 sm:p-6 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans print:m-0 print:p-0 print:border-none print:shadow-none print-page-break flex flex-col">
+                    <div 
+                      className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans print:m-0 print:p-0 print:border-none print:shadow-none print-page-break flex flex-col"
+                      style={getSheetStyle()}
+                    >
+                      {renderMarginGuide()}
                       <div className="border-[3px] border-black p-2 h-full flex-1 flex flex-col justify-between">
                         <div className="border border-black p-8 sm:p-12 h-full flex-1 flex flex-col justify-between text-xs leading-relaxed">
                           
@@ -2591,16 +2925,19 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                 return (
                   <div 
                     key={student.id}
-                    className="bg-white text-black p-10 sm:p-14 w-full max-w-[210mm] min-h-[297mm] shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break space-y-5"
+                    className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-xs print:m-0 print:p-0 print:border-none print:shadow-none print-page-break flex flex-col justify-between"
+                    style={getSheetStyle()}
                   >
-                    <div className="text-center pb-3 border-b-2 border-black space-y-1">
-                      <h2 className="text-sm sm:text-base font-bold uppercase tracking-wide">
-                        IDENTITAS PESERTA DIDIK
-                      </h2>
-                      <p className="text-xs font-medium">
-                        KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI
-                      </p>
-                    </div>
+                    {renderMarginGuide()}
+                    <div className="space-y-4 flex-1">
+                      <div className="text-center pb-3 border-b-2 border-black space-y-1">
+                        <h2 className="text-sm sm:text-base font-bold uppercase tracking-wide">
+                          IDENTITAS PESERTA DIDIK
+                        </h2>
+                        <p className="text-xs font-medium">
+                          KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI
+                        </p>
+                      </div>
 
                     {/* List Identitas Lengkap Siswa (Persis Sama dengan Buku Induk Siswa) */}
                     <div className="space-y-2.5 leading-relaxed text-xs">
@@ -2757,6 +3094,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         );
                       })()}
                     </div>
+                    </div>
 
                     {/* Running Footer Biodata Siswa */}
                     <div className="mt-auto pt-3 border-t border-black flex items-center justify-between text-[10px] text-slate-800">
@@ -2812,7 +3150,11 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
               </div>
             </div>
 
-            <div className="bg-white text-black p-6 sm:p-10 w-full max-w-[297mm] min-h-[210mm] shadow-xl border border-slate-300 rounded-sm font-sans text-[10px] print:m-0 print:p-0 print:w-full print:border-none print:shadow-none space-y-4">
+            <div 
+              className="rapor-sheet relative bg-white text-black shadow-xl border border-slate-300 rounded-sm font-sans text-[10px] print:m-0 print:p-0 print:w-full print:border-none print:shadow-none space-y-4"
+              style={getSheetStyle()}
+            >
+              {renderMarginGuide()}
             {/* Header Leger */}
             <div className="border-b-2 border-black pb-2 flex items-center justify-between gap-3">
               <div className="w-14 h-14 shrink-0 flex items-center justify-center">
@@ -3011,6 +3353,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
           </div>
         </div>
       )}
+        </div>
       </div>
     </div>
   );
