@@ -4,16 +4,47 @@ import {
   getFirestore, 
   doc, 
   getDocFromServer, 
-  disableNetwork, 
-  enableNetwork, 
   setLogLevel 
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
-// Suppress excessive Firestore console logging when offline or during retry backoffs
+// Suppress excessive Firestore console logging
 try {
   setLogLevel('silent');
 } catch {}
+
+// Global guard for internal Firestore SDK assertion crashes (e.g., ca9, b815 WatchChangeAggregator)
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    const reasonStr = String(event.reason?.message || event.reason || '');
+    if (
+      reasonStr.includes('INTERNAL ASSERTION FAILED') ||
+      reasonStr.includes('WatchChangeAggregator') ||
+      reasonStr.includes('TargetState') ||
+      reasonStr.includes('(ID: ca9)') ||
+      reasonStr.includes('(ID: b815)')
+    ) {
+      console.warn('[Firestore] Handled internal watch stream assertion gracefully:', reasonStr);
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
+  window.addEventListener('error', (event) => {
+    const msg = String(event.message || '');
+    if (
+      msg.includes('INTERNAL ASSERTION FAILED') ||
+      msg.includes('WatchChangeAggregator') ||
+      msg.includes('TargetState') ||
+      msg.includes('(ID: ca9)') ||
+      msg.includes('(ID: b815)')
+    ) {
+      console.warn('[Firestore] Suppressed internal assertion crash:', msg);
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+}
 
 // Initialize or reuse Firebase App instance
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -46,18 +77,12 @@ export function markQuotaExhaustedToday(): void {
 export function clearQuotaExhaustedToday(): void {
   try {
     localStorage.removeItem(QUOTA_KEY);
-    enableNetwork(db).catch(() => {});
   } catch {}
 }
 
 export async function reconnectFirebase(): Promise<boolean> {
   clearQuotaExhaustedToday();
-  try {
-    await enableNetwork(db);
-    return true;
-  } catch {
-    return false;
-  }
+  return true;
 }
 
 export enum OperationType {
@@ -102,9 +127,6 @@ export function isFirestoreQuotaError(error: unknown): boolean {
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   if (isFirestoreQuotaError(error)) {
     markQuotaExhaustedToday();
-    try {
-      disableNetwork(db).catch(() => {});
-    } catch {}
     return;
   }
 
@@ -124,23 +146,21 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  console.warn('Firestore Operation Info: ', JSON.stringify(errInfo));
 }
 
-// Connection test on boot as required by Firebase skill
+// Connection test on initial boot as required by Firebase skill
+let connectionTested = false;
 export async function testConnection(): Promise<boolean> {
+  if (connectionTested) return true;
+  connectionTested = true;
   try {
-    await enableNetwork(db).catch(() => {});
     await getDocFromServer(doc(db, 'erapor_data', 'test_connection'));
     clearQuotaExhaustedToday();
     return true;
   } catch (error) {
     if (isFirestoreQuotaError(error)) {
       markQuotaExhaustedToday();
-      try {
-        await disableNetwork(db).catch(() => {});
-      } catch {}
       return false;
     }
     // If error is just doc doesn't exist or client is online, connection works

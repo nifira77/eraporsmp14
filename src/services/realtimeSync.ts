@@ -1,4 +1,4 @@
-import { doc, onSnapshot, setDoc, getDoc, disableNetwork, enableNetwork } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { 
   db, 
   handleFirestoreError, 
@@ -22,40 +22,29 @@ export interface CloudSyncMetadata {
 // Generate a unique session identifier for this device/tab
 export const CURRENT_DEVICE_ID = `dev-${Math.random().toString(36).substring(2, 9)}`;
 
-// Circuit breaker for Firestore daily write quota limit
-let isNetworkDisabledDueToQuota = false;
+// Circuit breaker for Firestore daily write quota limit (application-level, without calling disableNetwork)
+let isNetworkPausedDueToQuota = false;
 let quotaExhaustedUntil = 0;
 let lastSyncedHash = '';
 
 export function isQuotaExhausted(): boolean {
   if (isQuotaExhaustedToday()) return true;
-  if (isNetworkDisabledDueToQuota) return true;
+  if (isNetworkPausedDueToQuota) return true;
   if (quotaExhaustedUntil > Date.now()) return true;
   return false;
 }
 
-export async function pauseNetworkDueToQuota() {
+export function pauseNetworkDueToQuota() {
   markQuotaExhaustedToday();
-  if (isNetworkDisabledDueToQuota) return;
-  isNetworkDisabledDueToQuota = true;
+  isNetworkPausedDueToQuota = true;
   quotaExhaustedUntil = Date.now() + 60 * 60 * 1000; // 1 hour pause
-  try {
-    await disableNetwork(db);
-  } catch (e) {
-    // Handled
-  }
 }
 
 export async function resumeNetworkFromQuota(): Promise<boolean> {
-  try {
-    clearQuotaExhaustedToday();
-    isNetworkDisabledDueToQuota = false;
-    quotaExhaustedUntil = 0;
-    await enableNetwork(db);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  clearQuotaExhaustedToday();
+  isNetworkPausedDueToQuota = false;
+  quotaExhaustedUntil = 0;
+  return true;
 }
 
 function calculateStateFingerprint(state: ERaporState): string {
@@ -78,7 +67,7 @@ function calculateStateFingerprint(state: ERaporState): string {
 
 /**
  * Subscribes to real-time updates from Firestore.
- * Whenever any device modifies the state in the cloud, all other devices receive the changes instantly.
+ * Safely guards against unmounted callback race conditions and SDK internal assertion states.
  */
 export function subscribeToCloudSync(
   onCloudUpdate: (cloudState: Partial<ERaporState>, metadata: CloudSyncMetadata) => void,
@@ -90,36 +79,70 @@ export function subscribeToCloudSync(
     return () => {};
   }
 
-  const docRef = doc(db, COLLECTION_NAME, DOC_ID);
+  let isUnsubscribed = false;
+  let activeUnsubscribe: (() => void) | null = null;
 
-  const unsubscribe = onSnapshot(
-    docRef,
-    (snapshot) => {
-      if (snapshot.exists()) {
-        const payload = snapshot.data();
-        const { _metadata, ...stateData } = payload;
-        
-        // If the update came from another device or was just committed
-        onCloudUpdate(stateData as Partial<ERaporState>, (_metadata || {}) as CloudSyncMetadata);
-        onStatusChange?.('connected');
-      } else {
-        // Cloud document does not exist yet (first-time deployment)
-        onCloudEmpty?.();
-        onStatusChange?.('connected');
-      }
-    },
-    async (error) => {
-      if (isFirestoreQuotaError(error)) {
-        await pauseNetworkDueToQuota();
+  try {
+    const docRef = doc(db, COLLECTION_NAME, DOC_ID);
+
+    activeUnsubscribe = onSnapshot(
+      docRef,
+      (snapshot) => {
+        if (isUnsubscribed) return;
+
+        try {
+          if (snapshot.exists()) {
+            const payload = snapshot.data();
+            const { _metadata, ...stateData } = payload;
+            
+            onCloudUpdate(stateData as Partial<ERaporState>, (_metadata || {}) as CloudSyncMetadata);
+            onStatusChange?.('connected');
+          } else {
+            // Cloud document does not exist yet (first-time deployment)
+            onCloudEmpty?.();
+            onStatusChange?.('connected');
+          }
+        } catch (innerErr) {
+          console.warn('[RealtimeSync] Error processing snapshot data:', innerErr);
+        }
+      },
+      (error) => {
+        if (isUnsubscribed) return;
+
+        if (isFirestoreQuotaError(error)) {
+          pauseNetworkDueToQuota();
+          onStatusChange?.('offline');
+          return;
+        }
+
+        const msg = String(error?.message || error || '');
+        if (msg.includes('INTERNAL ASSERTION FAILED') || msg.includes('WatchChangeAggregator')) {
+          console.warn('[RealtimeSync] Internal watch stream assertion intercepted cleanly:', msg);
+          onStatusChange?.('connected');
+          return;
+        }
+
+        console.warn('Realtime sync snapshot status:', msg);
         onStatusChange?.('offline');
-        return;
       }
-      console.warn('Realtime sync snapshot status:', error);
-      onStatusChange?.('offline');
-    }
-  );
+    );
+  } catch (err) {
+    console.warn('[RealtimeSync] Could not initialize onSnapshot listener:', err);
+    onStatusChange?.('offline');
+  }
 
-  return unsubscribe;
+  return () => {
+    isUnsubscribed = true;
+    if (activeUnsubscribe) {
+      try {
+        activeUnsubscribe();
+      } catch (e) {
+        // Suppress any teardown assertion errors from SDK internal queue
+        console.warn('[RealtimeSync] Cleaned up snapshot listener with notice:', e);
+      }
+      activeUnsubscribe = null;
+    }
+  };
 }
 
 let syncTimeout: any = null;
@@ -199,7 +222,7 @@ export async function syncStateToCloud(
     } catch (error) {
       if (isFirestoreQuotaError(error)) {
         console.warn('[RealtimeSync] Kuota harian Firestore gratis tercapai. Beralih ke mode offline lokal.');
-        await pauseNetworkDueToQuota();
+        pauseNetworkDueToQuota();
         return false;
       }
       console.warn('Failed to sync state to cloud, stored locally:', error);

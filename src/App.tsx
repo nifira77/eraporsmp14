@@ -299,18 +299,8 @@ export default function App() {
       }
     );
 
-    const handleVisibilityOrFocus = () => {
-      if (document.visibilityState === 'visible' && !isQuotaExhausted()) {
-        testConnection();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
-    window.addEventListener('focus', handleVisibilityOrFocus);
-
     return () => {
       unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
-      window.removeEventListener('focus', handleVisibilityOrFocus);
     };
   }, []);
 
