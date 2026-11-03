@@ -801,7 +801,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
       </div>
 
       {/* DOCUMENT PREVIEW CONTAINER */}
-      <div className="bg-slate-200/70 p-4 sm:p-8 rounded-2xl flex flex-col items-center overflow-x-auto shadow-inner no-print-bg">
+      <div className="bg-slate-100/50 p-4 sm:p-8 rounded-2xl flex flex-col items-center overflow-x-auto border border-slate-200/60 shadow-xs no-print-bg">
         {/* ============================================================== */}
         {/* MODE 1: RAPOR NILAI (TENGAH SEMESTER ATAU AKHIR SEMESTER) */}
         {/* ============================================================== */}
@@ -943,7 +943,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               /* Tabel Nilai STS */
                               <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                 <thead>
-                                  <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                  <tr className="bg-white border-b border-black text-center font-bold">
                                     <th className="border border-black py-1.5 px-2 w-8">No</th>
                                     <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                                     <th className="border border-black py-1.5 px-2 w-14">KKTP</th>
@@ -972,7 +972,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                     );
                                   })}
                                 </tbody>
-                                <tfoot className="bg-slate-50 font-bold border-t border-black">
+                                <tfoot className="bg-white font-bold border-t border-black">
                                   <tr>
                                     <td colSpan={3} className="border border-black py-1.5 px-3 text-right">Rata-rata Nilai Tengah Semester:</td>
                                     <td className="border border-black py-1.5 px-2 text-center font-mono font-bold">{studentData.avgScoreSTS}</td>
@@ -986,7 +986,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               /* Tabel Nilai SAS Lengkap */
                               <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                 <thead>
-                                  <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                  <tr className="bg-white border-b border-black text-center font-bold">
                                     <th className="border border-black py-1.5 px-2 w-8">No</th>
                                     <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                                     <th className="border border-black py-1.5 px-2 w-14">Nilai Akhir</th>
@@ -1014,7 +1014,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                     </tr>
                                   ))}
                                 </tbody>
-                                <tfoot className="bg-slate-50 font-bold border-t border-black">
+                                <tfoot className="bg-white font-bold border-t border-black">
                                   <tr>
                                     <td colSpan={2} className="border border-black py-1.5 px-3 text-right">Rata-rata Nilai Akhir Semester:</td>
                                     <td className="border border-black py-1.5 px-2 text-center font-mono font-bold">{studentData.avgScoreSAS}</td>
@@ -1086,7 +1086,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                 <h3 className="font-bold text-[11px] uppercase tracking-wide">B. Kegiatan Ekstrakurikuler</h3>
                                 <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                   <thead>
-                                    <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                    <tr className="bg-white border-b border-black text-center font-bold">
                                       <th className="border border-black py-1 px-2 w-8">No</th>
                                       <th className="border border-black py-1 px-3 w-56 text-left">Kegiatan Ekstrakurikuler</th>
                                       <th className="border border-black py-1 px-2 w-24">Predikat</th>
@@ -1143,7 +1143,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                   <h3 className="font-bold text-[11px] uppercase tracking-wide">D. Prestasi Yang Diraih</h3>
                                   <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                     <thead>
-                                      <tr className="bg-slate-100 border-b border-black font-bold">
+                                      <tr className="bg-white border-b border-black font-bold">
                                         <th className="border border-black py-1 px-2 w-8 text-center">No</th>
                                         <th className="border border-black py-1 px-2">Prestasi &amp; Keterangan</th>
                                       </tr>
@@ -1173,7 +1173,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               {/* E. CATATAN WALI KELAS */}
                               <div className="space-y-1">
                                 <h3 className="font-bold text-[11px] uppercase tracking-wide">E. Catatan Wali Kelas</h3>
-                                <div className="border border-black p-2.5 min-h-[44px] text-[10.5px] leading-relaxed italic bg-slate-50/30">
+                                <div className="border border-black p-2.5 min-h-[44px] text-[10.5px] leading-relaxed italic bg-white">
                                   "{studentData.studentNote}"
                                 </div>
                               </div>
@@ -1203,7 +1203,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                               <div className="space-y-1 flex flex-col">
                                 <h3 className="font-bold text-[11px] uppercase tracking-wide">C. Catatan Wali Kelas</h3>
-                                <div className="border border-black p-2.5 flex-1 min-h-[85px] text-[10.5px] leading-relaxed italic bg-slate-50/30 flex items-start">
+                                <div className="border border-black p-2.5 flex-1 min-h-[85px] text-[10.5px] leading-relaxed italic bg-white flex items-start">
                                   "{studentData.studentNote}"
                                 </div>
                               </div>
@@ -1384,7 +1384,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             {raporPeriod === 'tengah_semester' ? (
                               <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                 <thead>
-                                  <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                  <tr className="bg-white border-b border-black text-center font-bold">
                                     <th className="border border-black py-1.5 px-2 w-8">No</th>
                                     <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                                     <th className="border border-black py-1.5 px-2 w-14">KKTP</th>
@@ -1417,7 +1417,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             ) : (
                               <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                 <thead>
-                                  <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                  <tr className="bg-white border-b border-black text-center font-bold">
                                     <th className="border border-black py-1.5 px-2 w-8">No</th>
                                     <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                                     <th className="border border-black py-1.5 px-2 w-14">Nilai Akhir</th>
@@ -1516,7 +1516,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             {raporPeriod === 'tengah_semester' ? (
                               <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                 <thead>
-                                  <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                  <tr className="bg-white border-b border-black text-center font-bold">
                                     <th className="border border-black py-1.5 px-2 w-8">No</th>
                                     <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                                     <th className="border border-black py-1.5 px-2 w-14">KKTP</th>
@@ -1545,7 +1545,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                     );
                                   })}
                                 </tbody>
-                                <tfoot className="bg-slate-50 font-bold border-t border-black">
+                                <tfoot className="bg-white font-bold border-t border-black">
                                   <tr>
                                     <td colSpan={3} className="border border-black py-1.5 px-3 text-right">Rata-rata Nilai Tengah Semester:</td>
                                     <td className="border border-black py-1.5 px-2 text-center font-mono font-bold">{studentData.avgScoreSTS}</td>
@@ -1558,7 +1558,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             ) : (
                               <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                 <thead>
-                                  <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                  <tr className="bg-white border-b border-black text-center font-bold">
                                     <th className="border border-black py-1.5 px-2 w-8">No</th>
                                     <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                                     <th className="border border-black py-1.5 px-2 w-14">Nilai Akhir</th>
@@ -1586,7 +1586,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                     </tr>
                                   ))}
                                 </tbody>
-                                <tfoot className="bg-slate-50 font-bold border-t border-black">
+                                <tfoot className="bg-white font-bold border-t border-black">
                                   <tr>
                                     <td colSpan={2} className="border border-black py-1.5 px-3 text-right">Rata-rata Nilai Akhir Semester:</td>
                                     <td className="border border-black py-1.5 px-2 text-center font-mono font-bold">{studentData.avgScoreSAS}</td>
@@ -1661,7 +1661,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                 <h3 className="font-bold text-[11px] uppercase tracking-wide">B. Kegiatan Ekstrakurikuler</h3>
                                 <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                   <thead>
-                                    <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                                    <tr className="bg-white border-b border-black text-center font-bold">
                                       <th className="border border-black py-1 px-2 w-8">No</th>
                                       <th className="border border-black py-1 px-3 w-56 text-left">Kegiatan Ekstrakurikuler</th>
                                       <th className="border border-black py-1 px-2 w-24">Predikat</th>
@@ -1718,7 +1718,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                                   <h3 className="font-bold text-[11px] uppercase tracking-wide">D. Prestasi Yang Diraih</h3>
                                   <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                                     <thead>
-                                      <tr className="bg-slate-100 border-b border-black font-bold">
+                                      <tr className="bg-white border-b border-black font-bold">
                                         <th className="border border-black py-1 px-2 w-8 text-center">No</th>
                                         <th className="border border-black py-1 px-2">Prestasi &amp; Keterangan</th>
                                       </tr>
@@ -1748,7 +1748,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               {/* E. CATATAN WALI KELAS */}
                               <div className="space-y-1">
                                 <h3 className="font-bold text-[11px] uppercase tracking-wide">E. Catatan Wali Kelas</h3>
-                                <div className="border border-black p-3 min-h-[56px] text-[10.5px] leading-relaxed italic bg-slate-50/30">
+                                <div className="border border-black p-3 min-h-[56px] text-[10.5px] leading-relaxed italic bg-white">
                                   "{studentData.studentNote}"
                                 </div>
                               </div>
@@ -1779,7 +1779,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                                 <div className="space-y-1 flex flex-col">
                                   <h3 className="font-bold text-[11px] uppercase tracking-wide">C. Catatan Wali Kelas</h3>
-                                  <div className="border border-black p-3 flex-1 min-h-[76px] text-[10.5px] leading-relaxed italic bg-slate-50/30 flex items-start">
+                                  <div className="border border-black p-3 flex-1 min-h-[76px] text-[10.5px] leading-relaxed italic bg-white flex items-start">
                                     "{studentData.studentNote}"
                                   </div>
                                 </div>
@@ -1983,7 +1983,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       {raporPeriod === 'tengah_semester' ? (
                         <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                           <thead>
-                            <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                            <tr className="bg-white border-b border-black text-center font-bold">
                               <th className="border border-black py-1.5 px-2 w-8">No</th>
                               <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                               <th className="border border-black py-1.5 px-2 w-14">KKTP</th>
@@ -2021,7 +2021,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               );
                             })}
                           </tbody>
-                          <tfoot className="bg-slate-50 font-bold border-t border-black">
+                          <tfoot className="bg-white font-bold border-t border-black">
                             <tr>
                               <td colSpan={3} className="border border-black py-1.5 px-3 text-right">
                                 Rata-rata Nilai Tengah Semester:
@@ -2039,7 +2039,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                         /* TABEL NILAI AKHIR SEMESTER (SAS) LENGKAP */
                         <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                           <thead>
-                            <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                            <tr className="bg-white border-b border-black text-center font-bold">
                               <th className="border border-black py-1.5 px-2 w-8">No</th>
                               <th className="border border-black py-1.5 px-2 w-48 text-left">Mata Pelajaran</th>
                               <th className="border border-black py-1.5 px-2 w-14">Nilai Akhir</th>
@@ -2073,7 +2073,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               </tr>
                             ))}
                           </tbody>
-                          <tfoot className="bg-slate-50 font-bold border-t border-black">
+                          <tfoot className="bg-white font-bold border-t border-black">
                             <tr>
                               <td colSpan={2} className="border border-black py-1.5 px-3 text-right">
                                 Rata-rata Nilai Akhir Semester:
@@ -2102,7 +2102,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                           </h3>
                           <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                             <thead>
-                              <tr className="bg-slate-100 border-b border-black text-center font-bold">
+                              <tr className="bg-white border-b border-black text-center font-bold">
                                 <th className="border border-black py-1 px-2 w-8">No</th>
                                 <th className="border border-black py-1 px-3 w-56 text-left">Kegiatan Ekstrakurikuler</th>
                                 <th className="border border-black py-1 px-2 w-24">Predikat</th>
@@ -2173,7 +2173,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             </h3>
                             <table className="w-full text-left text-[10.5px] border-collapse border border-black print-border-table">
                               <thead>
-                                <tr className="bg-slate-100 border-b border-black font-bold">
+                                <tr className="bg-white border-b border-black font-bold">
                                   <th className="border border-black py-1 px-2 w-8 text-center">No</th>
                                   <th className="border border-black py-1 px-2">Prestasi & Keterangan</th>
                                 </tr>
@@ -2236,7 +2236,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             <h3 className="font-bold text-[11px] uppercase tracking-wide">
                               C. Catatan Wali Kelas
                             </h3>
-                            <div className="border border-black p-2.5 flex-1 min-h-[76px] text-[10.5px] leading-relaxed italic bg-slate-50/30 flex items-start">
+                            <div className="border border-black p-2.5 flex-1 min-h-[76px] text-[10.5px] leading-relaxed italic bg-white flex items-start">
                               "{studentData.studentNote}"
                             </div>
                           </div>
@@ -2249,7 +2249,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                           <h3 className="font-bold text-[11px] uppercase tracking-wide">
                             E. Catatan Wali Kelas
                           </h3>
-                          <div className="border border-black p-2.5 min-h-[44px] text-[10.5px] leading-relaxed italic bg-slate-50/30">
+                          <div className="border border-black p-2.5 min-h-[44px] text-[10.5px] leading-relaxed italic bg-white">
                             "{studentData.studentNote}"
                           </div>
                         </div>
@@ -2391,7 +2391,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                               <p className="text-xs uppercase font-semibold text-slate-800 tracking-wide">
                                 Nama Peserta Didik:
                               </p>
-                              <div className="border-2 border-black py-2.5 px-4 font-extrabold text-base sm:text-lg uppercase bg-slate-50 tracking-wide text-slate-950 shadow-2xs">
+                              <div className="border-2 border-black py-2.5 px-4 font-extrabold text-base sm:text-lg uppercase bg-white tracking-wide text-slate-950 shadow-2xs">
                                 {student.nama}
                               </div>
                             </div>
@@ -2730,7 +2730,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
 
                     {/* Pasfoto & TTD Kepala Sekolah */}
                     <div className="pt-6 flex justify-between items-end">
-                      <div className="w-28 h-36 border-2 border-black flex items-center justify-center text-[10px] text-slate-400 font-mono overflow-hidden bg-slate-50 shadow-2xs">
+                      <div className="w-28 h-36 border-2 border-black flex items-center justify-center text-[10px] text-slate-400 font-mono overflow-hidden bg-white shadow-2xs">
                         {student.foto ? (
                           <img src={student.foto} alt={student.nama} className="w-full h-full object-cover" />
                         ) : (
@@ -2845,19 +2845,19 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse border border-black print-border-table">
                 <thead>
-                  <tr className="bg-slate-100 text-center font-bold border-b border-black">
+                  <tr className="bg-white text-center font-bold border-b border-black">
                     <th rowSpan={2} className="border border-black py-1 px-1.5 w-6">No</th>
                     <th rowSpan={2} className="border border-black py-1 px-2 w-20">NISN</th>
                     <th rowSpan={2} className="border border-black py-1 px-2 min-w-[140px] text-left">Nama Peserta Didik</th>
-                    <th colSpan={subjects.length} className="border border-black py-1 px-1 text-center bg-slate-200">
+                    <th colSpan={subjects.length} className="border border-black py-1 px-1 text-center bg-white">
                       Mata Pelajaran ({raporPeriod === 'tengah_semester' ? 'Nilai STS' : 'Nilai Akhir SAS'})
                     </th>
-                    <th rowSpan={2} className="border border-black py-1 px-1.5 w-12 bg-slate-200">Jumlah</th>
-                    <th rowSpan={2} className="border border-black py-1 px-1.5 w-12 bg-slate-200">Rerata</th>
+                    <th rowSpan={2} className="border border-black py-1 px-1.5 w-12 bg-white">Jumlah</th>
+                    <th rowSpan={2} className="border border-black py-1 px-1.5 w-12 bg-white">Rerata</th>
                     <th rowSpan={2} className="border border-black py-1 px-1 w-8">Rank</th>
-                    <th colSpan={3} className="border border-black py-1 px-1 text-center bg-slate-100">Presensi</th>
+                    <th colSpan={3} className="border border-black py-1 px-1 text-center bg-white">Presensi</th>
                   </tr>
-                  <tr className="bg-slate-50 text-center font-bold text-[9px] border-b border-black">
+                  <tr className="bg-white text-center font-bold text-[9px] border-b border-black">
                     {subjects.map(s => (
                       <th key={s.id} className="border border-black py-1 px-1 w-10" title={s.nama}>
                         {s.kode}
@@ -2920,7 +2920,7 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                       const att = attendances.find(a => a.studentId === student.id) || { sakit: 0, izin: 0, alpa: 0 };
 
                       return (
-                        <tr key={student.id} className="border-b border-black hover:bg-slate-50">
+                        <tr key={student.id} className="border-b border-black hover:bg-slate-50/50 print:bg-white">
                           <td className="border border-black py-1 px-1.5 text-center font-mono">{idx + 1}</td>
                           <td className="border border-black py-1 px-2 font-mono text-[9px]">{student.nisn}</td>
                           <td className="border border-black py-1 px-2 font-semibold">{student.nama}</td>
@@ -2955,10 +2955,10 @@ export const CetakRaporView: React.FC<CetakRaporViewProps> = ({ state }) => {
                             );
                           })}
 
-                          <td className="border border-black py-1 px-1.5 text-center font-mono font-bold bg-slate-50">
+                          <td className="border border-black py-1 px-1.5 text-center font-mono font-bold bg-white">
                             {studentRecord?.total}
                           </td>
-                          <td className="border border-black py-1 px-1.5 text-center font-mono font-bold bg-slate-50">
+                          <td className="border border-black py-1 px-1.5 text-center font-mono font-bold bg-white">
                             {studentRecord?.avg.toFixed(1)}
                           </td>
                           <td className="border border-black py-1 px-1 text-center font-mono font-bold text-blue-900">
